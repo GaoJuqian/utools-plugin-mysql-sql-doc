@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>ANALYZE TABLE StatementANALYZE TABLE OutputKey Distribution AnalysisOther Considerations</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="analyze-table"></a>13.7.2.1&nbsp;ANALYZE TABLE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572736608"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ANALYZE [NO_WRITE_TO_BINLOG | LOCAL]
+    TABLE <em class="replaceable">tbl_name</em> [, <em class="replaceable">tbl_name</em>] ...</code></pre><p>
+        <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a> performs a key
+        distribution analysis and stores the distribution for the named
+        table or tables. For <code class="literal">MyISAM</code> tables, this
+        statement is equivalent to using <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk
+        --analyze</strong></span></a>.
+      </p><p>
+        This statement requires <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a>
+        and <a class="link" href="privileges-provided.html#priv_insert"><code class="literal">INSERT</code></a> privileges for the
+        table.
+      </p><p>
+        <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a> works with
+        <code class="literal">InnoDB</code>, <code class="literal">NDB</code>, and
+        <code class="literal">MyISAM</code> tables. It does not work with views.
+      </p><p>
+        <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a> is supported for
+        partitioned tables, and you can use <code class="literal">ALTER TABLE ...
+        ANALYZE PARTITION</code> to analyze one or more partitions;
+        for more information, see <a class="xref" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement">Section&nbsp;13.1.8, “ALTER TABLE Statement”</a>, and
+        <a class="xref" href="partitioning-maintenance.html" title="22.3.4&nbsp;Maintenance of Partitions">Section&nbsp;22.3.4, “Maintenance of Partitions”</a>.
+      </p><p>
+        During the analysis, the table is locked with a read lock for
+        <code class="literal">InnoDB</code> and <code class="literal">MyISAM</code>.
+      </p><p>
+        <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a> removes the table
+        from the table definition cache, which requires a flush lock. If
+        there are long running statements or transactions still using
+        the table, subsequent statements and transactions must wait for
+        those operations to finish before the flush lock is released.
+        Because <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a> itself
+        typically finishes quickly, it may not be apparent that delayed
+        transactions or statements involving the same table are due to
+        the remaining flush lock.
+      </p><p>
+        By default, the server writes <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE
+        TABLE</code></a> statements to the binary log so that they
+        replicate to replicas. To suppress logging, specify the optional
+        <code class="literal">NO_WRITE_TO_BINLOG</code> keyword or its alias
+        <code class="literal">LOCAL</code>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="analyze-table.html#analyze-table-output" title="ANALYZE TABLE Output">ANALYZE TABLE Output</a></p></li><li class="listitem"><p><a class="xref" href="analyze-table.html#analyze-table-key-distribution-analysis" title="Key Distribution Analysis">Key Distribution Analysis</a></p></li><li class="listitem"><p><a class="xref" href="analyze-table.html#analyze-table-other-considerations" title="Other Considerations">Other Considerations</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="analyze-table-output"></a>ANALYZE TABLE Output</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a> returns a result
+          set with the columns shown in the following table.
+</p>
+<div class="informaltable">
+<table summary="Columns of the ANALYZE TABLE result set."><colgroup><col style="width: 15%"><col style="width: 60%"></colgroup><thead><tr>
+              <th>Column</th>
+              <th>Value</th>
+            </tr></thead><tbody><tr>
+              <td><code class="literal">Table</code></td>
+              <td>The table name</td>
+            </tr><tr>
+              <td><code class="literal">Op</code></td>
+              <td>Always <code class="literal">analyze</code></td>
+            </tr><tr>
+              <td><code class="literal">Msg_type</code></td>
+              <td><code class="literal">status</code>, <code class="literal">error</code>,
+                <code class="literal">info</code>, <code class="literal">note</code>, or
+                <code class="literal">warning</code></td>
+            </tr><tr>
+              <td><code class="literal">Msg_text</code></td>
+              <td>An informational message</td>
+</tr></tbody></table>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="analyze-table-key-distribution-analysis"></a>Key Distribution Analysis</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          If the table has not changed since the last key distribution
+          analysis, the table is not analyzed again.
+        </p><p>
+          MySQL uses the stored key distribution to decide the table
+          join order for joins on something other than a constant. In
+          addition, key distributions can be used when deciding which
+          indexes to use for a specific table within a query.
+        </p><p>
+          To check the stored key distribution cardinality, use the
+          <a class="link" href="show-index.html" title="13.7.5.22&nbsp;SHOW INDEX Statement"><code class="literal">SHOW INDEX</code></a> statement or the
+          <code class="literal">INFORMATION_SCHEMA</code>
+          <a class="link" href="information-schema-statistics-table.html" title="24.3.24&nbsp;The INFORMATION_SCHEMA STATISTICS Table"><code class="literal">STATISTICS</code></a> table. See
+          <a class="xref" href="show-index.html" title="13.7.5.22&nbsp;SHOW INDEX Statement">Section&nbsp;13.7.5.22, “SHOW INDEX Statement”</a>, and
+          <a class="xref" href="information-schema-statistics-table.html" title="24.3.24&nbsp;The INFORMATION_SCHEMA STATISTICS Table">Section&nbsp;24.3.24, “The INFORMATION_SCHEMA STATISTICS Table”</a>.
+        </p><p>
+          For <code class="literal">InnoDB</code> tables,
+          <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a> determines index
+          cardinality by performing random dives on each of the index
+          trees and updating index cardinality estimates accordingly.
+          Because these are only estimates, repeated runs of
+          <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a> could produce
+          different numbers. This makes <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE
+          TABLE</code></a> fast on <code class="literal">InnoDB</code> tables but
+          not 100% accurate because it does not take all rows into
+          account.
+        </p><p>
+          You can make the
+          <a class="link" href="glossary.html#glos_statistics" title="statistics">statistics</a> collected by
+          <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a> more precise and
+          more stable by enabling
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_stats_persistent"><code class="literal">innodb_stats_persistent</code></a>, as
+          explained in <a class="xref" href="innodb-persistent-stats.html" title="14.8.11.1&nbsp;Configuring Persistent Optimizer Statistics Parameters">Section&nbsp;14.8.11.1, “Configuring Persistent Optimizer Statistics Parameters”</a>. When
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_stats_persistent"><code class="literal">innodb_stats_persistent</code></a> is
+          enabled, it is important to run <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE
+          TABLE</code></a> after major changes to index column data, as
+          statistics are not recalculated periodically (such as after a
+          server restart).
+        </p><p>
+          If <a class="link" href="innodb-parameters.html#sysvar_innodb_stats_persistent"><code class="literal">innodb_stats_persistent</code></a> is
+          enabled, you can change the number of random dives by
+          modifying the
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_stats_persistent_sample_pages"><code class="literal">innodb_stats_persistent_sample_pages</code></a>
+          system variable. If
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_stats_persistent"><code class="literal">innodb_stats_persistent</code></a> is
+          disabled, modify
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_stats_transient_sample_pages"><code class="literal">innodb_stats_transient_sample_pages</code></a>
+          instead.
+        </p><p>
+          For more information about key distribution analysis in
+          <code class="literal">InnoDB</code>, see
+          <a class="xref" href="innodb-persistent-stats.html" title="14.8.11.1&nbsp;Configuring Persistent Optimizer Statistics Parameters">Section&nbsp;14.8.11.1, “Configuring Persistent Optimizer Statistics Parameters”</a>, and
+          <a class="xref" href="innodb-analyze-table-complexity.html" title="14.8.11.3&nbsp;Estimating ANALYZE TABLE Complexity for InnoDB Tables">Section&nbsp;14.8.11.3, “Estimating ANALYZE TABLE Complexity for InnoDB Tables”</a>.
+        </p><p>
+          MySQL uses index cardinality estimates in join optimization.
+          If a join is not optimized in the right way, try running
+          <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a>. In the few cases
+          that <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a> does not
+          produce values good enough for your particular tables, you can
+          use <code class="literal">FORCE INDEX</code> with your queries to force
+          the use of a particular index, or set the
+          <a class="link" href="server-system-variables.html#sysvar_max_seeks_for_key"><code class="literal">max_seeks_for_key</code></a> system
+          variable to ensure that MySQL prefers index lookups over table
+          scans. See <a class="xref" href="optimizer-issues.html" title="B.3.5&nbsp;Optimizer-Related Issues">Section&nbsp;B.3.5, “Optimizer-Related Issues”</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="analyze-table-other-considerations"></a>Other Considerations</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          <code class="literal">ANALYZE TABLE</code> clears table statistics from
+          the Information Schema
+          <a class="link" href="information-schema-innodb-sys-tablestats-table.html" title="24.4.25&nbsp;The INFORMATION_SCHEMA INNODB_SYS_TABLESTATS View"><code class="literal">INNODB_SYS_TABLESTATS</code></a> table and
+          sets the <code class="literal">STATS_INITIALIZED</code> column to
+          <code class="literal">Uninitialized</code>. Statistics are collected
+          again the next time the table is accessed.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

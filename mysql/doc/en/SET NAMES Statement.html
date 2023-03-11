@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SET NAMES Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="set-names"></a>13.7.4.3&nbsp;SET NAMES Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571697328"></a><a class="indexterm" name="idm45852571696256"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET NAMES {'<em class="replaceable">charset_name</em>'
+    [COLLATE '<em class="replaceable">collation_name</em>'] | DEFAULT}</code></pre><p>
+        This statement sets the three session system variables
+        <a class="link" href="server-system-variables.html#sysvar_character_set_client"><code class="literal">character_set_client</code></a>,
+        <a class="link" href="server-system-variables.html#sysvar_character_set_connection"><code class="literal">character_set_connection</code></a>, and
+        <a class="link" href="server-system-variables.html#sysvar_character_set_results"><code class="literal">character_set_results</code></a> to the
+        given character set. Setting
+        <a class="link" href="server-system-variables.html#sysvar_character_set_connection"><code class="literal">character_set_connection</code></a> to
+        <code class="literal">charset_name</code> also sets
+        <a class="link" href="server-system-variables.html#sysvar_collation_connection"><code class="literal">collation_connection</code></a> to the
+        default collation for <code class="literal">charset_name</code>. See
+        <a class="xref" href="charset-connection.html" title="10.4&nbsp;Connection Character Sets and Collations">Section&nbsp;10.4, “Connection Character Sets and Collations”</a>.
+      </p><p>
+        The optional <code class="literal">COLLATE</code> clause may be used to
+        specify a collation explicitly. If given, the collation must one
+        of the permitted collations for
+        <em class="replaceable"><code>charset_name</code></em>.
+      </p><p>
+        <em class="replaceable"><code>charset_name</code></em> and
+        <em class="replaceable"><code>collation_name</code></em> may be quoted or
+        unquoted.
+      </p><p>
+        The default mapping can be restored by using a value of
+        <code class="literal">DEFAULT</code>. The default depends on the server
+        configuration.
+      </p><p>
+        Some character sets cannot be used as the client character set.
+        Attempting to use them with <a class="link" href="set-names.html" title="13.7.4.3&nbsp;SET NAMES Statement"><code class="literal">SET
+        NAMES</code></a> produces an error. See
+        <a class="xref" href="charset-connection.html#charset-connection-impermissible-client-charset" title="Impermissible Client Character Sets">Impermissible Client Character Sets</a>.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Derived Tables</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="derived-tables"></a>13.2.10.8&nbsp;Derived Tables</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577686576"></a><a class="indexterm" name="idm45852577685504"></a><a class="indexterm" name="idm45852577683600"></a><p>
+        A derived table is an expression that generates a table within
+        the scope of a query <code class="literal">FROM</code> clause. For
+        example, a subquery in a <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+        statement <code class="literal">FROM</code> clause is a derived table:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT ... FROM (<em class="replaceable">subquery</em>) [AS] <em class="replaceable">tbl_name</em> ...</code></pre><p>
+        The <code class="literal">[AS] <em class="replaceable"><code>tbl_name</code></em></code>
+        clause is mandatory because every table in a
+        <code class="literal">FROM</code> clause must have a name. Any columns in
+        the derived table must have unique names.
+      </p><p>
+        For the sake of illustration, assume that you have this table:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE t1 (s1 INT, s2 CHAR(5), s3 FLOAT);</code></pre><p>
+        Here is how to use a subquery in the <code class="literal">FROM</code>
+        clause, using the example table:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">INSERT INTO t1 VALUES (1,'1',1.0);
+INSERT INTO t1 VALUES (2,'2',2.0);
+SELECT sb1,sb2,sb3
+  FROM (SELECT s1 AS sb1, s2 AS sb2, s3*2 AS sb3 FROM t1) AS sb
+  WHERE sb1 &gt; 1;</code></pre><p>
+        Result:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">+------+------+------+
+| sb1  | sb2  | sb3  |
++------+------+------+
+|    2 | 2    |    4 |
++------+------+------+</code></pre><p>
+        Here is another example: Suppose that you want to know the
+        average of a set of sums for a grouped table. This does not
+        work:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT AVG(SUM(column1)) FROM t1 GROUP BY column1;</code></pre><p>
+        However, this query provides the desired information:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT AVG(sum_column1)
+  FROM (SELECT SUM(column1) AS sum_column1
+        FROM t1 GROUP BY column1) AS t1;</code></pre><p>
+        Notice that the column name used within the subquery
+        (<code class="literal">sum_column1</code>) is recognized in the outer
+        query.
+      </p><p>
+        A derived table can return a scalar, column, row, or table.
+      </p><p>
+        Derived tables are subject to these restrictions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            A derived table cannot be a correlated subquery.
+          </p></li><li class="listitem"><p>
+            A derived table cannot contain references to other tables of
+            the same <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>.
+          </p></li><li class="listitem"><p>
+            A derived table cannot contain outer references. This is a
+            MySQL restriction, not a restriction of the SQL standard.
+</p></li></ul>
+</div>
+<p>
+        The optimizer determines information about derived tables in
+        such a way that <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> does not
+        need to materialize them. See
+        <a class="xref" href="derived-table-optimization.html" title="8.2.2.4&nbsp;Optimizing Derived Tables and View References with Merging or Materialization">Section&nbsp;8.2.2.4, “Optimizing Derived Tables and View References with Merging or
+          Materialization”</a>.
+      </p><p>
+        It is possible under certain circumstances that using
+        <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN
+        SELECT</code></a> modifies table data. This can occur if the
+        outer query accesses any tables and an inner query invokes a
+        stored function that changes one or more rows of a table.
+        Suppose that there are two tables <code class="literal">t1</code> and
+        <code class="literal">t2</code> in database <code class="literal">d1</code>, and a
+        stored function <code class="literal">f1</code> that modifies
+        <code class="literal">t2</code>, created as shown here:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE DATABASE d1;
+USE d1;
+CREATE TABLE t1 (c1 INT);
+CREATE TABLE t2 (c1 INT);
+CREATE FUNCTION f1(p1 INT) RETURNS INT
+  BEGIN
+    INSERT INTO t2 VALUES (p1);
+    RETURN p1;
+  END;</code></pre><p>
+        Referencing the function directly in an
+        <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN
+        SELECT</code></a> has no effect on <code class="literal">t2</code>, as
+        shown here:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM t2;
+Empty set (0.02 sec)
+
+mysql&gt; EXPLAIN SELECT f1(5)\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: NULL
+   partitions: NULL
+         type: NULL
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: NULL
+     filtered: NULL
+        Extra: No tables used
+1 row in set (0.01 sec)
+
+mysql&gt; SELECT * FROM t2;
+Empty set (0.01 sec)</code></pre><p>
+        This is because the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+        statement did not reference any tables, as can be seen in the
+        <code class="literal">table</code> and <code class="literal">Extra</code> columns of
+        the output. This is also true of the following nested
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; EXPLAIN SELECT NOW() AS a1, (SELECT f1(5)) AS a2\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: NULL
+         type: NULL
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: NULL
+     filtered: NULL
+        Extra: No tables used
+1 row in set, 1 warning (0.00 sec)
+
+mysql&gt; SHOW WARNINGS;
++-------+------+------------------------------------------+
+| Level | Code | Message                                  |
++-------+------+------------------------------------------+
+| Note  | 1249 | Select 2 was reduced during optimization |
++-------+------+------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql&gt; SELECT * FROM t2;
+Empty set (0.00 sec)</code></pre><p>
+        However, if the outer <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+        references any tables, the optimizer executes the statement in
+        the subquery as well, with the result that <code class="literal">t2</code>
+        is modified:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; EXPLAIN SELECT * FROM t1 AS a1, (SELECT f1(5)) AS a2\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: &lt;derived2&gt;
+   partitions: NULL
+         type: system
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: 1
+     filtered: 100.00
+        Extra: NULL
+*************************** 2. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: a1
+   partitions: NULL
+         type: ALL
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: 1
+     filtered: 100.00
+        Extra: NULL
+*************************** 3. row ***************************
+           id: 2
+  select_type: DERIVED
+        table: NULL
+   partitions: NULL
+         type: NULL
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: NULL
+     filtered: NULL
+        Extra: No tables used
+3 rows in set (0.00 sec)
+
+mysql&gt; SELECT * FROM t2;
++------+
+| c1   |
++------+
+|    5 |
++------+
+1 row in set (0.00 sec)</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

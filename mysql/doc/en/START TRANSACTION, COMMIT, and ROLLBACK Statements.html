@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>START TRANSACTION, COMMIT, and ROLLBACK Statements</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="commit"></a>13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements</h3>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852577328208"></a><a class="indexterm" name="idm45852577327168"></a><a class="indexterm" name="idm45852577326096"></a><a class="indexterm" name="idm45852577325024"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">START TRANSACTION
+    [<em class="replaceable">transaction_characteristic</em> [, <em class="replaceable">transaction_characteristic</em>] ...]
+
+<em class="replaceable">transaction_characteristic</em>: {
+    WITH CONSISTENT SNAPSHOT
+  | READ WRITE
+  | READ ONLY
+}
+
+BEGIN [WORK]
+COMMIT [WORK] [AND [NO] CHAIN] [[NO] RELEASE]
+ROLLBACK [WORK] [AND [NO] CHAIN] [[NO] RELEASE]
+SET autocommit = {0 | 1}</code></pre><p>
+      These statements provide control over use of
+      <a class="link" href="glossary.html#glos_transaction" title="transaction">transactions</a>:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">START TRANSACTION</code> or
+          <code class="literal">BEGIN</code> start a new transaction.
+        </p></li><li class="listitem"><p>
+          <code class="literal">COMMIT</code> commits the current transaction,
+          making its changes permanent.
+        </p></li><li class="listitem"><p>
+          <code class="literal">ROLLBACK</code> rolls back the current
+          transaction, canceling its changes.
+        </p></li><li class="listitem"><p>
+          <code class="literal">SET autocommit</code> disables or enables the
+          default autocommit mode for the current session.
+</p></li></ul>
+</div>
+<p>
+      By default, MySQL runs with
+      <a class="link" href="glossary.html#glos_autocommit" title="autocommit">autocommit</a> mode enabled.
+      This means that, when not otherwise inside a transaction, each
+      statement is atomic, as if it were surrounded by <code class="literal">START
+      TRANSACTION</code> and <code class="literal">COMMIT</code>. You cannot
+      use <code class="literal">ROLLBACK</code> to undo the effect; however, if an
+      error occurs during statement execution, the statement is rolled
+      back.
+    </p><p>
+      To disable autocommit mode implicitly for a single series of
+      statements, use the <code class="literal">START TRANSACTION</code>
+      statement:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">START TRANSACTION;
+SELECT @A:=SUM(salary) FROM table1 WHERE type=1;
+UPDATE table2 SET summary=@A WHERE type=1;
+COMMIT;</code></pre><p>
+      With <code class="literal">START TRANSACTION</code>, autocommit remains
+      disabled until you end the transaction with
+      <code class="literal">COMMIT</code> or <code class="literal">ROLLBACK</code>. The
+      autocommit mode then reverts to its previous state.
+    </p><p>
+      <code class="literal">START TRANSACTION</code> permits several modifiers
+      that control transaction characteristics. To specify multiple
+      modifiers, separate them by commas.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          The <code class="literal">WITH CONSISTENT SNAPSHOT</code> modifier
+          starts a <a class="link" href="glossary.html#glos_consistent_read" title="consistent read">consistent
+          read</a> for storage engines that are capable of it. This
+          applies only to <code class="literal">InnoDB</code>. The effect is the
+          same as issuing a <code class="literal">START TRANSACTION</code>
+          followed by a <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> from any
+          <code class="literal">InnoDB</code> table. See
+          <a class="xref" href="innodb-consistent-read.html" title="14.7.2.3&nbsp;Consistent Nonlocking Reads">Section&nbsp;14.7.2.3, “Consistent Nonlocking Reads”</a>. The <code class="literal">WITH
+          CONSISTENT SNAPSHOT</code> modifier does not change the
+          current transaction
+          <a class="link" href="glossary.html#glos_isolation_level" title="isolation level">isolation level</a>,
+          so it provides a consistent snapshot only if the current
+          isolation level is one that permits a consistent read. The
+          only isolation level that permits a consistent read is
+          <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_repeatable-read"><code class="literal">REPEATABLE READ</code></a>. For all
+          other isolation levels, the <code class="literal">WITH CONSISTENT
+          SNAPSHOT</code> clause is ignored. As of MySQL 5.7.2, a
+          warning is generated when the <code class="literal">WITH CONSISTENT
+          SNAPSHOT</code> clause is ignored.
+        </p></li><li class="listitem"><p>
+          The <code class="literal">READ WRITE</code> and <code class="literal">READ
+          ONLY</code> modifiers set the transaction access mode. They
+          permit or prohibit changes to tables used in the transaction.
+          The <code class="literal">READ ONLY</code> restriction prevents the
+          transaction from modifying or locking both transactional and
+          nontransactional tables that are visible to other
+          transactions; the transaction can still modify or lock
+          temporary tables.
+        </p><p>
+          MySQL enables extra optimizations for queries on
+          <code class="literal">InnoDB</code> tables when the transaction is known
+          to be read-only. Specifying <code class="literal">READ ONLY</code>
+          ensures these optimizations are applied in cases where the
+          read-only status cannot be determined automatically. See
+          <a class="xref" href="innodb-performance-ro-txn.html" title="8.5.3&nbsp;Optimizing InnoDB Read-Only Transactions">Section&nbsp;8.5.3, “Optimizing InnoDB Read-Only Transactions”</a> for more
+          information.
+        </p><p>
+          If no access mode is specified, the default mode applies.
+          Unless the default has been changed, it is read/write. It is
+          not permitted to specify both <code class="literal">READ WRITE</code>
+          and <code class="literal">READ ONLY</code> in the same statement.
+        </p><p>
+          In read-only mode, it remains possible to change tables
+          created with the <code class="literal">TEMPORARY</code> keyword using
+          DML statements. Changes made with DDL statements are not
+          permitted, just as with permanent tables.
+        </p><p>
+          For additional information about transaction access mode,
+          including ways to change the default mode, see
+          <a class="xref" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement">Section&nbsp;13.3.6, “SET TRANSACTION Statement”</a>.
+        </p><p>
+          If the <a class="link" href="server-system-variables.html#sysvar_read_only"><code class="literal">read_only</code></a> system
+          variable is enabled, explicitly starting a transaction with
+          <code class="literal">START TRANSACTION READ WRITE</code> requires the
+          <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege.
+</p></li></ul>
+</div>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Important
+</div>
+<p>
+        Many APIs used for writing MySQL client applications (such as
+        JDBC) provide their own methods for starting transactions that
+        can (and sometimes should) be used instead of sending a
+        <code class="literal">START TRANSACTION</code> statement from the client.
+        See <a class="xref" href="connectors-apis.html" title="Chapter&nbsp;27&nbsp;Connectors and APIs">Chapter&nbsp;27, <i>Connectors and APIs</i></a>, or the documentation for
+        your API, for more information.
+</p>
+</div>
+<p>
+      To disable autocommit mode explicitly, use the following
+      statement:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET autocommit=0;</code></pre><p>
+      After disabling autocommit mode by setting the
+      <a class="link" href="server-system-variables.html#sysvar_autocommit"><code class="literal">autocommit</code></a> variable to zero,
+      changes to transaction-safe tables (such as those for
+      <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> or
+      <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a>) are not made permanent
+      immediately. You must use <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">COMMIT</code></a> to
+      store your changes to disk or <code class="literal">ROLLBACK</code> to
+      ignore the changes.
+    </p><p>
+      <a class="link" href="server-system-variables.html#sysvar_autocommit"><code class="literal">autocommit</code></a> is a session variable
+      and must be set for each session. To disable autocommit mode for
+      each new connection, see the description of the
+      <a class="link" href="server-system-variables.html#sysvar_autocommit"><code class="literal">autocommit</code></a> system variable at
+      <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>.
+    </p><p>
+      <code class="literal">BEGIN</code> and <code class="literal">BEGIN WORK</code> are
+      supported as aliases of <code class="literal">START TRANSACTION</code> for
+      initiating a transaction. <code class="literal">START TRANSACTION</code> is
+      standard SQL syntax, is the recommended way to start an ad-hoc
+      transaction, and permits modifiers that <code class="literal">BEGIN</code>
+      does not.
+    </p><p>
+      The <code class="literal">BEGIN</code> statement differs from the use of the
+      <code class="literal">BEGIN</code> keyword that starts a
+      <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ... END</code></a>
+      compound statement. The latter does not begin a transaction. See
+      <a class="xref" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement">Section&nbsp;13.6.1, “BEGIN ... END Compound Statement”</a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        Within all stored programs (stored procedures and functions,
+        triggers, and events), the parser treats <code class="literal">BEGIN
+        [WORK]</code> as the beginning of a
+        <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+        END</code></a> block. Begin a transaction in this context with
+        <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+        TRANSACTION</code></a> instead.
+</p>
+</div>
+<p>
+      The optional <code class="literal">WORK</code> keyword is supported for
+      <code class="literal">COMMIT</code> and <code class="literal">ROLLBACK</code>, as are
+      the <code class="literal">CHAIN</code> and <code class="literal">RELEASE</code>
+      clauses. <code class="literal">CHAIN</code> and <code class="literal">RELEASE</code>
+      can be used for additional control over transaction completion.
+      The value of the <a class="link" href="server-system-variables.html#sysvar_completion_type"><code class="literal">completion_type</code></a>
+      system variable determines the default completion behavior. See
+      <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>.
+    </p><p>
+      The <code class="literal">AND CHAIN</code> clause causes a new transaction
+      to begin as soon as the current one ends, and the new transaction
+      has the same isolation level as the just-terminated transaction.
+      The new transaction also uses the same access mode (<code class="literal">READ
+      WRITE</code> or <code class="literal">READ ONLY</code>) as the
+      just-terminated transaction. The <code class="literal">RELEASE</code> clause
+      causes the server to disconnect the current client session after
+      terminating the current transaction. Including the
+      <code class="literal">NO</code> keyword suppresses <code class="literal">CHAIN</code>
+      or <code class="literal">RELEASE</code> completion, which can be useful if
+      the <a class="link" href="server-system-variables.html#sysvar_completion_type"><code class="literal">completion_type</code></a> system
+      variable is set to cause chaining or release completion by
+      default.
+    </p><p>
+      Beginning a transaction causes any pending transaction to be
+      committed. See <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>, for more
+      information.
+    </p><p>
+      Beginning a transaction also causes table locks acquired with
+      <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> to be released, as
+      though you had executed
+      <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+      TABLES</code></a>. Beginning a transaction does not release a
+      global read lock acquired with <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH TABLES
+      WITH READ LOCK</code></a>.
+    </p><p>
+      For best results, transactions should be performed using only
+      tables managed by a single transaction-safe storage engine.
+      Otherwise, the following problems can occur:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          If you use tables from more than one transaction-safe storage
+          engine (such as <code class="literal">InnoDB</code>), and the
+          transaction isolation level is not
+          <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_serializable"><code class="literal">SERIALIZABLE</code></a>, it is
+          possible that when one transaction commits, another ongoing
+          transaction that uses the same tables sees only some of the
+          changes made by the first transaction. That is, the atomicity
+          of transactions is not guaranteed with mixed engines and
+          inconsistencies can result. (If mixed-engine transactions are
+          infrequent, you can use
+          <a class="link" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement"><code class="literal">SET
+          TRANSACTION ISOLATION LEVEL</code></a> to set the isolation
+          level to <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_serializable"><code class="literal">SERIALIZABLE</code></a> on a
+          per-transaction basis as necessary.)
+        </p></li><li class="listitem"><p>
+          If you use tables that are not transaction-safe within a
+          transaction, changes to those tables are stored at once,
+          regardless of the status of autocommit mode.
+        </p></li><li class="listitem"><p>
+          If you issue a
+          <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">ROLLBACK</code></a>
+          statement after updating a nontransactional table within a
+          transaction, an
+          <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_warning_not_complete_rollback" target="_top"><code class="literal">ER_WARNING_NOT_COMPLETE_ROLLBACK</code></a>
+          warning occurs. Changes to transaction-safe tables are rolled
+          back, but not changes to nontransaction-safe tables.
+</p></li></ul>
+</div>
+<p>
+      Each transaction is stored in the binary log in one chunk, upon
+      <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">COMMIT</code></a>. Transactions that are
+      rolled back are not logged.
+      (<span class="bold"><strong>Exception</strong></span>: Modifications to
+      nontransactional tables cannot be rolled back. If a transaction
+      that is rolled back includes modifications to nontransactional
+      tables, the entire transaction is logged with a
+      <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">ROLLBACK</code></a>
+      statement at the end to ensure that modifications to the
+      nontransactional tables are replicated.) See
+      <a class="xref" href="binary-log.html" title="5.4.4&nbsp;The Binary Log">Section&nbsp;5.4.4, “The Binary Log”</a>.
+    </p><p>
+      You can change the isolation level or access mode for transactions
+      with the <a class="link" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement"><code class="literal">SET TRANSACTION</code></a> statement.
+      See <a class="xref" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement">Section&nbsp;13.3.6, “SET TRANSACTION Statement”</a>.
+    </p><p>
+      Rolling back can be a slow operation that may occur implicitly
+      without the user having explicitly asked for it (for example, when
+      an error occurs). Because of this, <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW
+      PROCESSLIST</code></a> displays <code class="literal">Rolling back</code> in
+      the <code class="literal">State</code> column for the session, not only for
+      explicit rollbacks performed with the
+      <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">ROLLBACK</code></a>
+      statement but also for implicit rollbacks.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        In MySQL 5.7, <code class="literal">BEGIN</code>,
+        <code class="literal">COMMIT</code>, and <code class="literal">ROLLBACK</code> are
+        not affected by <a class="link" href="replication-options-replica.html#option_mysqld_replicate-do-db"><code class="option">--replicate-do-db</code></a>
+        or <a class="link" href="replication-options-replica.html#option_mysqld_replicate-ignore-db"><code class="option">--replicate-ignore-db</code></a> rules.
+</p>
+</div>
+<p>
+      When <code class="literal">InnoDB</code> performs a complete rollback of a
+      transaction, all locks set by the transaction are released. If a
+      single SQL statement within a transaction rolls back as a result
+      of an error, such as a duplicate key error, locks set by the
+      statement are preserved while the transaction remains active. This
+      happens because <code class="literal">InnoDB</code> stores row locks in a
+      format such that it cannot know afterward which lock was set by
+      which statement.
+    </p><p>
+      If a <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement within a
+      transaction calls a stored function, and a statement within the
+      stored function fails, that statement rolls back. If
+      <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">ROLLBACK</code></a> is
+      executed for the transaction subsequently, the entire transaction
+      rolls back.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

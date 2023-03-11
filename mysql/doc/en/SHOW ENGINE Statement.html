@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW ENGINE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-engine"></a>13.7.5.15&nbsp;SHOW ENGINE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571120512"></a><a class="indexterm" name="idm45852571119440"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW ENGINE <em class="replaceable">engine_name</em> {STATUS | MUTEX}</code></pre><p>
+        <a class="link" href="show-engine.html" title="13.7.5.15&nbsp;SHOW ENGINE Statement"><code class="literal">SHOW ENGINE</code></a> displays operational
+        information about a storage engine. It requires the
+        <a class="link" href="privileges-provided.html#priv_process"><code class="literal">PROCESS</code></a> privilege. The statement
+        has these variants:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW ENGINE INNODB STATUS
+SHOW ENGINE INNODB MUTEX
+SHOW ENGINE PERFORMANCE_SCHEMA STATUS</code></pre><p>
+        <a class="link" href="show-engine.html" title="13.7.5.15&nbsp;SHOW ENGINE Statement"><code class="literal">SHOW ENGINE INNODB
+        STATUS</code></a> displays extensive information from the
+        standard <code class="literal">InnoDB</code> Monitor about the state of
+        the <code class="literal">InnoDB</code> storage engine. For information
+        about the standard monitor and other <code class="literal">InnoDB</code>
+        Monitors that provide information about
+        <code class="literal">InnoDB</code> processing, see
+        <a class="xref" href="innodb-monitors.html" title="14.18&nbsp;InnoDB Monitors">Section&nbsp;14.18, “InnoDB Monitors”</a>.
+      </p><p>
+        <a class="link" href="show-engine.html" title="13.7.5.15&nbsp;SHOW ENGINE Statement"><code class="literal">SHOW ENGINE INNODB
+        MUTEX</code></a> displays <code class="literal">InnoDB</code>
+        <a class="link" href="glossary.html#glos_mutex" title="mutex">mutex</a> and
+        <a class="link" href="glossary.html#glos_rw_lock" title="rw-lock">rw-lock</a> statistics.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          <code class="literal">InnoDB</code> mutexes and rwlocks can also be
+          monitored using <a class="link" href="performance-schema.html" title="Chapter&nbsp;25&nbsp;MySQL Performance Schema">Performance
+          Schema</a> tables. See
+          <a class="xref" href="monitor-innodb-mutex-waits-performance-schema.html" title="14.17.2&nbsp;Monitoring InnoDB Mutex Waits Using Performance Schema">Section&nbsp;14.17.2, “Monitoring InnoDB Mutex Waits Using Performance Schema”</a>.
+</p>
+</div>
+<p>
+        <a class="link" href="show-engine.html" title="13.7.5.15&nbsp;SHOW ENGINE Statement"><code class="literal">SHOW ENGINE INNODB
+        MUTEX</code></a> output was removed in MySQL 5.7.2. It was
+        revised and reintroduced in MySQL 5.7.8.
+      </p><p>
+        In MySQL 5.7.8, mutex statistics collection is configured
+        dynamically using the following options:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            To enable the collection of mutex statistics, run:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET GLOBAL innodb_monitor_enable='latch';</code></pre></li><li class="listitem"><p>
+            To reset mutex statistics, run:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET GLOBAL innodb_monitor_reset='latch';</code></pre></li><li class="listitem"><p>
+            To disable the collection of mutex statistics, run:
+</p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET GLOBAL innodb_monitor_disable='latch';</code></pre></li></ul>
+</div>
+<p>
+        Collection of mutex statistics for
+        <a class="link" href="show-engine.html" title="13.7.5.15&nbsp;SHOW ENGINE Statement"><code class="literal">SHOW ENGINE INNODB
+        MUTEX</code></a> can also be enabled by setting
+        <a class="link" href="innodb-parameters.html#sysvar_innodb_monitor_enable"><code class="literal">innodb_monitor_enable='all'</code></a>, or
+        disabled by setting
+        <a class="link" href="innodb-parameters.html#sysvar_innodb_monitor_disable"><code class="literal">innodb_monitor_disable='all'</code></a>.
+      </p><p>
+        <a class="link" href="show-engine.html" title="13.7.5.15&nbsp;SHOW ENGINE Statement"><code class="literal">SHOW ENGINE INNODB
+        MUTEX</code></a> output has these columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Type</code>
+          </p><p>
+            Always <code class="literal">InnoDB</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Name</code>
+          </p><p>
+            Prior to MySQL 5.7.8, the <code class="literal">Name</code> field
+            reports the source file where the mutex is implemented, and
+            the line number in the file where the mutex is created. The
+            line number is specific to your version of MySQL. As of
+            MySQL 5.7.8, only the mutex name is reported. File name and
+            line number are still reported for rwlocks.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Status</code>
+          </p><p>
+            The mutex status.
+          </p><p>
+            Prior to MySQL 5.7.8, the <code class="literal">Status</code> field
+            displays several values if
+            <a class="link" href="source-configuration-options.html#option_cmake_with_debug"><code class="option">WITH_DEBUG</code></a> was defined at
+            MySQL compilation time. If
+            <a class="link" href="source-configuration-options.html#option_cmake_with_debug"><code class="option">WITH_DEBUG</code></a> was not defined,
+            the statement displays only the <code class="literal">os_waits</code>
+            value. In the latter case (without
+            <a class="link" href="source-configuration-options.html#option_cmake_with_debug"><code class="option">WITH_DEBUG</code></a>), the information
+            on which the output is based is insufficient to distinguish
+            regular mutexes and mutexes that protect rwlocks (which
+            permit multiple readers or a single writer). Consequently,
+            the output may appear to contain multiple rows for the same
+            mutex. Pre-MySQL 5.7.8 <code class="literal">Status</code> field
+            values include:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                <code class="literal">count</code> indicates how many times the
+                mutex was requested.
+              </p></li><li class="listitem"><p>
+                <code class="literal">spin_waits</code> indicates how many times
+                the spinlock had to run.
+              </p></li><li class="listitem"><p>
+                <code class="literal">spin_rounds</code> indicates the number of
+                spinlock rounds. (<code class="literal">spin_rounds</code> divided
+                by <code class="literal">spin_waits</code> provides the average
+                round count.)
+              </p></li><li class="listitem"><p>
+                <code class="literal">os_waits</code> indicates the number of
+                operating system waits. This occurs when the spinlock
+                did not work (the mutex was not locked during the
+                spinlock and it was necessary to yield to the operating
+                system and wait).
+              </p></li><li class="listitem"><p>
+                <code class="literal">os_yields</code> indicates the number of
+                times a thread trying to lock a mutex gave up its
+                timeslice and yielded to the operating system (on the
+                presumption that permitting other threads to run frees
+                the mutex so that it can be locked).
+              </p></li><li class="listitem"><p>
+                <code class="literal">os_wait_times</code> indicates the amount of
+                time (in ms) spent in operating system waits. In MySQL
+                5.7 timing is disabled and this value is
+                always 0.
+</p></li></ul>
+</div>
+<p>
+            As of MySQL 5.7.8, the <code class="literal">Status</code> field
+            reports the number of spins, waits, and calls. Statistics
+            for low-level operating system mutexes, which are
+            implemented outside of <code class="literal">InnoDB</code>, are not
+            reported.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                <code class="literal">spins</code> indicates the number of spins.
+              </p></li><li class="listitem"><p>
+                <code class="literal">waits</code> indicates the number of mutex
+                waits.
+              </p></li><li class="listitem"><p>
+                <code class="literal">calls</code> indicates how many times the
+                mutex was requested.
+</p></li></ul>
+</div>
+</li></ul>
+</div>
+<p>
+        <code class="literal">SHOW ENGINE INNODB MUTEX</code> does not list
+        mutexes and rw-locks for each buffer pool block, as the amount
+        of output would be overwhelming on systems with a large buffer
+        pool. <code class="literal">SHOW ENGINE INNODB MUTEX</code> does, however,
+        print aggregate <code class="literal">BUF_BLOCK_MUTEX</code> spin, wait,
+        and call values for buffer pool block mutexes and rw-locks.
+        <code class="literal">SHOW ENGINE INNODB MUTEX</code> also does not list
+        any mutexes or rw-locks that have never been waited on
+        (<code class="literal">os_waits=0</code>). Thus, <code class="literal">SHOW ENGINE
+        INNODB MUTEX</code> only displays information about mutexes
+        and rw-locks outside of the buffer pool that have caused at
+        least one OS-level <a class="link" href="glossary.html#glos_wait" title="wait">wait</a>.
+      </p><p>
+        Use <a class="link" href="show-engine.html" title="13.7.5.15&nbsp;SHOW ENGINE Statement"><code class="literal">SHOW ENGINE
+        PERFORMANCE_SCHEMA STATUS</code></a> to inspect the internal
+        operation of the Performance Schema code:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW ENGINE PERFORMANCE_SCHEMA STATUS\G
+...
+*************************** 3. row ***************************
+  Type: performance_schema
+  Name: events_waits_history.size
+Status: 76
+*************************** 4. row ***************************
+  Type: performance_schema
+  Name: events_waits_history.count
+Status: 10000
+*************************** 5. row ***************************
+  Type: performance_schema
+  Name: events_waits_history.memory
+Status: 760000
+...
+*************************** 57. row ***************************
+  Type: performance_schema
+  Name: performance_schema.memory
+Status: 26459600
+...</code></pre><p>
+        This statement is intended to help the DBA understand the
+        effects that different Performance Schema options have on memory
+        requirements.
+      </p><p>
+        <code class="literal">Name</code> values consist of two parts, which name
+        an internal buffer and a buffer attribute, respectively.
+        Interpret buffer names as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            An internal buffer that is not exposed as a table is named
+            within parentheses. Examples:
+            <code class="literal">(pfs_cond_class).size</code>,
+            <code class="literal">(pfs_mutex_class).memory</code>.
+          </p></li><li class="listitem"><p>
+            An internal buffer that is exposed as a table in the
+            <code class="literal">performance_schema</code> database is named
+            after the table, without parentheses. Examples:
+            <code class="literal">events_waits_history.size</code>,
+            <code class="literal">mutex_instances.count</code>.
+          </p></li><li class="listitem"><p>
+            A value that applies to the Performance Schema as a whole
+            begins with <code class="literal">performance_schema</code>. Example:
+            <code class="literal">performance_schema.memory</code>.
+</p></li></ul>
+</div>
+<p>
+        Buffer attributes have these meanings:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">size</code> is the size of the internal record
+            used by the implementation, such as the size of a row in a
+            table. <code class="literal">size</code> values cannot be changed.
+          </p></li><li class="listitem"><p>
+            <code class="literal">count</code> is the number of internal records,
+            such as the number of rows in a table.
+            <code class="literal">count</code> values can be changed using
+            Performance Schema configuration options.
+          </p></li><li class="listitem"><p>
+            For a table,
+            <code class="literal"><em class="replaceable"><code>tbl_name</code></em>.memory</code>
+            is the product of <code class="literal">size</code> and
+            <code class="literal">count</code>. For the Performance Schema as a
+            whole, <code class="literal">performance_schema.memory</code> is the
+            sum of all the memory used (the sum of all other
+            <code class="literal">memory</code> values).
+</p></li></ul>
+</div>
+<p>
+        In some cases, there is a direct relationship between a
+        Performance Schema configuration parameter and a <code class="literal">SHOW
+        ENGINE</code> value. For example,
+        <code class="literal">events_waits_history_long.count</code> corresponds
+        to
+        <a class="link" href="performance-schema-system-variables.html#sysvar_performance_schema_events_waits_history_long_size"><code class="literal">performance_schema_events_waits_history_long_size</code></a>.
+        In other cases, the relationship is more complex. For example,
+        <code class="literal">events_waits_history.count</code> corresponds to
+        <a class="link" href="performance-schema-system-variables.html#sysvar_performance_schema_events_waits_history_size"><code class="literal">performance_schema_events_waits_history_size</code></a>
+        (the number of rows per thread) multiplied by
+        <a class="link" href="performance-schema-system-variables.html#sysvar_performance_schema_max_thread_instances"><code class="literal">performance_schema_max_thread_instances</code></a>
+        ( the number of threads).
+      </p><p><a name="show-engine-ndb-status"></a><b>SHOW ENGINE NDB STATUS.&nbsp;</b>
+          If the server has the <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage
+          engine enabled, <code class="literal">SHOW ENGINE NDB STATUS</code>
+          displays cluster status information such as the number of
+          connected data nodes, the cluster connectstring, and cluster
+          binary log epochs, as well as counts of various Cluster API
+          objects created by the MySQL Server when connected to the
+          cluster. Sample output from this statement is shown here:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW ENGINE NDB STATUS;
++------------+-----------------------+--------------------------------------------------+
+| Type       | Name                  | Status                                           |
++------------+-----------------------+--------------------------------------------------+
+| ndbcluster | connection            | cluster_node_id=7,
+  connected_host=198.51.100.103, connected_port=1186, number_of_data_nodes=4,
+  number_of_ready_data_nodes=3, connect_count=0                                         |
+| ndbcluster | NdbTransaction        | created=6, free=0, sizeof=212                    |
+| ndbcluster | NdbOperation          | created=8, free=8, sizeof=660                    |
+| ndbcluster | NdbIndexScanOperation | created=1, free=1, sizeof=744                    |
+| ndbcluster | NdbIndexOperation     | created=0, free=0, sizeof=664                    |
+| ndbcluster | NdbRecAttr            | created=1285, free=1285, sizeof=60               |
+| ndbcluster | NdbApiSignal          | created=16, free=16, sizeof=136                  |
+| ndbcluster | NdbLabel              | created=0, free=0, sizeof=196                    |
+| ndbcluster | NdbBranch             | created=0, free=0, sizeof=24                     |
+| ndbcluster | NdbSubroutine         | created=0, free=0, sizeof=68                     |
+| ndbcluster | NdbCall               | created=0, free=0, sizeof=16                     |
+| ndbcluster | NdbBlob               | created=1, free=1, sizeof=264                    |
+| ndbcluster | NdbReceiver           | created=4, free=0, sizeof=68                     |
+| ndbcluster | binlog                | latest_epoch=155467, latest_trans_epoch=148126,
+  latest_received_binlog_epoch=0, latest_handled_binlog_epoch=0,
+  latest_applied_binlog_epoch=0                                                         |
++------------+-----------------------+--------------------------------------------------+</code></pre><p>
+        The <code class="literal">Status</code> column in each of these rows
+        provides information about the MySQL server's connection to
+        the cluster and about the cluster binary log's status,
+        respectively. The <code class="literal">Status</code> information is in
+        the form of comma-delimited set of name/value pairs.
+      </p><p>
+        The <code class="literal">connection</code> row's
+        <code class="literal">Status</code> column contains the name/value pairs
+        described in the following table.
+</p>
+<div class="informaltable">
+<table summary="Name and value pairs found in the connection row Status column in the output of the SHOW ENGINE NDB STATUS statement."><colgroup><col style="width: 40%"><col style="width: 60%"></colgroup><thead><tr>
+            <th>Name</th>
+            <th>Value</th>
+          </tr></thead><tbody><tr>
+            <td><code class="literal">cluster_node_id</code></td>
+            <td>The node ID of the MySQL server in the cluster</td>
+          </tr><tr>
+            <td><code class="literal">connected_host</code></td>
+            <td>The host name or IP address of the cluster management server to which
+              the MySQL server is connected</td>
+          </tr><tr>
+            <td><code class="literal">connected_port</code></td>
+            <td>The port used by the MySQL server to connect to the management server
+              (<code class="literal">connected_host</code>)</td>
+          </tr><tr>
+            <td><code class="literal">number_of_data_nodes</code></td>
+            <td>The number of data nodes configured for the cluster (that is, the number
+              of <code class="literal">[ndbd]</code> sections in the cluster
+              <code class="filename">config.ini</code> file)</td>
+          </tr><tr>
+            <td><code class="literal">number_of_ready_data_nodes</code></td>
+            <td>The number of data nodes in the cluster that are actually running</td>
+          </tr><tr>
+            <td><code class="literal">connect_count</code></td>
+            <td>The number of times this <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> has connected or
+              reconnected to cluster data nodes</td>
+</tr></tbody></table>
+</div>
+<p>
+        The <code class="literal">binlog</code> row's
+        <code class="literal">Status</code> column contains information relating
+        to NDB Cluster Replication. The name/value pairs it contains are
+        described in the following table.
+</p>
+<div class="informaltable">
+<table summary="Name and value pairs found in the binlog row Status column in the output of the SHOW ENGINE NDB STATUS statement."><colgroup><col style="width: 40%"><col style="width: 60%"></colgroup><thead><tr>
+            <th>Name</th>
+            <th>Value</th>
+          </tr></thead><tbody><tr>
+            <td><code class="literal">latest_epoch</code></td>
+            <td>The most recent epoch most recently run on this MySQL server (that is,
+              the sequence number of the most recent transaction run on
+              the server)</td>
+          </tr><tr>
+            <td><code class="literal">latest_trans_epoch</code></td>
+            <td>The most recent epoch processed by the cluster's data nodes</td>
+          </tr><tr>
+            <td><code class="literal">latest_received_binlog_epoch</code></td>
+            <td>The most recent epoch received by the binary log thread</td>
+          </tr><tr>
+            <td><code class="literal">latest_handled_binlog_epoch</code></td>
+            <td>The most recent epoch processed by the binary log thread (for writing to
+              the binary log)</td>
+          </tr><tr>
+            <td><code class="literal">latest_applied_binlog_epoch</code></td>
+            <td>The most recent epoch actually written to the binary log</td>
+</tr></tbody></table>
+</div>
+<p>
+        See <a class="xref" href="mysql-cluster-replication.html" title="21.7&nbsp;NDB Cluster Replication">Section&nbsp;21.7, “NDB Cluster Replication”</a>, for more
+        information.
+      </p><p>
+        The remaining rows from the output of <code class="literal">SHOW ENGINE NDB
+        STATUS</code> which are most likely to prove useful in
+        monitoring the cluster are listed here by
+        <code class="literal">Name</code>:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">NdbTransaction</code>: The number and size of
+            <code class="literal">NdbTransaction</code> objects that have been
+            created. An <code class="literal">NdbTransaction</code> is created
+            each time a table schema operation (such as
+            <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> or
+            <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>) is performed on
+            an <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> table.
+          </p></li><li class="listitem"><p>
+            <code class="literal">NdbOperation</code>: The number and size of
+            <code class="literal">NdbOperation</code> objects that have been
+            created.
+          </p></li><li class="listitem"><p>
+            <code class="literal">NdbIndexScanOperation</code>: The number and
+            size of <code class="literal">NdbIndexScanOperation</code> objects
+            that have been created.
+          </p></li><li class="listitem"><p>
+            <code class="literal">NdbIndexOperation</code>: The number and size of
+            <code class="literal">NdbIndexOperation</code> objects that have been
+            created.
+          </p></li><li class="listitem"><p>
+            <code class="literal">NdbRecAttr</code>: The number and size of
+            <code class="literal">NdbRecAttr</code> objects that have been
+            created. In general, one of these is created each time a
+            data manipulation statement is performed by an SQL node.
+          </p></li><li class="listitem"><p>
+            <code class="literal">NdbBlob</code>: The number and size of
+            <code class="literal">NdbBlob</code> objects that have been created.
+            An <code class="literal">NdbBlob</code> is created for each new
+            operation involving a <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>
+            column in an <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> table.
+          </p></li><li class="listitem"><p>
+            <code class="literal">NdbReceiver</code>: The number and size of any
+            <code class="literal">NdbReceiver</code> object that have been
+            created. The number in the <code class="literal">created</code> column
+            is the same as the number of data nodes in the cluster to
+            which the MySQL server has connected.
+</p></li></ul>
+</div>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Note
+</div>
+<p>
+          <code class="literal">SHOW ENGINE NDB STATUS</code> returns an empty
+          result if no operations involving
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables have been performed
+          during the current session by the MySQL client accessing the
+          SQL node on which this statement is run.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

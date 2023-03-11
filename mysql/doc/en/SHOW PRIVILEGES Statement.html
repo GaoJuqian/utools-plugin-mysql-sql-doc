@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW PRIVILEGES Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-privileges"></a>13.7.5.26&nbsp;SHOW PRIVILEGES Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570486976"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW PRIVILEGES</code></pre><p>
+        <a class="link" href="show-privileges.html" title="13.7.5.26&nbsp;SHOW PRIVILEGES Statement"><code class="literal">SHOW PRIVILEGES</code></a> shows the list of
+        system privileges that the MySQL server supports. The exact list
+        of privileges depends on the version of your server.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW PRIVILEGES\G
+*************************** 1. row ***************************
+Privilege: Alter
+  Context: Tables
+  Comment: To alter the table
+*************************** 2. row ***************************
+Privilege: Alter routine
+  Context: Functions,Procedures
+  Comment: To alter or drop stored functions/procedures
+*************************** 3. row ***************************
+Privilege: Create
+  Context: Databases,Tables,Indexes
+  Comment: To create new databases and tables
+*************************** 4. row ***************************
+Privilege: Create routine
+  Context: Databases
+  Comment: To use CREATE FUNCTION/PROCEDURE
+*************************** 5. row ***************************
+Privilege: Create temporary tables
+  Context: Databases
+  Comment: To use CREATE TEMPORARY TABLE
+...</code></pre><p>
+        Privileges belonging to a specific user are displayed by the
+        <a class="link" href="show-grants.html" title="13.7.5.21&nbsp;SHOW GRANTS Statement"><code class="literal">SHOW GRANTS</code></a> statement. See
+        <a class="xref" href="show-grants.html" title="13.7.5.21&nbsp;SHOW GRANTS Statement">Section&nbsp;13.7.5.21, “SHOW GRANTS Statement”</a>, for more information.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

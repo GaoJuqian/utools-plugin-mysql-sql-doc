@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Scope Rules for Handlers</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="handler-scope"></a>13.6.7.6&nbsp;Scope Rules for Handlers</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        A stored program may include handlers to be invoked when certain
+        conditions occur within the program. The applicability of each
+        handler depends on its location within the program definition
+        and on the condition or conditions that it handles:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            A handler declared in a
+            <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+            END</code></a> block is in scope only for the SQL statements
+            following the handler declarations in the block. If the
+            handler itself raises a condition, it cannot handle that
+            condition, nor can any other handlers declared in the block.
+            In the following example, handlers <code class="literal">H1</code> and
+            <code class="literal">H2</code> are in scope for conditions raised by
+            statements <em class="replaceable"><code>stmt1</code></em> and
+            <em class="replaceable"><code>stmt2</code></em>. But neither
+            <code class="literal">H1</code> nor <code class="literal">H2</code> are in scope
+            for conditions raised in the body of <code class="literal">H1</code>
+            or <code class="literal">H2</code>.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">BEGIN -- outer block
+  DECLARE EXIT HANDLER FOR ...;  -- handler H1
+  DECLARE EXIT HANDLER FOR ...;  -- handler H2
+  <em class="replaceable">stmt1</em>;
+  <em class="replaceable">stmt2</em>;
+END;</code></pre></li><li class="listitem"><p>
+            A handler is in scope only for the block in which it is
+            declared, and cannot be activated for conditions occurring
+            outside that block. In the following example, handler
+            <code class="literal">H1</code> is in scope for
+            <em class="replaceable"><code>stmt1</code></em> in the inner block, but not
+            for <em class="replaceable"><code>stmt2</code></em> in the outer block:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">BEGIN -- outer block
+  BEGIN -- inner block
+    DECLARE EXIT HANDLER FOR ...;  -- handler H1
+    <em class="replaceable">stmt1</em>;
+  END;
+  <em class="replaceable">stmt2</em>;
+END;</code></pre></li><li class="listitem"><p>
+            A handler can be specific or general. A specific handler is
+            for a MySQL error code, <code class="literal">SQLSTATE</code> value,
+            or condition name. A general handler is for a condition in
+            the <code class="literal">SQLWARNING</code>,
+            <code class="literal">SQLEXCEPTION</code>, or <code class="literal">NOT
+            FOUND</code> class. Condition specificity is related to
+            condition precedence, as described later.
+</p></li></ul>
+</div>
+<p>
+        Multiple handlers can be declared in different scopes and with
+        different specificities. For example, there might be a specific
+        MySQL error code handler in an outer block, and a general
+        <code class="literal">SQLWARNING</code> handler in an inner block. Or
+        there might be handlers for a specific MySQL error code and the
+        general <code class="literal">SQLWARNING</code> class in the same block.
+      </p><p>
+        Whether a handler is activated depends not only on its own scope
+        and condition value, but on what other handlers are present.
+        When a condition occurs in a stored program, the server searches
+        for applicable handlers in the current scope (current
+        <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+        END</code></a> block). If there are no applicable handlers, the
+        search continues outward with the handlers in each successive
+        containing scope (block). When the server finds one or more
+        applicable handlers at a given scope, it chooses among them
+        based on condition precedence:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            A MySQL error code handler takes precedence over an
+            <code class="literal">SQLSTATE</code> value handler.
+          </p></li><li class="listitem"><p>
+            An <code class="literal">SQLSTATE</code> value handler takes
+            precedence over general <code class="literal">SQLWARNING</code>,
+            <code class="literal">SQLEXCEPTION</code>, or <code class="literal">NOT
+            FOUND</code> handlers.
+          </p></li><li class="listitem"><p>
+            An <code class="literal">SQLEXCEPTION</code> handler takes precedence
+            over an <code class="literal">SQLWARNING</code> handler.
+          </p></li><li class="listitem"><p>
+            It is possible to have several applicable handlers with the
+            same precedence. For example, a statement could generate
+            multiple warnings with different error codes, for each of
+            which an error-specific handler exists. In this case, the
+            choice of which handler the server activates is
+            nondeterministic, and may change depending on the
+            circumstances under which the condition occurs.
+</p></li></ul>
+</div>
+<p>
+        One implication of the handler selection rules is that if
+        multiple applicable handlers occur in different scopes, handlers
+        with the most local scope take precedence over handlers in outer
+        scopes, even over those for more specific conditions.
+      </p><p>
+        If there is no appropriate handler when a condition occurs, the
+        action taken depends on the class of the condition:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            For <code class="literal">SQLEXCEPTION</code> conditions, the stored
+            program terminates at the statement that raised the
+            condition, as if there were an <code class="literal">EXIT</code>
+            handler. If the program was called by another stored
+            program, the calling program handles the condition using the
+            handler selection rules applied to its own handlers.
+          </p></li><li class="listitem"><p>
+            For <code class="literal">SQLWARNING</code> conditions, the program
+            continues executing, as if there were a
+            <code class="literal">CONTINUE</code> handler.
+          </p></li><li class="listitem"><p>
+            For <code class="literal">NOT FOUND</code> conditions, if the
+            condition was raised normally, the action is
+            <code class="literal">CONTINUE</code>. If it was raised by
+            <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> or
+            <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a>, the action is
+            <code class="literal">EXIT</code>.
+</p></li></ul>
+</div>
+<p>
+        The following examples demonstrate how MySQL applies the handler
+        selection rules.
+      </p><p>
+        This procedure contains two handlers, one for the specific
+        <code class="literal">SQLSTATE</code> value (<code class="literal">'42S02'</code>)
+        that occurs for attempts to drop a nonexistent table, and one
+        for the general <code class="literal">SQLEXCEPTION</code> class:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p1()
+BEGIN
+  DECLARE CONTINUE HANDLER FOR SQLSTATE '42S02'
+    SELECT 'SQLSTATE handler was activated' AS msg;
+  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SELECT 'SQLEXCEPTION handler was activated' AS msg;
+
+  DROP TABLE test.t;
+END;</code></pre><p>
+        Both handlers are declared in the same block and have the same
+        scope. However, <code class="literal">SQLSTATE</code> handlers take
+        precedence over <code class="literal">SQLEXCEPTION</code> handlers, so if
+        the table <code class="literal">t</code> is nonexistent, the
+        <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> statement raises a
+        condition that activates the <code class="literal">SQLSTATE</code>
+        handler:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CALL p1();
++--------------------------------+
+| msg                            |
++--------------------------------+
+| SQLSTATE handler was activated |
++--------------------------------+</code></pre><p>
+        This procedure contains the same two handlers. But this time,
+        the <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> statement and
+        <code class="literal">SQLEXCEPTION</code> handler are in an inner block
+        relative to the <code class="literal">SQLSTATE</code> handler:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p2()
+BEGIN -- outer block
+    DECLARE CONTINUE HANDLER FOR SQLSTATE '42S02'
+      SELECT 'SQLSTATE handler was activated' AS msg;
+  BEGIN -- inner block
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+      SELECT 'SQLEXCEPTION handler was activated' AS msg;
+
+    DROP TABLE test.t; -- occurs within inner block
+  END;
+END;</code></pre><p>
+        In this case, the handler that is more local to where the
+        condition occurs takes precedence. The
+        <code class="literal">SQLEXCEPTION</code> handler activates, even though
+        it is more general than the <code class="literal">SQLSTATE</code> handler:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CALL p2();
++------------------------------------+
+| msg                                |
++------------------------------------+
+| SQLEXCEPTION handler was activated |
++------------------------------------+</code></pre><p>
+        In this procedure, one of the handlers is declared in a block
+        inner to the scope of the <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP
+        TABLE</code></a> statement:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p3()
+BEGIN -- outer block
+  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SELECT 'SQLEXCEPTION handler was activated' AS msg;
+  BEGIN -- inner block
+    DECLARE CONTINUE HANDLER FOR SQLSTATE '42S02'
+      SELECT 'SQLSTATE handler was activated' AS msg;
+  END;
+
+  DROP TABLE test.t; -- occurs within outer block
+END;</code></pre><p>
+        Only the <code class="literal">SQLEXCEPTION</code> handler applies because
+        the other one is not in scope for the condition raised by the
+        <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CALL p3();
++------------------------------------+
+| msg                                |
++------------------------------------+
+| SQLEXCEPTION handler was activated |
++------------------------------------+</code></pre><p>
+        In this procedure, both handlers are declared in a block inner
+        to the scope of the <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a>
+        statement:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p4()
+BEGIN -- outer block
+  BEGIN -- inner block
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+      SELECT 'SQLEXCEPTION handler was activated' AS msg;
+    DECLARE CONTINUE HANDLER FOR SQLSTATE '42S02'
+      SELECT 'SQLSTATE handler was activated' AS msg;
+  END;
+
+  DROP TABLE test.t; -- occurs within outer block
+END;</code></pre><p>
+        Neither handler applies because they are not in scope for the
+        <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a>. The condition raised
+        by the statement goes unhandled and terminates the procedure
+        with an error:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CALL p4();
+ERROR 1051 (42S02): Unknown table 'test.t'</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

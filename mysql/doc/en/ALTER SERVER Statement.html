@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>ALTER SERVER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="alter-server"></a>13.1.7&nbsp;ALTER SERVER Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852585555360"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER SERVER  <em class="replaceable">server_name</em>
+    OPTIONS (<em class="replaceable">option</em> [, <em class="replaceable">option</em>] ...)</code></pre><p>
+      Alters the server information for
+      <code class="literal"><em class="replaceable"><code>server_name</code></em></code>,
+      adjusting any of the options permitted in the
+      <a class="link" href="create-server.html" title="13.1.17&nbsp;CREATE SERVER Statement"><code class="literal">CREATE SERVER</code></a> statement. The
+      corresponding fields in the <code class="literal">mysql.servers</code> table
+      are updated accordingly. This statement requires the
+      <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege.
+    </p><p>
+      For example, to update the <code class="literal">USER</code> option:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER SERVER s OPTIONS (USER 'sally');</code></pre><p>
+      <code class="literal">ALTER SERVER</code> causes an implicit commit. See
+      <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+    </p><p>
+      <code class="literal">ALTER SERVER</code> is not written to the binary log,
+      regardless of the logging format that is in use.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

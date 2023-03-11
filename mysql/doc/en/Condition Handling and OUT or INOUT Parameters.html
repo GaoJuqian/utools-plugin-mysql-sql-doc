@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Condition Handling and OUT or INOUT Parameters</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="conditions-and-parameters"></a>13.6.7.8&nbsp;Condition Handling and OUT or INOUT Parameters</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852574083728"></a><a class="indexterm" name="idm45852574082240"></a><a class="indexterm" name="idm45852574080752"></a><a class="indexterm" name="idm45852574079264"></a><p>
+        If a stored procedure exits with an unhandled exception,
+        modified values of <code class="literal">OUT</code> and
+        <code class="literal">INOUT</code> parameters are not propogated back to
+        the caller.
+      </p><p>
+        If an exception is handled by a <code class="literal">CONTINUE</code> or
+        <code class="literal">EXIT</code> handler that contains a
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> statement, execution of
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> pops the Diagnostics
+        Area stack, thus signalling the exception (that is, the
+        information that existed before entry into the handler). If the
+        exception is an error, the values of <code class="literal">OUT</code> and
+        <code class="literal">INOUT</code> parameters are not propogated back to
+        the caller.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

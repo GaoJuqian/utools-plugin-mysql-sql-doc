@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>EXECUTE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="execute"></a>13.5.2&nbsp;EXECUTE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575431216"></a><a class="indexterm" name="idm45852575430144"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">EXECUTE <em class="replaceable">stmt_name</em>
+    [USING @<em class="replaceable">var_name</em> [, @<em class="replaceable">var_name</em>] ...]</code></pre><p>
+      After preparing a statement with
+      <a class="link" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement"><code class="literal">PREPARE</code></a>, you execute it with an
+      <a class="link" href="execute.html" title="13.5.2&nbsp;EXECUTE Statement"><code class="literal">EXECUTE</code></a> statement that refers to
+      the prepared statement name. If the prepared statement contains
+      any parameter markers, you must supply a <code class="literal">USING</code>
+      clause that lists user variables containing the values to be bound
+      to the parameters. Parameter values can be supplied only by user
+      variables, and the <code class="literal">USING</code> clause must name
+      exactly as many variables as the number of parameter markers in
+      the statement.
+    </p><p>
+      You can execute a given prepared statement multiple times, passing
+      different variables to it or setting the variables to different
+      values before each execution.
+    </p><p>
+      For examples, see <a class="xref" href="sql-prepared-statements.html" title="13.5&nbsp;Prepared Statements">Section&nbsp;13.5, “Prepared Statements”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

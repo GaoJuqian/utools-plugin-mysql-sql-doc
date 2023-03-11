@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE VIEW Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="create-view"></a>13.1.21&nbsp;CREATE VIEW Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580990672"></a><a class="indexterm" name="idm45852580989600"></a><a class="indexterm" name="idm45852580988112"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE
+    [OR REPLACE]
+    [ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}]
+    [DEFINER = <em class="replaceable">user</em>]
+    [SQL SECURITY { DEFINER | INVOKER }]
+    VIEW <em class="replaceable">view_name</em> [(<em class="replaceable">column_list</em>)]
+    AS <em class="replaceable">select_statement</em>
+    [WITH [CASCADED | LOCAL] CHECK OPTION]</code></pre><p>
+      The <a class="link" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement"><code class="literal">CREATE VIEW</code></a> statement creates a
+      new view, or replaces an existing view if the <code class="literal">OR
+      REPLACE</code> clause is given. If the view does not exist,
+      <a class="link" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement"><code class="literal">CREATE OR REPLACE
+      VIEW</code></a> is the same as <a class="link" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement"><code class="literal">CREATE
+      VIEW</code></a>. If the view does exist,
+      <a class="link" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement"><code class="literal">CREATE OR REPLACE
+      VIEW</code></a> replaces it.
+    </p><p>
+      For information about restrictions on view use, see
+      <a class="xref" href="view-restrictions.html" title="23.9&nbsp;Restrictions on Views">Section&nbsp;23.9, “Restrictions on Views”</a>.
+    </p><p>
+      The <em class="replaceable"><code>select_statement</code></em> is a
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement that provides the
+      definition of the view. (Selecting from the view selects, in
+      effect, using the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+      statement.) The <em class="replaceable"><code>select_statement</code></em> can
+      select from base tables or other views.
+    </p><p>
+      The view definition is <span class="quote">“<span class="quote">frozen</span>”</span> at creation time and
+      is not affected by subsequent changes to the definitions of the
+      underlying tables. For example, if a view is defined as
+      <code class="literal">SELECT *</code> on a table, new columns added to the
+      table later do not become part of the view, and columns dropped
+      from the table result in an error when selecting from the view.
+    </p><p>
+      The <code class="literal">ALGORITHM</code> clause affects how MySQL
+      processes the view. The <code class="literal">DEFINER</code> and
+      <code class="literal">SQL SECURITY</code> clauses specify the security
+      context to be used when checking access privileges at view
+      invocation time. The <code class="literal">WITH CHECK OPTION</code> clause
+      can be given to constrain inserts or updates to rows in tables
+      referenced by the view. These clauses are described later in this
+      section.
+    </p><p>
+      The <a class="link" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement"><code class="literal">CREATE VIEW</code></a> statement requires
+      the <a class="link" href="privileges-provided.html#priv_create-view"><code class="literal">CREATE VIEW</code></a> privilege for the
+      view, and some privilege for each column selected by the
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement. For columns used
+      elsewhere in the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement,
+      you must have the <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege.
+      If the <code class="literal">OR REPLACE</code> clause is present, you must
+      also have the <a class="link" href="privileges-provided.html#priv_drop"><code class="literal">DROP</code></a> privilege for
+      the view. If the <code class="literal">DEFINER</code> clause is present, the
+      privileges required depend on the <em class="replaceable"><code>user</code></em>
+      value, as discussed in <a class="xref" href="stored-objects-security.html" title="23.6&nbsp;Stored Object Access Control">Section&nbsp;23.6, “Stored Object Access Control”</a>.
+    </p><p>
+      When a view is referenced, privilege checking occurs as described
+      later in this section.
+    </p><p>
+      A view belongs to a database. By default, a new view is created in
+      the default database. To create the view explicitly in a given
+      database, use <em class="replaceable"><code>db_name.view_name</code></em> syntax
+      to qualify the view name with the database name:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE VIEW test.v AS SELECT * FROM t;</code></pre><p>
+      Unqualified table or view names in the
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement are also
+      interpreted with respect to the default database. A view can refer
+      to tables or views in other databases by qualifying the table or
+      view name with the appropriate database name.
+    </p><p>
+      Within a database, base tables and views share the same namespace,
+      so a base table and a view cannot have the same name.
+    </p><p>
+      Columns retrieved by the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+      statement can be simple references to table columns, or
+      expressions that use functions, constant values, operators, and so
+      forth.
+    </p><p>
+      A view must have unique column names with no duplicates, just like
+      a base table. By default, the names of the columns retrieved by
+      the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement are used for
+      the view column names. To define explicit names for the view
+      columns, specify the optional
+      <em class="replaceable"><code>column_list</code></em> clause as a list of
+      comma-separated identifiers. The number of names in
+      <em class="replaceable"><code>column_list</code></em> must be the same as the
+      number of columns retrieved by the
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement.
+    </p><p>
+      A view can be created from many kinds of
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements. It can refer to
+      base tables or other views. It can use joins,
+      <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a>, and subqueries. The
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> need not even refer to any
+      tables:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE VIEW v_today (today) AS SELECT CURRENT_DATE;</code></pre><p>
+      The following example defines a view that selects two columns from
+      another table as well as an expression calculated from those
+      columns:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLE t (qty INT, price INT);
+mysql&gt; INSERT INTO t VALUES(3, 50);
+mysql&gt; CREATE VIEW v AS SELECT qty, price, qty*price AS value FROM t;
+mysql&gt; SELECT * FROM v;
++------+-------+-------+
+| qty  | price | value |
++------+-------+-------+
+|    3 |    50 |   150 |
++------+-------+-------+</code></pre><p>
+      A view definition is subject to the following restrictions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          The <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement cannot
+          refer to system variables or user-defined variables.
+        </p></li><li class="listitem"><p>
+          Within a stored program, the
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement cannot refer
+          to program parameters or local variables.
+        </p></li><li class="listitem"><p>
+          The <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement cannot
+          refer to prepared statement parameters.
+        </p></li><li class="listitem"><p>
+          Any table or view referred to in the definition must exist.
+          If, after the view has been created, a table or view that the
+          definition refers to is dropped, use of the view results in an
+          error. To check a view definition for problems of this kind,
+          use the <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> statement.
+        </p></li><li class="listitem"><p>
+          The definition cannot refer to a <code class="literal">TEMPORARY</code>
+          table, and you cannot create a <code class="literal">TEMPORARY</code>
+          view.
+        </p></li><li class="listitem"><p>
+          You cannot associate a trigger with a view.
+        </p></li><li class="listitem"><p>
+          Aliases for column names in the
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement are checked
+          against the maximum column length of 64 characters (not the
+          maximum alias length of 256 characters).
+</p></li></ul>
+</div>
+<p>
+      <code class="literal">ORDER BY</code> is permitted in a view definition, but
+      it is ignored if you select from a view using a statement that has
+      its own <code class="literal">ORDER BY</code>.
+    </p><p>
+      For other options or clauses in the definition, they are added to
+      the options or clauses of the statement that references the view,
+      but the effect is undefined. For example, if a view definition
+      includes a <code class="literal">LIMIT</code> clause, and you select from
+      the view using a statement that has its own
+      <code class="literal">LIMIT</code> clause, it is undefined which limit
+      applies. This same principle applies to options such as
+      <code class="literal">ALL</code>, <code class="literal">DISTINCT</code>, or
+      <code class="literal">SQL_SMALL_RESULT</code> that follow the
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> keyword, and to clauses such
+      as <code class="literal">INTO</code>, <code class="literal">FOR UPDATE</code>,
+      <code class="literal">LOCK IN SHARE MODE</code>, and
+      <code class="literal">PROCEDURE</code>.
+    </p><p>
+      The results obtained from a view may be affected if you change the
+      query processing environment by changing system variables:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE VIEW v (mycol) AS SELECT 'abc';
+Query OK, 0 rows affected (0.01 sec)
+
+mysql&gt; SET sql_mode = '';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; SELECT "mycol" FROM v;
++-------+
+| mycol |
++-------+
+| mycol |
++-------+
+1 row in set (0.01 sec)
+
+mysql&gt; SET sql_mode = 'ANSI_QUOTES';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; SELECT "mycol" FROM v;
++-------+
+| mycol |
++-------+
+| abc   |
++-------+
+1 row in set (0.00 sec)</code></pre><p>
+      The <code class="literal">DEFINER</code> and <code class="literal">SQL SECURITY</code>
+      clauses determine which MySQL account to use when checking access
+      privileges for the view when a statement is executed that
+      references the view. The valid <code class="literal">SQL SECURITY</code>
+      characteristic values are <code class="literal">DEFINER</code> (the default)
+      and <code class="literal">INVOKER</code>. These indicate that the required
+      privileges must be held by the user who defined or invoked the
+      view, respectively.
+    </p><p>
+      If the <code class="literal">DEFINER</code> clause is present, the
+      <em class="replaceable"><code>user</code></em> value should be a MySQL account
+      specified as
+      <code class="literal">'<em class="replaceable"><code>user_name</code></em>'@'<em class="replaceable"><code>host_name</code></em>'</code>,
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a>, or
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER()</code></a>. The permitted
+      <em class="replaceable"><code>user</code></em> values depend on the privileges
+      you hold, as discussed in
+      <a class="xref" href="stored-objects-security.html" title="23.6&nbsp;Stored Object Access Control">Section&nbsp;23.6, “Stored Object Access Control”</a>. Also see that section
+      for additional information about view security.
+    </p><p>
+      If the <code class="literal">DEFINER</code> clause is omitted, the default
+      definer is the user who executes the <a class="link" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement"><code class="literal">CREATE
+      VIEW</code></a> statement. This is the same as specifying
+      <code class="literal">DEFINER = CURRENT_USER</code> explicitly.
+    </p><p>
+      Within a view definition, the
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a> function returns the
+      view's <code class="literal">DEFINER</code> value by default. For views
+      defined with the <code class="literal">SQL SECURITY INVOKER</code>
+      characteristic, <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a>
+      returns the account for the view's invoker. For information about
+      user auditing within views, see
+      <a class="xref" href="account-activity-auditing.html" title="6.2.18&nbsp;SQL-Based Account Activity Auditing">Section&nbsp;6.2.18, “SQL-Based Account Activity Auditing”</a>.
+    </p><p>
+      Within a stored routine that is defined with the <code class="literal">SQL
+      SECURITY DEFINER</code> characteristic,
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a> returns the routine's
+      <code class="literal">DEFINER</code> value. This also affects a view defined
+      within such a routine, if the view definition contains a
+      <code class="literal">DEFINER</code> value of
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a>.
+    </p><p>
+      MySQL checks view privileges like this:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          At view definition time, the view creator must have the
+          privileges needed to use the top-level objects accessed by the
+          view. For example, if the view definition refers to table
+          columns, the creator must have some privilege for each column
+          in the select list of the definition, and the
+          <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for each
+          column used elsewhere in the definition. If the definition
+          refers to a stored function, only the privileges needed to
+          invoke the function can be checked. The privileges required at
+          function invocation time can be checked only as it executes:
+          For different invocations, different execution paths within
+          the function might be taken.
+        </p></li><li class="listitem"><p>
+          The user who references a view must have appropriate
+          privileges to access it (<a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a>
+          to select from it, <a class="link" href="privileges-provided.html#priv_insert"><code class="literal">INSERT</code></a> to
+          insert into it, and so forth.)
+        </p></li><li class="listitem"><p>
+          When a view has been referenced, privileges for objects
+          accessed by the view are checked against the privileges held
+          by the view <code class="literal">DEFINER</code> account or invoker,
+          depending on whether the <code class="literal">SQL SECURITY</code>
+          characteristic is <code class="literal">DEFINER</code> or
+          <code class="literal">INVOKER</code>, respectively.
+        </p></li><li class="listitem"><p>
+          If reference to a view causes execution of a stored function,
+          privilege checking for statements executed within the function
+          depend on whether the function <code class="literal">SQL SECURITY</code>
+          characteristic is <code class="literal">DEFINER</code> or
+          <code class="literal">INVOKER</code>. If the security characteristic is
+          <code class="literal">DEFINER</code>, the function runs with the
+          privileges of the <code class="literal">DEFINER</code> account. If the
+          characteristic is <code class="literal">INVOKER</code>, the function
+          runs with the privileges determined by the view's <code class="literal">SQL
+          SECURITY</code> characteristic.
+</p></li></ul>
+</div>
+<p>
+      Example: A view might depend on a stored function, and that
+      function might invoke other stored routines. For example, the
+      following view invokes a stored function <code class="literal">f()</code>:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE VIEW v AS SELECT * FROM t WHERE t.id = f(t.name);</code></pre><p>
+      Suppose that <code class="literal">f()</code> contains a statement such as
+      this:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">IF name IS NULL then
+  CALL p1();
+ELSE
+  CALL p2();
+END IF;</code></pre><p>
+      The privileges required for executing statements within
+      <code class="literal">f()</code> need to be checked when
+      <code class="literal">f()</code> executes. This might mean that privileges
+      are needed for <code class="literal">p1()</code> or <code class="literal">p2()</code>,
+      depending on the execution path within <code class="literal">f()</code>.
+      Those privileges must be checked at runtime, and the user who must
+      possess the privileges is determined by the <code class="literal">SQL
+      SECURITY</code> values of the view <code class="literal">v</code> and the
+      function <code class="literal">f()</code>.
+    </p><p>
+      The <code class="literal">DEFINER</code> and <code class="literal">SQL SECURITY</code>
+      clauses for views are extensions to standard SQL. In standard SQL,
+      views are handled using the rules for <code class="literal">SQL SECURITY
+      DEFINER</code>. The standard says that the definer of the view,
+      which is the same as the owner of the view's schema, gets
+      applicable privileges on the view (for example,
+      <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a>) and may grant them. MySQL
+      has no concept of a schema <span class="quote">“<span class="quote">owner</span>”</span>, so MySQL adds a
+      clause to identify the definer. The <code class="literal">DEFINER</code>
+      clause is an extension where the intent is to have what the
+      standard has; that is, a permanent record of who defined the view.
+      This is why the default <code class="literal">DEFINER</code> value is the
+      account of the view creator.
+    </p><p>
+      The optional <code class="literal">ALGORITHM</code> clause is a MySQL
+      extension to standard SQL. It affects how MySQL processes the
+      view. <code class="literal">ALGORITHM</code> takes three values:
+      <code class="literal">MERGE</code>, <code class="literal">TEMPTABLE</code>, or
+      <code class="literal">UNDEFINED</code>. For more information, see
+      <a class="xref" href="view-algorithms.html" title="23.5.2&nbsp;View Processing Algorithms">Section&nbsp;23.5.2, “View Processing Algorithms”</a>, as well as
+      <a class="xref" href="derived-table-optimization.html" title="8.2.2.4&nbsp;Optimizing Derived Tables and View References with Merging or Materialization">Section&nbsp;8.2.2.4, “Optimizing Derived Tables and View References with Merging or
+          Materialization”</a>.
+    </p><p>
+      Some views are updatable. That is, you can use them in statements
+      such as <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>,
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>, or
+      <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> to update the contents of
+      the underlying table. For a view to be updatable, there must be a
+      one-to-one relationship between the rows in the view and the rows
+      in the underlying table. There are also certain other constructs
+      that make a view nonupdatable.
+    </p><a class="indexterm" name="idm45852580833824"></a><p>
+      A generated column in a view is considered updatable because it is
+      possible to assign to it. However, if such a column is updated
+      explicitly, the only permitted value is
+      <code class="literal">DEFAULT</code>. For information about generated
+      columns, see <a class="xref" href="create-table-generated-columns.html" title="13.1.18.7&nbsp;CREATE TABLE and Generated Columns">Section&nbsp;13.1.18.7, “CREATE TABLE and Generated Columns”</a>.
+    </p><p>
+      The <code class="literal">WITH CHECK OPTION</code> clause can be given for
+      an updatable view to prevent inserts or updates to rows except
+      those for which the <code class="literal">WHERE</code> clause in the
+      <em class="replaceable"><code>select_statement</code></em> is true.
+    </p><p>
+      In a <code class="literal">WITH CHECK OPTION</code> clause for an updatable
+      view, the <code class="literal">LOCAL</code> and <code class="literal">CASCADED</code>
+      keywords determine the scope of check testing when the view is
+      defined in terms of another view. The <code class="literal">LOCAL</code>
+      keyword restricts the <code class="literal">CHECK OPTION</code> only to the
+      view being defined. <code class="literal">CASCADED</code> causes the checks
+      for underlying views to be evaluated as well. When neither keyword
+      is given, the default is <code class="literal">CASCADED</code>.
+    </p><p>
+      For more information about updatable views and the <code class="literal">WITH
+      CHECK OPTION</code> clause, see
+      <a class="xref" href="view-updatability.html" title="23.5.3&nbsp;Updatable and Insertable Views">Section&nbsp;23.5.3, “Updatable and Insertable Views”</a>, and
+      <a class="xref" href="view-check-option.html" title="23.5.4&nbsp;The View WITH CHECK OPTION Clause">Section&nbsp;23.5.4, “The View WITH CHECK OPTION Clause”</a>.
+    </p><p>
+      Views created before MySQL 5.7.3 containing <code class="literal">ORDER BY
+      <em class="replaceable"><code>integer</code></em></code> can result in errors
+      at view evaluation time. Consider these view definitions, which
+      use <code class="literal">ORDER BY</code> with an ordinal number:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE VIEW v1 AS SELECT x, y, z FROM t ORDER BY 2;
+CREATE VIEW v2 AS SELECT x, 1, z FROM t ORDER BY 2;</code></pre><p>
+      In the first case, <code class="literal">ORDER BY 2</code> refers to a named
+      column <code class="literal">y</code>. In the second case, it refers to a
+      constant 1. For queries that select from either view fewer than 2
+      columns (the number named in the <code class="literal">ORDER BY</code>
+      clause), an error occurs if the server evaluates the view using
+      the MERGE algorithm. Examples:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT x FROM v1;
+ERROR 1054 (42S22): Unknown column '2' in 'order clause'
+mysql&gt; SELECT x FROM v2;
+ERROR 1054 (42S22): Unknown column '2' in 'order clause'</code></pre><p>
+      As of MySQL 5.7.3, to handle view definitions like this, the
+      server writes them differently into the <code class="filename">.frm</code>
+      file that stores the view definition. This difference is visible
+      with <a class="link" href="show-create-view.html" title="13.7.5.13&nbsp;SHOW CREATE VIEW Statement"><code class="literal">SHOW CREATE VIEW</code></a>. Previously,
+      the <code class="filename">.frm</code> file contained this for the
+      <code class="literal">ORDER BY 2</code> clause:
+    </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">For v1: ORDER BY 2
+For v2: ORDER BY 2</code></pre><p>
+      As of 5.7.3, the <code class="filename">.frm</code> file contains this:
+    </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">For v1: ORDER BY `t`.`y`
+For v2: ORDER BY ''</code></pre><p>
+      That is, for <code class="literal">v1</code>, 2 is replaced by a reference
+      to the name of the column referred to. For <code class="literal">v2</code>,
+      2 is replaced by a constant string expression (ordering by a
+      constant has no effect, so ordering by any constant works).
+    </p><p>
+      If you experience view-evaluation errors such as just described,
+      drop and recreate the view so that the <code class="filename">.frm</code>
+      file contains the updated view representation. Alternatively, for
+      views like <code class="literal">v2</code> that order by a constant value,
+      drop and recreate the view with no <code class="literal">ORDER BY</code>
+      clause.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

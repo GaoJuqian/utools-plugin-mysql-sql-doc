@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW CREATE DATABASE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-create-database"></a>13.7.5.6&nbsp;SHOW CREATE DATABASE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571349408"></a><a class="indexterm" name="idm45852571348352"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW CREATE {DATABASE | SCHEMA} [IF NOT EXISTS] <em class="replaceable">db_name</em></code></pre><p>
+        Shows the <a class="link" href="create-database.html" title="13.1.11&nbsp;CREATE DATABASE Statement"><code class="literal">CREATE DATABASE</code></a>
+        statement that creates the named database. If the
+        <code class="literal">SHOW</code> statement includes an <code class="literal">IF NOT
+        EXISTS</code> clause, the output too includes such a clause.
+        <a class="link" href="show-create-database.html" title="13.7.5.6&nbsp;SHOW CREATE DATABASE Statement"><code class="literal">SHOW
+        CREATE SCHEMA</code></a> is a synonym for
+        <a class="link" href="show-create-database.html" title="13.7.5.6&nbsp;SHOW CREATE DATABASE Statement"><code class="literal">SHOW CREATE DATABASE</code></a>.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW CREATE DATABASE test\G
+*************************** 1. row ***************************
+       Database: test
+Create Database: CREATE DATABASE `test`
+                 /*!40100 DEFAULT CHARACTER SET latin1 */
+
+mysql&gt; SHOW CREATE SCHEMA test\G
+*************************** 1. row ***************************
+       Database: test
+Create Database: CREATE DATABASE `test`
+                 /*!40100 DEFAULT CHARACTER SET latin1 */</code></pre><p>
+        <a class="link" href="show-create-database.html" title="13.7.5.6&nbsp;SHOW CREATE DATABASE Statement"><code class="literal">SHOW CREATE DATABASE</code></a> quotes table
+        and column names according to the value of the
+        <a class="link" href="server-system-variables.html#sysvar_sql_quote_show_create"><code class="literal">sql_quote_show_create</code></a> option.
+        See <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>STOP SLAVE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="stop-slave"></a>13.4.2.7&nbsp;STOP SLAVE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575655264"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">STOP SLAVE [<em class="replaceable">thread_types</em>] [<em class="replaceable">channel_option</em>]
+
+<em class="replaceable">thread_types</em>:
+    [<em class="replaceable">thread_type</em> [, <em class="replaceable">thread_type</em>] ... ]
+
+<em class="replaceable">thread_type</em>: IO_THREAD | SQL_THREAD
+
+<em class="replaceable">channel_option</em>:
+    FOR CHANNEL <em class="replaceable">channel</em></code></pre><p>
+        Stops the replication threads. <a class="link" href="stop-slave.html" title="13.4.2.7&nbsp;STOP SLAVE Statement"><code class="literal">STOP
+        SLAVE</code></a> requires the
+        <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege. Recommended best
+        practice is to execute <code class="literal">STOP SLAVE</code> on the
+        replica before stopping the replica server (see
+        <a class="xref" href="server-shutdown.html" title="5.1.16&nbsp;The Server Shutdown Process">Section&nbsp;5.1.16, “The Server Shutdown Process”</a>, for more information).
+      </p><p>
+        <span class="emphasis"><em>When using the row-based logging format</em></span>:
+        You should execute <code class="literal">STOP SLAVE</code> or
+        <code class="literal">STOP SLAVE SQL_THREAD</code> on the replica prior to
+        shutting down the replica server if you are replicating any
+        tables that use a nontransactional storage engine (see the
+        <em class="citetitle">Note</em> later in this section).
+      </p><p>
+        Like <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START SLAVE</code></a>, this statement
+        may be used with the <code class="literal">IO_THREAD</code> and
+        <code class="literal">SQL_THREAD</code> options to name the thread or
+        threads to be stopped. Note that the Group Replication applier
+        channel (<code class="literal">group_replication_applier</code>) has no
+        replication I/O thread, only a replication SQL thread. Using the
+        <code class="literal">SQL_THREAD</code> option therefore stops this
+        channel completely.
+      </p><p>
+        <code class="literal">STOP SLAVE</code> causes an implicit commit of an
+        ongoing transaction. See <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+      </p><p>
+        <a class="link" href="replication-options-gtids.html#sysvar_gtid_next"><code class="literal">gtid_next</code></a> must be set to
+        <code class="literal">AUTOMATIC</code> before issuing this statement.
+      </p><p>
+        You can control how long <code class="literal">STOP SLAVE</code> waits
+        before timing out by setting the
+        <a class="link" href="replication-options-replica.html#sysvar_rpl_stop_slave_timeout"><code class="literal">rpl_stop_slave_timeout</code></a> system
+        variable. This can be used to avoid deadlocks between
+        <code class="literal">STOP SLAVE</code> and other SQL statements using
+        different client connections to the replica. When the timeout
+        value is reached, the issuing client returns an error message
+        and stops waiting, but the <code class="literal">STOP SLAVE</code>
+        instruction remains in effect. Once the replication threads are
+        no longer busy, the <code class="literal">STOP SLAVE</code> statement is
+        executed and the replica stops.
+      </p><p>
+        Some <code class="literal">CHANGE MASTER TO</code> statements are allowed
+        while the replica is running, depending on the states of the
+        replication SQL thread and the replication I/O thread. However,
+        using <code class="literal">STOP SLAVE</code> prior to executing
+        <code class="literal">CHANGE MASTER TO</code> in such cases is still
+        supported. See <a class="xref" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement">Section&nbsp;13.4.2.1, “CHANGE MASTER TO Statement”</a>, and
+        <a class="xref" href="replication-solutions-switch.html" title="16.3.7&nbsp;Switching Sources During Failover">Section&nbsp;16.3.7, “Switching Sources During Failover”</a>, for more
+        information.
+      </p><p>
+        The optional <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause enables you
+        to name which replication channel the statement applies to.
+        Providing a <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause applies the
+        <code class="literal">STOP SLAVE</code> statement to a specific
+        replication channel. If no channel is named and no extra
+        channels exist, the statement applies to the default channel. If
+        a <code class="literal">STOP SLAVE</code> statement does not name a
+        channel when using multiple channels, this statement stops the
+        specified threads for all channels. This statement cannot be
+        used with the <code class="literal">group_replication_recovery</code>
+        channel. See <a class="xref" href="replication-channels.html" title="16.2.2&nbsp;Replication Channels">Section&nbsp;16.2.2, “Replication Channels”</a> for more
+        information.
+      </p><p>
+        <span class="emphasis"><em>When using statement-based replication</em></span>:
+        changing the source while it has open temporary tables is
+        potentially unsafe. This is one of the reasons why
+        statement-based replication of temporary tables is not
+        recommended. You can find out whether there are any temporary
+        tables on the replica by checking the value of
+        <a class="link" href="server-status-variables.html#statvar_Slave_open_temp_tables"><code class="literal">Slave_open_temp_tables</code></a>; when
+        using statement-based replication, this value should be 0 before
+        executing <code class="literal">CHANGE MASTER TO</code>. If there are any
+        temporary tables open on the replica, issuing a <code class="literal">CHANGE
+        MASTER TO</code> statement after issuing a <code class="literal">STOP
+        SLAVE</code> causes an
+        <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_warn_open_temp_tables_must_be_zero" target="_top"><code class="literal">ER_WARN_OPEN_TEMP_TABLES_MUST_BE_ZERO</code></a>
+        warning.
+      </p><p>
+        When using a multithreaded replica
+        (<a class="link" href="replication-options-replica.html#sysvar_slave_parallel_workers"><code class="literal">slave_parallel_workers</code></a> is a
+        nonzero value), any gaps in the sequence of transactions
+        executed from the relay log are closed as part of stopping the
+        worker threads. If the replica is stopped unexpectedly (for
+        example due to an error in a worker thread, or another thread
+        issuing <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL</code></a>) while a
+        <a class="link" href="stop-slave.html" title="13.4.2.7&nbsp;STOP SLAVE Statement"><code class="literal">STOP SLAVE</code></a> statement is
+        executing, the sequence of executed transactions from the relay
+        log may become inconsistent. See
+        <a class="xref" href="replication-features-transaction-inconsistencies.html" title="16.4.1.32&nbsp;Replication and Transaction Inconsistencies">Section&nbsp;16.4.1.32, “Replication and Transaction Inconsistencies”</a>,
+        for more information.
+      </p><p>
+        If the current replication event group has modified one or more
+        nontransactional tables, STOP SLAVE waits for up to 60 seconds
+        for the event group to complete, unless you issue a
+        <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL QUERY</code></a> or
+        <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL CONNECTION</code></a>
+        statement for the replication SQL thread. If the event group
+        remains incomplete after the timeout, an error message is
+        logged.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

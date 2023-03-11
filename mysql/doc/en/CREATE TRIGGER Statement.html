@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE TRIGGER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="create-trigger"></a>13.1.20&nbsp;CREATE TRIGGER Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852581107264"></a><a class="indexterm" name="idm45852581106224"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE
+    [DEFINER = <em class="replaceable">user</em>]
+    TRIGGER <em class="replaceable">trigger_name</em>
+    <em class="replaceable">trigger_time</em> <em class="replaceable">trigger_event</em>
+    ON <em class="replaceable">tbl_name</em> FOR EACH ROW
+    [<em class="replaceable">trigger_order</em>]
+    <em class="replaceable">trigger_body</em>
+
+<em class="replaceable">trigger_time</em>: { BEFORE | AFTER }
+
+<em class="replaceable">trigger_event</em>: { INSERT | UPDATE | DELETE }
+
+<em class="replaceable">trigger_order</em>: { FOLLOWS | PRECEDES } <em class="replaceable">other_trigger_name</em></code></pre><p>
+      This statement creates a new trigger. A trigger is a named
+      database object that is associated with a table, and that
+      activates when a particular event occurs for the table. The
+      trigger becomes associated with the table named
+      <em class="replaceable"><code>tbl_name</code></em>, which must refer to a
+      permanent table. You cannot associate a trigger with a
+      <code class="literal">TEMPORARY</code> table or a view.
+    </p><p>
+      Trigger names exist in the schema namespace, meaning that all
+      triggers must have unique names within a schema. Triggers in
+      different schemas can have the same name.
+    </p><p>
+      This section describes <a class="link" href="create-trigger.html" title="13.1.20&nbsp;CREATE TRIGGER Statement"><code class="literal">CREATE
+      TRIGGER</code></a> syntax. For additional discussion, see
+      <a class="xref" href="trigger-syntax.html" title="23.3.1&nbsp;Trigger Syntax and Examples">Section&nbsp;23.3.1, “Trigger Syntax and Examples”</a>.
+    </p><p>
+      <a class="link" href="create-trigger.html" title="13.1.20&nbsp;CREATE TRIGGER Statement"><code class="literal">CREATE TRIGGER</code></a> requires the
+      <a class="link" href="privileges-provided.html#priv_trigger"><code class="literal">TRIGGER</code></a> privilege for the table
+      associated with the trigger. If the <code class="literal">DEFINER</code>
+      clause is present, the privileges required depend on the
+      <em class="replaceable"><code>user</code></em> value, as discussed in
+      <a class="xref" href="stored-objects-security.html" title="23.6&nbsp;Stored Object Access Control">Section&nbsp;23.6, “Stored Object Access Control”</a>. If binary logging is
+      enabled, <a class="link" href="create-trigger.html" title="13.1.20&nbsp;CREATE TRIGGER Statement"><code class="literal">CREATE TRIGGER</code></a> might
+      require the <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege, as
+      discussed in <a class="xref" href="stored-programs-logging.html" title="23.7&nbsp;Stored Program Binary Logging">Section&nbsp;23.7, “Stored Program Binary Logging”</a>.
+    </p><p>
+      The <code class="literal">DEFINER</code> clause determines the security
+      context to be used when checking access privileges at trigger
+      activation time, as described later in this section.
+    </p><p>
+      <em class="replaceable"><code>trigger_time</code></em> is the trigger action
+      time. It can be <code class="literal">BEFORE</code> or
+      <code class="literal">AFTER</code> to indicate that the trigger activates
+      before or after each row to be modified.
+    </p><p>
+      Basic column value checks occur prior to trigger activation, so
+      you cannot use <code class="literal">BEFORE</code> triggers to convert
+      values inappropriate for the column type to valid values.
+    </p><p>
+      <em class="replaceable"><code>trigger_event</code></em> indicates the kind of
+      operation that activates the trigger. These
+      <em class="replaceable"><code>trigger_event</code></em> values are permitted:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>: The trigger activates
+          whenever a new row is inserted into the table (for example,
+          through <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>,
+          <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>, and
+          <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a> statements).
+        </p></li><li class="listitem"><p>
+          <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>: The trigger activates
+          whenever a row is modified (for example, through
+          <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statements).
+        </p></li><li class="listitem"><p>
+          <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>: The trigger activates
+          whenever a row is deleted from the table (for example, through
+          <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> and
+          <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a> statements).
+          <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> and
+          <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> statements on
+          the table do <span class="emphasis"><em>not</em></span> activate this trigger,
+          because they do not use <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>.
+          Dropping a partition does not activate
+          <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> triggers, either.
+</p></li></ul>
+</div>
+<p>
+      The <em class="replaceable"><code>trigger_event</code></em> does not represent a
+      literal type of SQL statement that activates the trigger so much
+      as it represents a type of table operation. For example, an
+      <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> trigger activates not only
+      for <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> statements but also
+      <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> statements because both
+      statements insert rows into a table.
+    </p><p>
+      A potentially confusing example of this is the <code class="literal">INSERT
+      INTO ... ON DUPLICATE KEY UPDATE ...</code> syntax: a
+      <code class="literal">BEFORE INSERT</code> trigger activates for every row,
+      followed by either an <code class="literal">AFTER INSERT</code> trigger or
+      both the <code class="literal">BEFORE UPDATE</code> and <code class="literal">AFTER
+      UPDATE</code> triggers, depending on whether there was a
+      duplicate key for the row.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        Cascaded foreign key actions do not activate triggers.
+</p>
+</div>
+<p>
+      It is possible to define multiple triggers for a given table that
+      have the same trigger event and action time. For example, you can
+      have two <code class="literal">BEFORE UPDATE</code> triggers for a table. By
+      default, triggers that have the same trigger event and action time
+      activate in the order they were created. To affect trigger order,
+      specify a <em class="replaceable"><code>trigger_order</code></em> clause that
+      indicates <code class="literal">FOLLOWS</code> or
+      <code class="literal">PRECEDES</code> and the name of an existing trigger
+      that also has the same trigger event and action time. With
+      <code class="literal">FOLLOWS</code>, the new trigger activates after the
+      existing trigger. With <code class="literal">PRECEDES</code>, the new
+      trigger activates before the existing trigger.
+    </p><p>
+      <em class="replaceable"><code>trigger_body</code></em> is the statement to
+      execute when the trigger activates. To execute multiple
+      statements, use the
+      <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ... END</code></a>
+      compound statement construct. This also enables you to use the
+      same statements that are permitted within stored routines. See
+      <a class="xref" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement">Section&nbsp;13.6.1, “BEGIN ... END Compound Statement”</a>. Some statements are not permitted in
+      triggers; see <a class="xref" href="stored-program-restrictions.html" title="23.8&nbsp;Restrictions on Stored Programs">Section&nbsp;23.8, “Restrictions on Stored Programs”</a>.
+    </p><p>
+      Within the trigger body, you can refer to columns in the subject
+      table (the table associated with the trigger) by using the aliases
+      <code class="literal">OLD</code> and <code class="literal">NEW</code>.
+      <code class="literal">OLD.<em class="replaceable"><code>col_name</code></em></code> refers
+      to a column of an existing row before it is updated or deleted.
+      <code class="literal">NEW.<em class="replaceable"><code>col_name</code></em></code> refers
+      to the column of a new row to be inserted or an existing row after
+      it is updated.
+    </p><a class="indexterm" name="idm45852581034592"></a><p>
+      Triggers cannot use
+      <code class="literal">NEW.<em class="replaceable"><code>col_name</code></em></code> or use
+      <code class="literal">OLD.<em class="replaceable"><code>col_name</code></em></code> to
+      refer to generated columns. For information about generated
+      columns, see <a class="xref" href="create-table-generated-columns.html" title="13.1.18.7&nbsp;CREATE TABLE and Generated Columns">Section&nbsp;13.1.18.7, “CREATE TABLE and Generated Columns”</a>.
+    </p><p>
+      MySQL stores the <a class="link" href="server-system-variables.html#sysvar_sql_mode"><code class="literal">sql_mode</code></a> system
+      variable setting in effect when a trigger is created, and always
+      executes the trigger body with this setting in force,
+      <span class="emphasis"><em>regardless of the current server SQL mode when the
+      trigger begins executing</em></span>.
+    </p><p>
+      The <code class="literal">DEFINER</code> clause specifies the MySQL account
+      to be used when checking access privileges at trigger activation
+      time. If the <code class="literal">DEFINER</code> clause is present, the
+      <em class="replaceable"><code>user</code></em> value should be a MySQL account
+      specified as
+      <code class="literal">'<em class="replaceable"><code>user_name</code></em>'@'<em class="replaceable"><code>host_name</code></em>'</code>,
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a>, or
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER()</code></a>. The permitted
+      <em class="replaceable"><code>user</code></em> values depend on the privileges
+      you hold, as discussed in
+      <a class="xref" href="stored-objects-security.html" title="23.6&nbsp;Stored Object Access Control">Section&nbsp;23.6, “Stored Object Access Control”</a>. Also see that section
+      for additional information about trigger security.
+    </p><p>
+      If the <code class="literal">DEFINER</code> clause is omitted, the default
+      definer is the user who executes the <a class="link" href="create-trigger.html" title="13.1.20&nbsp;CREATE TRIGGER Statement"><code class="literal">CREATE
+      TRIGGER</code></a> statement. This is the same as specifying
+      <code class="literal">DEFINER = CURRENT_USER</code> explicitly.
+    </p><p>
+      MySQL takes the <code class="literal">DEFINER</code> user into account when
+      checking trigger privileges as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          At <a class="link" href="create-trigger.html" title="13.1.20&nbsp;CREATE TRIGGER Statement"><code class="literal">CREATE TRIGGER</code></a> time, the
+          user who issues the statement must have the
+          <a class="link" href="privileges-provided.html#priv_trigger"><code class="literal">TRIGGER</code></a> privilege.
+        </p></li><li class="listitem"><p>
+          At trigger activation time, privileges are checked against the
+          <code class="literal">DEFINER</code> user. This user must have these
+          privileges:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              The <a class="link" href="privileges-provided.html#priv_trigger"><code class="literal">TRIGGER</code></a> privilege for
+              the subject table.
+            </p></li><li class="listitem"><p>
+              The <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for
+              the subject table if references to table columns occur
+              using
+              <code class="literal">OLD.<em class="replaceable"><code>col_name</code></em></code>
+              or
+              <code class="literal">NEW.<em class="replaceable"><code>col_name</code></em></code>
+              in the trigger body.
+            </p></li><li class="listitem"><p>
+              The <a class="link" href="privileges-provided.html#priv_update"><code class="literal">UPDATE</code></a> privilege for
+              the subject table if table columns are targets of
+              <code class="literal">SET NEW.<em class="replaceable"><code>col_name</code></em> =
+              <em class="replaceable"><code>value</code></em></code> assignments in
+              the trigger body.
+            </p></li><li class="listitem"><p>
+              Whatever other privileges normally are required for the
+              statements executed by the trigger.
+</p></li></ul>
+</div>
+</li></ul>
+</div>
+<p>
+      Within a trigger body, the
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a> function returns the
+      account used to check privileges at trigger activation time. This
+      is the <code class="literal">DEFINER</code> user, not the user whose actions
+      caused the trigger to be activated. For information about user
+      auditing within triggers, see
+      <a class="xref" href="account-activity-auditing.html" title="6.2.18&nbsp;SQL-Based Account Activity Auditing">Section&nbsp;6.2.18, “SQL-Based Account Activity Auditing”</a>.
+    </p><p>
+      If you use <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> to lock a
+      table that has triggers, the tables used within the trigger are
+      also locked, as described in
+      <a class="xref" href="lock-tables.html#lock-tables-and-triggers" title="LOCK TABLES and Triggers">LOCK TABLES and Triggers</a>.
+    </p><p>
+      For additional discussion of trigger use, see
+      <a class="xref" href="trigger-syntax.html" title="23.3.1&nbsp;Trigger Syntax and Examples">Section&nbsp;23.3.1, “Trigger Syntax and Examples”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

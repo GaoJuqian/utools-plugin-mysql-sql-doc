@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SET Syntax for Variable AssignmentUser-Defined Variable AssignmentParameter and Local Variable AssignmentSystem Variable AssignmentSET Error HandlingMultiple Variable AssignmentSystem Variable References in Expressions</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="set-variable"></a>13.7.4.1&nbsp;SET Syntax for Variable Assignment</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571852320"></a><a class="indexterm" name="idm45852571850864"></a><a class="indexterm" name="idm45852571849376"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET <em class="replaceable">variable</em> = <em class="replaceable">expr</em> [, <em class="replaceable">variable</em> = <em class="replaceable">expr</em>] ...
+
+<em class="replaceable">variable</em>: {
+    <em class="replaceable">user_var_name</em>
+  | <em class="replaceable">param_name</em>
+  | <em class="replaceable">local_var_name</em>
+  | {GLOBAL | @@GLOBAL.} <em class="replaceable">system_var_name</em>
+  | [SESSION | @@SESSION. | @@] <em class="replaceable">system_var_name</em>
+}</code></pre><p>
+        <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+        syntax for variable assignment enables you to assign values to
+        different types of variables that affect the operation of the
+        server or clients:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            User-defined variables. See
+            <a class="xref" href="user-variables.html" title="9.4&nbsp;User-Defined Variables">Section&nbsp;9.4, “User-Defined Variables”</a>.
+          </p></li><li class="listitem"><p>
+            Stored procedure and function parameters, and stored program
+            local variables. See
+            <a class="xref" href="stored-program-variables.html" title="13.6.4&nbsp;Variables in Stored Programs">Section&nbsp;13.6.4, “Variables in Stored Programs”</a>.
+          </p></li><li class="listitem"><p>
+            System variables. See
+            <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>. System variables
+            also can be set at server startup, as described in
+            <a class="xref" href="using-system-variables.html" title="5.1.8&nbsp;Using System Variables">Section&nbsp;5.1.8, “Using System Variables”</a>.
+</p></li></ul>
+</div>
+<p>
+        A <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+        statement that assigns variable values is not written to the
+        binary log, so in replication scenarios it affects only the host
+        on which you execute it. To affect all replication hosts,
+        execute the statement on each host.
+      </p><p>
+        The following sections describe
+        <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+        syntax for setting variables. They use the
+        <a class="link" href="assignment-operators.html#operator_assign-equal"><code class="literal">=</code></a>
+        assignment operator, but the
+        <a class="link" href="assignment-operators.html#operator_assign-value"><code class="literal">:=</code></a>
+        assignment operator is also permitted for this purpose.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="set-variable.html#set-variable-user-variables" title="User-Defined Variable Assignment">User-Defined Variable Assignment</a></p></li><li class="listitem"><p><a class="xref" href="set-variable.html#set-variable-parameters-local-variables" title="Parameter and Local Variable Assignment">Parameter and Local Variable Assignment</a></p></li><li class="listitem"><p><a class="xref" href="set-variable.html#set-variable-system-variables" title="System Variable Assignment">System Variable Assignment</a></p></li><li class="listitem"><p><a class="xref" href="set-variable.html#set-variable-error-handling" title="SET Error Handling">SET Error Handling</a></p></li><li class="listitem"><p><a class="xref" href="set-variable.html#set-variable-multiple-assignments" title="Multiple Variable Assignment">Multiple Variable Assignment</a></p></li><li class="listitem"><p><a class="xref" href="set-variable.html#variable-references-in-expressions" title="System Variable References in Expressions">System Variable References in Expressions</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="set-variable-user-variables"></a>User-Defined Variable Assignment</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          User-defined variables are created locally within a session
+          and exist only within the context of that session; see
+          <a class="xref" href="user-variables.html" title="9.4&nbsp;User-Defined Variables">Section&nbsp;9.4, “User-Defined Variables”</a>.
+        </p><p>
+          A user-defined variable is written as
+          <code class="literal">@<em class="replaceable"><code>var_name</code></em></code> and is
+          assigned an expression value as follows:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET @<em class="replaceable">var_name</em> = <em class="replaceable">expr</em>;</code></pre><p>
+          Examples:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET @name = 43;
+SET @total_tax = (SELECT SUM(tax) FROM taxable_transactions);</code></pre><p>
+          As demonstrated by those statements,
+          <em class="replaceable"><code>expr</code></em> can range from simple (a
+          literal value) to more complex (the value returned by a scalar
+          subquery).
+        </p><p>
+          The Performance Schema
+          <a class="link" href="performance-schema-user-variable-tables.html" title="25.12.10&nbsp;Performance Schema User-Defined Variable Tables"><code class="literal">user_variables_by_thread</code></a> table
+          contains information about user-defined variables. See
+          <a class="xref" href="performance-schema-user-variable-tables.html" title="25.12.10&nbsp;Performance Schema User-Defined Variable Tables">Section&nbsp;25.12.10, “Performance Schema User-Defined Variable Tables”</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="set-variable-parameters-local-variables"></a>Parameter and Local Variable Assignment</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+          applies to parameters and local variables in the context of
+          the stored object within which they are defined. The following
+          procedure uses the <code class="literal">increment</code> procedure
+          parameter and <code class="literal">counter</code> local variable:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p(increment INT)
+BEGIN
+  DECLARE counter INT DEFAULT 0;
+  WHILE counter &lt; 10 DO
+    -- ... do work ...
+    SET counter = counter + increment;
+  END WHILE;
+END;</code></pre>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="set-variable-system-variables"></a>System Variable Assignment</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          The MySQL server maintains system variables that configure its
+          operation. A system variable can have a global value that
+          affects server operation as a whole, a session value that
+          affects the current session, or both. Many system variables
+          are dynamic and can be changed at runtime using the
+          <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+          statement to affect operation of the current server instance.
+          (To make a global system variable setting permanent so that it
+          applies across server restarts, you should also set it in an
+          option file.)
+        </p><p>
+          If you change a session system variable, the value remains in
+          effect within your session until you change the variable to a
+          different value or the session ends. The change has no effect
+          on other sessions.
+        </p><p>
+          If you change a global system variable, the value is
+          remembered and used to initialize the session value for new
+          sessions until you change the variable to a different value or
+          the server exits. The change is visible to any client that
+          accesses the global value. However, the change affects the
+          corresponding session value only for clients that connect
+          after the change. The global variable change does not affect
+          the session value for any current client sessions (not even
+          the session within which the global value change occurs).
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            Setting a global system variable value always requires
+            special privileges. Setting a session system variable value
+            normally requires no special privileges and can be done by
+            any user, although there are exceptions. For more
+            information, see
+            <a class="xref" href="system-variable-privileges.html" title="5.1.8.1&nbsp;System Variable Privileges">Section&nbsp;5.1.8.1, “System Variable Privileges”</a>.
+</p>
+</div>
+<p>
+          The following discussion describes the syntax options for
+          setting system variables:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              To assign a value to a global system variable, precede the
+              variable name by the <code class="literal">GLOBAL</code> keyword or
+              the <code class="literal">@@GLOBAL.</code> qualifier:
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET GLOBAL max_connections = 1000;
+SET @@GLOBAL.max_connections = 1000;</code></pre></li><li class="listitem"><p>
+              To assign a value to a session system variable, precede
+              the variable name by the <code class="literal">SESSION</code> or
+              <code class="literal">LOCAL</code> keyword, by the
+              <code class="literal">@@SESSION.</code>,
+              <code class="literal">@@LOCAL.</code>, or <code class="literal">@@</code>
+              qualifier, or by no keyword or no modifier at all:
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET SESSION sql_mode = 'TRADITIONAL';
+SET LOCAL sql_mode = 'TRADITIONAL';
+SET @@SESSION.sql_mode = 'TRADITIONAL';
+SET @@LOCAL.sql_mode = 'TRADITIONAL';
+SET @@sql_mode = 'TRADITIONAL';
+SET sql_mode = 'TRADITIONAL';</code></pre><p>
+              A client can change its own session variables, but not
+              those of any other client.
+</p></li></ul>
+</div>
+<p>
+          To set a global system variable value to the compiled-in MySQL
+          default value or a session system variable to the current
+          corresponding global value, set the variable to the value
+          <code class="literal">DEFAULT</code>. For example, the following two
+          statements are identical in setting the session value of
+          <a class="link" href="server-system-variables.html#sysvar_max_join_size"><code class="literal">max_join_size</code></a> to the current
+          global value:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET @@SESSION.max_join_size = DEFAULT;
+SET @@SESSION.max_join_size = @@GLOBAL.max_join_size;</code></pre><p>
+          To display system variable names and values:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Use the <a class="link" href="show-variables.html" title="13.7.5.39&nbsp;SHOW VARIABLES Statement"><code class="literal">SHOW VARIABLES</code></a>
+              statement; see <a class="xref" href="show-variables.html" title="13.7.5.39&nbsp;SHOW VARIABLES Statement">Section&nbsp;13.7.5.39, “SHOW VARIABLES Statement”</a>.
+            </p></li><li class="listitem"><p>
+              Several Performance Schema tables provide system variable
+              information. See
+              <a class="xref" href="performance-schema-system-variable-tables.html" title="25.12.13&nbsp;Performance Schema System Variable Tables">Section&nbsp;25.12.13, “Performance Schema System Variable Tables”</a>.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="set-variable-error-handling"></a>SET Error Handling</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          If any variable assignment in a
+          <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+          statement fails, the entire statement fails and no variables
+          are changed.
+        </p><p>
+          <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+          produces an error under the circumstances described here. Most
+          of the examples show
+          <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+          statements that use keyword syntax (for example,
+          <code class="literal">GLOBAL</code> or <code class="literal">SESSION</code>), but
+          the principles are also true for statements that use the
+          corresponding modifiers (for example,
+          <code class="literal">@@GLOBAL.</code> or
+          <code class="literal">@@SESSION.</code>).
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Use of
+              <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+              (any variant) to set a read-only variable:
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SET GLOBAL version = 'abc';
+ERROR 1238 (HY000): Variable 'version' is a read only variable</code></pre></li><li class="listitem"><p>
+              Use of <code class="literal">GLOBAL</code> to set a variable that
+              has only a session value:
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SET GLOBAL sql_log_bin = ON;
+ERROR 1231 (42000): Variable 'sql_log_bin' can't be
+set to the value of 'ON'</code></pre></li><li class="listitem"><p>
+              Use of <code class="literal">SESSION</code> to set a variable that
+              has only a global value:
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SET SESSION max_connections = 1000;
+ERROR 1229 (HY000): Variable 'max_connections' is a
+GLOBAL variable and should be set with SET GLOBAL</code></pre></li><li class="listitem"><p>
+              Omission of <code class="literal">GLOBAL</code> to set a variable
+              that has only a global value:
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SET max_connections = 1000;
+ERROR 1229 (HY000): Variable 'max_connections' is a
+GLOBAL variable and should be set with SET GLOBAL</code></pre></li><li class="listitem"><p>
+              The <code class="literal">@@GLOBAL.</code>,
+              <code class="literal">@@SESSION.</code>, and <code class="literal">@@</code>
+              modifiers apply only to system variables. An error occurs
+              for attempts to apply them to user-defined variables,
+              stored procedure or function parameters, or stored program
+              local variables.
+            </p></li><li class="listitem"><p>
+              Not all system variables can be set to
+              <code class="literal">DEFAULT</code>. In such cases, assigning
+              <code class="literal">DEFAULT</code> results in an error.
+            </p></li><li class="listitem"><p>
+              An error occurs for attempts to assign
+              <code class="literal">DEFAULT</code> to user-defined variables,
+              stored procedure or function parameters, or stored program
+              local variables.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="set-variable-multiple-assignments"></a>Multiple Variable Assignment</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          A <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+          statement can contain multiple variable assignments, separated
+          by commas. This statement assigns a value to a user-defined
+          variable and a system variable:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET @x = 1, SESSION sql_mode = '';</code></pre><p>
+          If you set multiple system variables in a single statement,
+          the most recent <code class="literal">GLOBAL</code> or
+          <code class="literal">SESSION</code> keyword in the statement is used
+          for following assignments that have no keyword specified.
+        </p><p>
+          Examples of multiple-variable assignment:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET GLOBAL sort_buffer_size = 1000000, SESSION sort_buffer_size = 1000000;
+SET @@GLOBAL.sort_buffer_size = 1000000, @@LOCAL.sort_buffer_size = 1000000;
+SET GLOBAL max_connections = 1000, sort_buffer_size = 1000000;</code></pre><p>
+          The <code class="literal">@@GLOBAL.</code>,
+          <code class="literal">@@SESSION.</code>, and <code class="literal">@@</code>
+          modifiers apply only to the immediately following system
+          variable, not any remaining system variables. This statement
+          sets the <a class="link" href="server-system-variables.html#sysvar_sort_buffer_size"><code class="literal">sort_buffer_size</code></a>
+          global value to 50000 and the session value to 1000000:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET @@GLOBAL.sort_buffer_size = 50000, sort_buffer_size = 1000000;</code></pre>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="variable-references-in-expressions"></a>System Variable References in Expressions</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          To refer to the value of a system variable in expressions, use
+          one of the <code class="literal">@@</code>-modifiers. For example, you
+          can retrieve system variable values in a
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement like this:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT @@GLOBAL.sql_mode, @@SESSION.sql_mode, @@sql_mode;</code></pre>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            A reference to a system variable in an expression as
+            <code class="literal">@@<em class="replaceable"><code>var_name</code></em></code>
+            (with <code class="literal">@@</code> rather than
+            <code class="literal">@@GLOBAL.</code> or
+            <code class="literal">@@SESSION.</code>) returns the session value if
+            it exists and the global value otherwise. This differs from
+            <code class="literal">SET @@<em class="replaceable"><code>var_name</code></em> =
+            <em class="replaceable"><code>expr</code></em></code>, which always
+            refers to the session value.
+</p>
+</div>
+
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Condition Handling</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="condition-handling"></a>13.6.7&nbsp;Condition Handling</h3>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="declare-condition.html">13.6.7.1 DECLARE ... CONDITION Statement</a></span></dt><dt><span class="section"><a href="declare-handler.html">13.6.7.2 DECLARE ... HANDLER Statement</a></span></dt><dt><span class="section"><a href="get-diagnostics.html">13.6.7.3 GET DIAGNOSTICS Statement</a></span></dt><dt><span class="section"><a href="resignal.html">13.6.7.4 RESIGNAL Statement</a></span></dt><dt><span class="section"><a href="signal.html">13.6.7.5 SIGNAL Statement</a></span></dt><dt><span class="section"><a href="handler-scope.html">13.6.7.6 Scope Rules for Handlers</a></span></dt><dt><span class="section"><a href="diagnostics-area.html">13.6.7.7 The MySQL Diagnostics Area</a></span></dt><dt><span class="section"><a href="conditions-and-parameters.html">13.6.7.8 Condition Handling and OUT or INOUT Parameters</a></span></dt><dt><span class="section"><a href="condition-handling-restrictions.html">13.6.7.9 Restrictions on Condition Handling</a></span></dt></dl>
+</div>
+<p>
+      Conditions may arise during stored program execution that require
+      special handling, such as exiting the current program block or
+      continuing execution. Handlers can be defined for general
+      conditions such as warnings or exceptions, or for specific
+      conditions such as a particular error code. Specific conditions
+      can be assigned names and referred to that way in handlers.
+    </p><p>
+      To name a condition, use the
+      <a class="link" href="declare-condition.html" title="13.6.7.1&nbsp;DECLARE ... CONDITION Statement"><code class="literal">DECLARE ...
+      CONDITION</code></a> statement. To declare a handler, use the
+      <a class="link" href="declare-handler.html" title="13.6.7.2&nbsp;DECLARE ... HANDLER Statement"><code class="literal">DECLARE ...
+      HANDLER</code></a> statement. See
+      <a class="xref" href="declare-condition.html" title="13.6.7.1&nbsp;DECLARE ... CONDITION Statement">Section&nbsp;13.6.7.1, “DECLARE ... CONDITION Statement”</a>, and
+      <a class="xref" href="declare-handler.html" title="13.6.7.2&nbsp;DECLARE ... HANDLER Statement">Section&nbsp;13.6.7.2, “DECLARE ... HANDLER Statement”</a>. For information about how the
+      server chooses handlers when a condition occurs, see
+      <a class="xref" href="handler-scope.html" title="13.6.7.6&nbsp;Scope Rules for Handlers">Section&nbsp;13.6.7.6, “Scope Rules for Handlers”</a>.
+    </p><p>
+      To raise a condition, use the
+      <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement. To modify
+      condition information within a condition handler, use
+      <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a>. See
+      <a class="xref" href="declare-condition.html" title="13.6.7.1&nbsp;DECLARE ... CONDITION Statement">Section&nbsp;13.6.7.1, “DECLARE ... CONDITION Statement”</a>, and
+      <a class="xref" href="declare-handler.html" title="13.6.7.2&nbsp;DECLARE ... HANDLER Statement">Section&nbsp;13.6.7.2, “DECLARE ... HANDLER Statement”</a>.
+    </p><p>
+      To retrieve information from the diagnostics area, use the
+      <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> statement (see
+      <a class="xref" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement">Section&nbsp;13.6.7.3, “GET DIAGNOSTICS Statement”</a>). For information about the
+      diagnostics area, see <a class="xref" href="diagnostics-area.html" title="13.6.7.7&nbsp;The MySQL Diagnostics Area">Section&nbsp;13.6.7.7, “The MySQL Diagnostics Area”</a>.
+</p>
+</div><br>
+        
+</body>
+</html>

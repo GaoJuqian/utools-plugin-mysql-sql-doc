@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW SLAVE STATUS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-slave-status"></a>13.7.5.34&nbsp;SHOW SLAVE STATUS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570149936"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW SLAVE STATUS [FOR CHANNEL <em class="replaceable">channel</em>]</code></pre><p>
+        This statement provides status information on essential
+        parameters of the replica threads. It requires either the
+        <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> or
+        <a class="link" href="privileges-provided.html#priv_replication-client"><code class="literal">REPLICATION CLIENT</code></a> privilege.
+      </p><p>
+        If you issue this statement using the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a>
+        client, you can use a <code class="literal">\G</code> statement terminator
+        rather than a semicolon to obtain a more readable vertical
+        layout:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW SLAVE STATUS\G
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for master to send event
+                  Master_Host: localhost
+                  Master_User: repl
+                  Master_Port: 13000
+                Connect_Retry: 60
+              Master_Log_File: source-bin.000002
+          Read_Master_Log_Pos: 1307
+               Relay_Log_File: replica-relay-bin.000003
+                Relay_Log_Pos: 1508
+        Relay_Master_Log_File: source-bin.000002
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+              Replicate_Do_DB:
+          Replicate_Ignore_DB:
+           Replicate_Do_Table:
+       Replicate_Ignore_Table:
+      Replicate_Wild_Do_Table:
+  Replicate_Wild_Ignore_Table:
+                   Last_Errno: 0
+                   Last_Error:
+                 Skip_Counter: 0
+          Exec_Master_Log_Pos: 1307
+              Relay_Log_Space: 1858
+              Until_Condition: None
+               Until_Log_File:
+                Until_Log_Pos: 0
+           Master_SSL_Allowed: No
+           Master_SSL_CA_File:
+           Master_SSL_CA_Path:
+              Master_SSL_Cert:
+            Master_SSL_Cipher:
+               Master_SSL_Key:
+        Seconds_Behind_Master: 0
+Master_SSL_Verify_Server_Cert: No
+                Last_IO_Errno: 0
+                Last_IO_Error:
+               Last_SQL_Errno: 0
+               Last_SQL_Error:
+  Replicate_Ignore_Server_Ids:
+             Master_Server_Id: 1
+                  Master_UUID: 3e11fa47-71ca-11e1-9e33-c80aa9429562
+             Master_Info_File: /var/mysqld.2/data/master.info
+                    SQL_Delay: 0
+          SQL_Remaining_Delay: NULL
+      Slave_SQL_Running_State: Reading event from the relay log
+           Master_Retry_Count: 10
+                  Master_Bind:
+      Last_IO_Error_Timestamp:
+     Last_SQL_Error_Timestamp:
+               Master_SSL_Crl:
+           Master_SSL_Crlpath:
+           Retrieved_Gtid_Set: 3e11fa47-71ca-11e1-9e33-c80aa9429562:1-5
+            Executed_Gtid_Set: 3e11fa47-71ca-11e1-9e33-c80aa9429562:1-5
+                Auto_Position: 1
+         Replicate_Rewrite_DB:
+                 Channel_name:
+           Master_TLS_Version: TLSv1.2</code></pre><p>
+        The Performance Schema provides tables that expose replication
+        information. This is similar to the information available from
+        the <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE STATUS</code></a> statement,
+        but represented in table form. For details, see
+        <a class="xref" href="performance-schema-replication-tables.html" title="25.12.11&nbsp;Performance Schema Replication Tables">Section&nbsp;25.12.11, “Performance Schema Replication Tables”</a>.
+      </p><p>
+        The following list describes the fields returned by
+        <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE STATUS</code></a>. For additional
+        information about interpreting their meanings, see
+        <a class="xref" href="replication-administration-status.html" title="16.1.7.1&nbsp;Checking Replication Status">Section&nbsp;16.1.7.1, “Checking Replication Status”</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Slave_IO_State</code>
+          </p><p>
+            A copy of the <code class="literal">State</code> field of the
+            <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW PROCESSLIST</code></a> output for
+            the replica I/O thread. This tells you what the thread is
+            doing: trying to connect to the source, waiting for events
+            from the source, reconnecting to the source, and so on. For
+            a listing of possible states, see
+            <a class="xref" href="replica-io-thread-states.html" title="8.14.6&nbsp;Replication Replica I/O Thread States">Section&nbsp;8.14.6, “Replication Replica I/O Thread States”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_Host</code>
+          </p><p>
+            The source host that the replica is connected to.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_User</code>
+          </p><p>
+            The user name of the account used to connect to the source.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_Port</code>
+          </p><p>
+            The port used to connect to the source.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Connect_Retry</code>
+          </p><p>
+            The number of seconds between connect retries (default 60).
+            This can be set with the <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER
+            TO</code></a> statement.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_Log_File</code>
+          </p><p>
+            The name of the source binary log file from which the I/O
+            thread is currently reading.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Read_Master_Log_Pos</code>
+          </p><p>
+            The position in the current source binary log file up to
+            which the I/O thread has read.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Relay_Log_File</code>
+          </p><p>
+            The name of the relay log file from which the SQL thread is
+            currently reading and executing.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Relay_Log_Pos</code>
+          </p><p>
+            The position in the current relay log file up to which the
+            SQL thread has read and executed.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Relay_Master_Log_File</code>
+          </p><p>
+            The name of the source binary log file containing the most
+            recent event executed by the SQL thread.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Slave_IO_Running</code>
+          </p><p>
+            Whether the I/O thread is started and has connected
+            successfully to the source. Internally, the state of this
+            thread is represented by one of the following three values:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><b>MYSQL_SLAVE_NOT_RUN.&nbsp;</b>
+                  The replica I/O thread is not running. For this state,
+                  <code class="literal">Slave_IO_Running</code> is
+                  <code class="literal">No</code>.
+                </p></li><li class="listitem"><p><b>MYSQL_SLAVE_RUN_NOT_CONNECT.&nbsp;</b>
+                  The replica I/O thread is running, but is not
+                  connected to a replication source. For this state,
+                  <code class="literal">Slave_IO_Running</code> is
+                  <code class="literal">Connecting</code>.
+                </p></li><li class="listitem"><p><b>MYSQL_SLAVE_RUN_CONNECT.&nbsp;</b>
+                  The replica I/O thread is running, and is connected to
+                  a replication source. For this state,
+                  <code class="literal">Slave_IO_Running</code> is
+                  <code class="literal">Yes</code>.
+</p></li></ul>
+</div>
+<p>
+            The value of the
+            <a class="link" href="server-status-variables.html#statvar_Slave_running"><code class="literal">Slave_running</code></a> system
+            status variable corresponds with this value.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Slave_SQL_Running</code>
+          </p><p>
+            Whether the SQL thread is started.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Replicate_Do_DB</code>,
+            <code class="literal">Replicate_Ignore_DB</code>
+          </p><p>
+            The lists of databases that were specified with the
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-do-db"><code class="option">--replicate-do-db</code></a> and
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-ignore-db"><code class="option">--replicate-ignore-db</code></a>
+            options, if any.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Replicate_Do_Table</code>,
+            <code class="literal">Replicate_Ignore_Table</code>,
+            <code class="literal">Replicate_Wild_Do_Table</code>,
+            <code class="literal">Replicate_Wild_Ignore_Table</code>
+          </p><p>
+            The lists of tables that were specified with the
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-do-table"><code class="option">--replicate-do-table</code></a>,
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-ignore-table"><code class="option">--replicate-ignore-table</code></a>,
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-wild-do-table"><code class="option">--replicate-wild-do-table</code></a>,
+            and
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-wild-ignore-table"><code class="option">--replicate-wild-ignore-table</code></a>
+            options, if any.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Last_Errno</code>, <code class="literal">Last_Error</code>
+          </p><p>
+            These columns are aliases for
+            <code class="literal">Last_SQL_Errno</code> and
+            <code class="literal">Last_SQL_Error</code>.
+          </p><p>
+            Issuing <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> or
+            <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> resets the values
+            shown in these columns.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              When the replica SQL thread receives an error, it reports
+              the error first, then stops the SQL thread. This means
+              that there is a small window of time during which
+              <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE STATUS</code></a> shows a
+              nonzero value for <code class="literal">Last_SQL_Errno</code> even
+              though <code class="literal">Slave_SQL_Running</code> still displays
+              <code class="literal">Yes</code>.
+</p>
+</div>
+</li><li class="listitem"><p>
+            <code class="literal">Skip_Counter</code>
+          </p><p>
+            The current value of the
+            <a class="link" href="replication-options-replica.html#sysvar_sql_slave_skip_counter"><code class="literal">sql_slave_skip_counter</code></a>
+            system variable. See
+            <a class="xref" href="set-global-sql-slave-skip-counter.html" title="13.4.2.5&nbsp;SET GLOBAL sql_slave_skip_counter Syntax">Section&nbsp;13.4.2.5, “SET GLOBAL sql_slave_skip_counter Syntax”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Exec_Master_Log_Pos</code>
+          </p><p>
+            The position in the current source binary log file to which
+            the SQL thread has read and executed, marking the start of
+            the next transaction or event to be processed. You can use
+            this value with the <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER
+            TO</code></a> statement's
+            <code class="literal">MASTER_LOG_POS</code> option when starting a new
+            replica from an existing replica, so that the new replica
+            reads from this point. The coordinates given by
+            (<code class="literal">Relay_Master_Log_File</code>,
+            <code class="literal">Exec_Master_Log_Pos</code>) in the source's
+            binary log correspond to the coordinates given by
+            (<code class="literal">Relay_Log_File</code>,
+            <code class="literal">Relay_Log_Pos</code>) in the relay log.
+          </p><p>
+            Inconsistencies in the sequence of transactions from the
+            relay log which have been executed can cause this value to
+            be a <span class="quote">“<span class="quote">low-water mark</span>”</span>. In other words,
+            transactions appearing before the position are guaranteed to
+            have committed, but transactions after the position may have
+            committed or not. If these gaps need to be corrected, use
+            <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START SLAVE
+            UNTIL SQL_AFTER_MTS_GAPS</code></a>. See
+            <a class="xref" href="replication-features-transaction-inconsistencies.html" title="16.4.1.32&nbsp;Replication and Transaction Inconsistencies">Section&nbsp;16.4.1.32, “Replication and Transaction Inconsistencies”</a>
+            for more information.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Relay_Log_Space</code>
+          </p><p>
+            The total combined size of all existing relay log files.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Until_Condition</code>,
+            <code class="literal">Until_Log_File</code>,
+            <code class="literal">Until_Log_Pos</code>
+          </p><p>
+            The values specified in the <code class="literal">UNTIL</code> clause
+            of the <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START SLAVE</code></a> statement.
+          </p><p>
+            <code class="literal">Until_Condition</code> has these values:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                <code class="literal">None</code> if no <code class="literal">UNTIL</code>
+                clause was specified
+              </p></li><li class="listitem"><p>
+                <code class="literal">Master</code> if the replica is reading
+                until a given position in the source's binary log
+              </p></li><li class="listitem"><p>
+                <code class="literal">Relay</code> if the replica is reading until
+                a given position in its relay log
+              </p></li><li class="listitem"><p>
+                <code class="literal">SQL_BEFORE_GTIDS</code> if the replica SQL
+                thread is processing transactions until it has reached
+                the first transaction whose GTID is listed in the
+                <code class="literal">gtid_set</code>.
+              </p></li><li class="listitem"><p>
+                <code class="literal">SQL_AFTER_GTIDS</code> if the replica
+                threads are processing all transactions until the last
+                transaction in the <code class="literal">gtid_set</code> has been
+                processed by both threads.
+              </p></li><li class="listitem"><p>
+                <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">SQL_AFTER_MTS_GAPS</code></a>
+                if a multithreaded replica's SQL threads are running
+                until no more gaps are found in the relay log.
+</p></li></ul>
+</div>
+<p>
+            <code class="literal">Until_Log_File</code> and
+            <code class="literal">Until_Log_Pos</code> indicate the log file name
+            and position that define the coordinates at which the SQL
+            thread stops executing.
+          </p><p>
+            For more information on <code class="literal">UNTIL</code> clauses,
+            see <a class="xref" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement">Section&nbsp;13.4.2.6, “START SLAVE Statement”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_SSL_Allowed</code>,
+            <code class="literal">Master_SSL_CA_File</code>,
+            <code class="literal">Master_SSL_CA_Path</code>,
+            <code class="literal">Master_SSL_Cert</code>,
+            <code class="literal">Master_SSL_Cipher</code>,
+            <code class="literal">Master_SSL_CRL_File</code>,
+            <code class="literal">Master_SSL_CRL_Path</code>,
+            <code class="literal">Master_SSL_Key</code>,
+            <code class="literal">Master_SSL_Verify_Server_Cert</code>
+          </p><p>
+            These fields show the SSL parameters used by the replica to
+            connect to the source, if any.
+          </p><p>
+            <code class="literal">Master_SSL_Allowed</code> has these values:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                <code class="literal">Yes</code> if an SSL connection to the
+                source is permitted
+              </p></li><li class="listitem"><p>
+                <code class="literal">No</code> if an SSL connection to the source
+                is not permitted
+              </p></li><li class="listitem"><p>
+                <code class="literal">Ignored</code> if an SSL connection is
+                permitted but the replica server does not have SSL
+                support enabled
+</p></li></ul>
+</div>
+<p>
+            The values of the other SSL-related fields correspond to the
+            values of the <code class="literal">MASTER_SSL_CA</code>,
+            <code class="literal">MASTER_SSL_CAPATH</code>,
+            <code class="literal">MASTER_SSL_CERT</code>,
+            <code class="literal">MASTER_SSL_CIPHER</code>,
+            <code class="literal">MASTER_SSL_CRL</code>,
+            <code class="literal">MASTER_SSL_CRLPATH</code>,
+            <code class="literal">MASTER_SSL_KEY</code>, and
+            <code class="literal">MASTER_SSL_VERIFY_SERVER_CERT</code> options to
+            the <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a>
+            statement. See <a class="xref" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement">Section&nbsp;13.4.2.1, “CHANGE MASTER TO Statement”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Seconds_Behind_Master</code>
+          </p><p>
+            This field is an indication of how <span class="quote">“<span class="quote">late</span>”</span> the
+            replica is:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                When the replica is actively processing updates, this
+                field shows the difference between the current timestamp
+                on the replica and the original timestamp logged on the
+                source for the event currently being processed on the
+                replica.
+              </p></li><li class="listitem"><p>
+                When no event is currently being processed on the
+                replica, this value is 0.
+</p></li></ul>
+</div>
+<p>
+            In essence, this field measures the time difference in
+            seconds between the replica SQL thread and the replica I/O
+            thread. If the network connection between source and replica
+            is fast, the replica I/O thread is very close to the source,
+            so this field is a good approximation of how late the
+            replica SQL thread is compared to the source. If the network
+            is slow, this is <span class="emphasis"><em>not</em></span> a good
+            approximation; the replica SQL thread may quite often be
+            caught up with the slow-reading replica I/O thread, so
+            <code class="literal">Seconds_Behind_Master</code> often shows a value
+            of 0, even if the I/O thread is late compared to the source.
+            In other words, <span class="emphasis"><em>this column is useful only for
+            fast networks</em></span>.
+          </p><p>
+            This time difference computation works even if the source
+            and replica do not have identical clock times, provided that
+            the difference, computed when the replica I/O thread starts,
+            remains constant from then on. Any changes—including
+            NTP updates—can lead to clock skews that can make
+            calculation of <code class="literal">Seconds_Behind_Master</code> less
+            reliable.
+          </p><p>
+            In MySQL 5.7, this field is
+            <code class="literal">NULL</code> (undefined or unknown) if the
+            replica SQL thread is not running, or if the SQL thread has
+            consumed all of the relay log and the replica I/O thread is
+            not running. (In older versions of MySQL, this field was
+            <code class="literal">NULL</code> if the replica SQL thread or the
+            replica I/O thread was not running or was not connected to
+            the source.) If the I/O thread is running but the relay log
+            is exhausted, <code class="literal">Seconds_Behind_Master</code> is
+            set to 0.
+          </p><p>
+            The value of <code class="literal">Seconds_Behind_Master</code> is
+            based on the timestamps stored in events, which are
+            preserved through replication. This means that if a source
+            M1 is itself a replica of M0, any event from M1's binary log
+            that originates from M0's binary log has M0's timestamp for
+            that event. This enables MySQL to replicate
+            <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">TIMESTAMP</code></a> successfully.
+            However, the problem for
+            <code class="literal">Seconds_Behind_Master</code> is that if M1 also
+            receives direct updates from clients, the
+            <code class="literal">Seconds_Behind_Master</code> value randomly
+            fluctuates because sometimes the last event from M1
+            originates from M0 and sometimes is the result of a direct
+            update on M1.
+          </p><p>
+            When using a multithreaded replica, you should keep in mind
+            that this value is based on
+            <code class="literal">Exec_Master_Log_Pos</code>, and so may not
+            reflect the position of the most recently committed
+            transaction.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Last_IO_Errno</code>,
+            <code class="literal">Last_IO_Error</code>
+          </p><p>
+            The error number and error message of the most recent error
+            that caused the I/O thread to stop. An error number of 0 and
+            message of the empty string mean <span class="quote">“<span class="quote">no error.</span>”</span> If
+            the <code class="literal">Last_IO_Error</code> value is not empty, the
+            error values also appear in the replica's error log.
+          </p><p>
+            I/O error information includes a timestamp showing when the
+            most recent I/O thread error occurred. This timestamp uses
+            the format <em class="replaceable"><code>YYMMDD hh:mm:ss</code></em>, and
+            appears in the <code class="literal">Last_IO_Error_Timestamp</code>
+            column.
+          </p><p>
+            Issuing <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> or
+            <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> resets the values
+            shown in these columns.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Last_SQL_Errno</code>,
+            <code class="literal">Last_SQL_Error</code>
+          </p><p>
+            The error number and error message of the most recent error
+            that caused the SQL thread to stop. An error number of 0 and
+            message of the empty string mean <span class="quote">“<span class="quote">no error.</span>”</span> If
+            the <code class="literal">Last_SQL_Error</code> value is not empty,
+            the error values also appear in the replica's error log.
+          </p><p>
+            If the replica is multithreaded, the SQL thread is the
+            coordinator for worker threads. In this case, the
+            <code class="literal">Last_SQL_Error</code> field shows exactly what
+            the <code class="literal">Last_Error_Message</code> column in the
+            Performance Schema
+            <a class="link" href="performance-schema-replication-applier-status-by-coordinator-table.html" title="25.12.11.5&nbsp;The replication_applier_status_by_coordinator Table"><code class="literal">replication_applier_status_by_coordinator</code></a>
+            table shows. The field value is modified to suggest that
+            there may be more failures in the other worker threads which
+            can be seen in the
+            <a class="link" href="performance-schema-replication-applier-status-by-worker-table.html" title="25.12.11.6&nbsp;The replication_applier_status_by_worker Table"><code class="literal">replication_applier_status_by_worker</code></a>
+            table that shows each worker thread's status. If that table
+            is not available, the replica error log can be used. The log
+            or the
+            <a class="link" href="performance-schema-replication-applier-status-by-worker-table.html" title="25.12.11.6&nbsp;The replication_applier_status_by_worker Table"><code class="literal">replication_applier_status_by_worker</code></a>
+            table should also be used to learn more about the failure
+            shown by <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE STATUS</code></a> or
+            the coordinator table.
+          </p><p>
+            SQL error information includes a timestamp showing when the
+            most recent SQL thread error occurred. This timestamp uses
+            the format <em class="replaceable"><code>YYMMDD hh:mm:ss</code></em>, and
+            appears in the <code class="literal">Last_SQL_Error_Timestamp</code>
+            column.
+          </p><p>
+            Issuing <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> or
+            <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> resets the values
+            shown in these columns.
+          </p><p>
+            In MySQL 5.7, all error codes and messages
+            displayed in the <code class="literal">Last_SQL_Errno</code> and
+            <code class="literal">Last_SQL_Error</code> columns correspond to
+            error values listed in
+            <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html" target="_top">Server Error Message Reference</a>. This was not
+            always true in previous versions. (Bug #11760365, Bug
+            #52768)
+          </p></li><li class="listitem"><p>
+            <code class="literal">Replicate_Ignore_Server_Ids</code>
+          </p><p>
+            In MySQL 5.7, you set a replica to ignore
+            events from 0 or more sources using the
+            <code class="literal">IGNORE_SERVER_IDS</code> option of the
+            <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a> statement.
+            By default this is blank, and is usually modified only when
+            using a circular or other multi-source replication setup.
+            The message shown for
+            <code class="literal">Replicate_Ignore_Server_Ids</code> when not
+            blank consists of a comma-delimited list of one or more
+            numbers, indicating the server IDs to be ignored. For
+            example:
+          </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">	Replicate_Ignore_Server_Ids: 2, 6, 9</code></pre>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              <code class="literal">Ignored_server_ids</code> also shows the
+              server IDs to be ignored, but is a space-delimited list,
+              which is preceded by the total number of server IDs to be
+              ignored. For example, if a <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE
+              MASTER TO</code></a> statement containing the
+              <code class="literal">IGNORE_SERVER_IDS = (2,6,9)</code> option has
+              been issued to tell a replica to ignore sources having the
+              server ID 2, 6, or 9, that information appears as shown
+              here:
+            </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">	Ignored_server_ids: 3, 2, 6, 9</code></pre><p>
+              The first number (in this case <code class="literal">3</code>) shows
+              the number of server IDs being ignored.
+</p>
+</div>
+<p>
+            <code class="literal">Replicate_Ignore_Server_Ids</code> filtering is
+            performed by the I/O thread, rather than by the SQL thread,
+            which means that events which are filtered out are not
+            written to the relay log. This differs from the filtering
+            actions taken by server options such
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-do-table"><code class="option">--replicate-do-table</code></a>, which
+            apply to the SQL thread.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_Server_Id</code>
+          </p><p>
+            The <a class="link" href="replication-options.html#sysvar_server_id"><code class="literal">server_id</code></a> value from
+            the source.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_UUID</code>
+          </p><p>
+            The <a class="link" href="replication-options.html#sysvar_server_uuid"><code class="literal">server_uuid</code></a> value from
+            the source.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_Info_File</code>
+          </p><p>
+            The location of the <code class="filename">master.info</code> file.
+          </p></li><li class="listitem"><p>
+            <code class="literal">SQL_Delay</code>
+          </p><p>
+            The number of seconds that the replica must lag the source.
+          </p></li><li class="listitem"><p>
+            <code class="literal">SQL_Remaining_Delay</code>
+          </p><p>
+            When <code class="literal">Slave_SQL_Running_State</code> is
+            <code class="literal">Waiting until MASTER_DELAY seconds after master
+            executed event</code>, this field contains the number of
+            delay seconds remaining. At other times, this field is
+            <code class="literal">NULL</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Slave_SQL_Running_State</code>
+          </p><p>
+            The state of the SQL thread (analogous to
+            <code class="literal">Slave_IO_State</code>). The value is identical
+            to the <code class="literal">State</code> value of the SQL thread as
+            displayed by <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW
+            PROCESSLIST</code></a>.
+            <a class="xref" href="replica-sql-thread-states.html" title="8.14.7&nbsp;Replication Replica SQL Thread States">Section&nbsp;8.14.7, “Replication Replica SQL Thread States”</a>, provides a
+            listing of possible states
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_Retry_Count</code>
+          </p><p>
+            The number of times the replica can attempt to reconnect to
+            the source in the event of a lost connection. This value can
+            be set using the <code class="literal">MASTER_RETRY_COUNT</code>
+            option of the <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER
+            TO</code></a> statement (preferred) or the older
+            <a class="link" href="replication-options-replica.html#option_mysqld_master-retry-count"><code class="option">--master-retry-count</code></a> server
+            option (still supported for backward compatibility).
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_Bind</code>
+          </p><p>
+            The network interface that the replica is bound to, if any.
+            This is set using the <code class="literal">MASTER_BIND</code> option
+            for the <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a>
+            statement.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Last_IO_Error_Timestamp</code>
+          </p><p>
+            A timestamp in <em class="replaceable"><code>YYMMDD hh:mm:ss</code></em>
+            format that shows when the most recent I/O error took place.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Last_SQL_Error_Timestamp</code>
+          </p><p>
+            A timestamp in <em class="replaceable"><code>YYMMDD hh:mm:ss</code></em>
+            format that shows when the most recent SQL error occurred.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Retrieved_Gtid_Set</code>
+          </p><p>
+            The set of global transaction IDs corresponding to all
+            transactions received by this replica. Empty if GTIDs are
+            not in use. See
+            <a class="xref" href="replication-gtids-concepts.html#replication-gtids-concepts-gtid-sets" title="GTID Sets">GTID Sets</a> for
+            more information.
+          </p><p>
+            This is the set of all GTIDs that exist or have existed in
+            the relay logs. Each GTID is added as soon as the
+            <code class="literal">Gtid_log_event</code> is received. This can
+            cause partially transmitted transactions to have their GTIDs
+            included in the set.
+          </p><p>
+            When all relay logs are lost due to executing
+            <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> or
+            <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a>, or due to
+            the effects of the
+            <a class="link" href="replication-options-replica.html#sysvar_relay_log_recovery"><code class="option">--relay-log-recovery</code></a> option,
+            the set is cleared. When
+            <a class="link" href="replication-options-replica.html#sysvar_relay_log_purge"><code class="literal">relay_log_purge = 1</code></a>, the
+            newest relay log is always kept, and the set is not cleared.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Executed_Gtid_Set</code>
+          </p><p>
+            The set of global transaction IDs written in the binary log.
+            This is the same as the value for the global
+            <a class="link" href="replication-options-gtids.html#sysvar_gtid_executed"><code class="literal">gtid_executed</code></a> system
+            variable on this server, as well as the value for
+            <code class="literal">Executed_Gtid_Set</code> in the output of
+            <a class="link" href="show-master-status.html" title="13.7.5.23&nbsp;SHOW MASTER STATUS Statement"><code class="literal">SHOW MASTER STATUS</code></a> on this
+            server. Empty if GTIDs are not in use. See
+            <a class="xref" href="replication-gtids-concepts.html#replication-gtids-concepts-gtid-sets" title="GTID Sets">GTID Sets</a> for
+            more information.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Auto_Position</code>
+          </p><p>
+            1 if autopositioning is in use; otherwise 0.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Replicate_Rewrite_DB</code>
+          </p><p>
+            The <code class="literal">Replicate_Rewrite_DB</code> value displays
+            any replication filtering rules that were specified. For
+            example, if the following replication filter rule was set:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CHANGE REPLICATION FILTER REPLICATE_REWRITE_DB=((db1,db2), (db3,db4));</code></pre><p>
+            the <code class="literal">Replicate_Rewrite_DB</code> value displays:
+          </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">Replicate_Rewrite_DB: (db1,db2),(db3,db4)</code></pre><p>
+            For more information, see
+            <a class="xref" href="change-replication-filter.html" title="13.4.2.2&nbsp;CHANGE REPLICATION FILTER Statement">Section&nbsp;13.4.2.2, “CHANGE REPLICATION FILTER Statement”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Channel_name</code>
+          </p><p>
+            The replication channel which is being displayed. There is
+            always a default replication channel, and more replication
+            channels can be added. See
+            <a class="xref" href="replication-channels.html" title="16.2.2&nbsp;Replication Channels">Section&nbsp;16.2.2, “Replication Channels”</a> for more information.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Master_TLS_Version</code>
+          </p><p>
+            The TLS version used on the source. For TLS version
+            information, see
+            <a class="xref" href="encrypted-connection-protocols-ciphers.html" title="6.3.2&nbsp;Encrypted Connection TLS Protocols and Ciphers">Section&nbsp;6.3.2, “Encrypted Connection TLS Protocols and Ciphers”</a>.
+            This column was added in MySQL 5.7.10.
+</p></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

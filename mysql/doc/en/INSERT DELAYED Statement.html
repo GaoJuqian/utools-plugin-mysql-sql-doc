@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>INSERT DELAYED Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="insert-delayed"></a>13.2.5.3&nbsp;INSERT DELAYED Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852579632912"></a><a class="indexterm" name="idm45852579631872"></a><a class="indexterm" name="idm45852579630800"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">INSERT DELAYED ...</code></pre><p>
+        The <code class="literal">DELAYED</code> option for the
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> statement is a MySQL
+        extension to standard SQL. In previous versions of MySQL, it can
+        be used for certain kinds of tables (such as
+        <code class="literal">MyISAM</code>), such that when a client uses
+        <a class="link" href="insert-delayed.html" title="13.2.5.3&nbsp;INSERT DELAYED Statement"><code class="literal">INSERT DELAYED</code></a>, it gets an okay
+        from the server at once, and the row is queued to be inserted
+        when the table is not in use by any other thread.
+      </p><p>
+        <code class="literal">DELAYED</code> inserts and replaces were deprecated
+        in MySQL 5.6. In MySQL 5.7,
+        <code class="literal">DELAYED</code> is not supported. The server
+        recognizes but ignores the <code class="literal">DELAYED</code> keyword,
+        handles the insert as a nondelayed insert, and generates an
+        <code class="literal">ER_WARN_LEGACY_SYNTAX_CONVERTED</code> warning:
+        <span class="errortext">INSERT DELAYED is no longer supported. The statement
+        was converted to INSERT</span>. The
+        <code class="literal">DELAYED</code> keyword is scheduled for removal in a
+        future release.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

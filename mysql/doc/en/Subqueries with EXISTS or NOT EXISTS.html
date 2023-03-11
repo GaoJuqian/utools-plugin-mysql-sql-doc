@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Subqueries with EXISTS or NOT EXISTS</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="exists-and-not-exists-subqueries"></a>13.2.10.6&nbsp;Subqueries with EXISTS or NOT EXISTS</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577752688"></a><a class="indexterm" name="idm45852577751200"></a><a class="indexterm" name="idm45852577749712"></a><a class="indexterm" name="idm45852577748224"></a><p>
+        If a subquery returns any rows at all, <code class="literal">EXISTS
+        <em class="replaceable"><code>subquery</code></em></code> is
+        <code class="literal">TRUE</code>, and <code class="literal">NOT EXISTS
+        <em class="replaceable"><code>subquery</code></em></code> is
+        <code class="literal">FALSE</code>. For example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT column1 FROM t1 WHERE EXISTS (SELECT * FROM t2);</code></pre><p>
+        Traditionally, an <code class="literal">EXISTS</code> subquery starts with
+        <code class="literal">SELECT *</code>, but it could begin with
+        <code class="literal">SELECT 5</code> or <code class="literal">SELECT column1</code>
+        or anything at all. MySQL ignores the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> list in such a subquery,
+        so it makes no difference.
+      </p><p>
+        For the preceding example, if <code class="literal">t2</code> contains any
+        rows, even rows with nothing but <code class="literal">NULL</code> values,
+        the <code class="literal">EXISTS</code> condition is
+        <code class="literal">TRUE</code>. This is actually an unlikely example
+        because a <code class="literal">[NOT] EXISTS</code> subquery almost always
+        contains correlations. Here are some more realistic examples:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            What kind of store is present in one or more cities?
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT DISTINCT store_type FROM stores
+  WHERE EXISTS (SELECT * FROM cities_stores
+                WHERE cities_stores.store_type = stores.store_type);</code></pre></li><li class="listitem"><p>
+            What kind of store is present in no cities?
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT DISTINCT store_type FROM stores
+  WHERE NOT EXISTS (SELECT * FROM cities_stores
+                    WHERE cities_stores.store_type = stores.store_type);</code></pre></li><li class="listitem"><p>
+            What kind of store is present in all cities?
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT DISTINCT store_type FROM stores s1
+  WHERE NOT EXISTS (
+    SELECT * FROM cities WHERE NOT EXISTS (
+      SELECT * FROM cities_stores
+       WHERE cities_stores.city = cities.city
+       AND cities_stores.store_type = stores.store_type));</code></pre></li></ul>
+</div>
+<p>
+        The last example is a double-nested <code class="literal">NOT
+        EXISTS</code> query. That is, it has a <code class="literal">NOT
+        EXISTS</code> clause within a <code class="literal">NOT EXISTS</code>
+        clause. Formally, it answers the question <span class="quote">“<span class="quote">does a city
+        exist with a store that is not in
+        <code class="literal">Stores</code></span>”</span>? But it is easier to say that
+        a nested <code class="literal">NOT EXISTS</code> answers the question
+        <span class="quote">“<span class="quote">is <em class="replaceable"><code>x</code></em> <code class="literal">TRUE</code>
+        for all <em class="replaceable"><code>y</code></em>?</span>”</span>
+</p>
+</div>
+<br>
+        
+</body>
+</html>

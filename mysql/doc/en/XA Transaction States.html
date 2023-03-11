@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>XA Transaction States</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="xa-states"></a>13.3.7.2&nbsp;XA Transaction States</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        An XA transaction progresses through the following states:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+            Use <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+            START</code></a> to start an XA transaction and put it in the
+            <code class="literal">ACTIVE</code> state.
+          </p></li><li class="listitem"><p>
+            For an <code class="literal">ACTIVE</code> XA transaction, issue the
+            SQL statements that make up the transaction, and then issue
+            an <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+            END</code></a> statement.
+            <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+            END</code></a> puts the transaction in the
+            <code class="literal">IDLE</code> state.
+          </p></li><li class="listitem"><p>
+            For an <code class="literal">IDLE</code> XA transaction, you can issue
+            either an <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+            PREPARE</code></a> statement or an <code class="literal">XA COMMIT ... ONE
+            PHASE</code> statement:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+                <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+                PREPARE</code></a> puts the transaction in the
+                <code class="literal">PREPARED</code> state. An
+                <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+                RECOVER</code></a> statement at this point includes the
+                transaction's <em class="replaceable"><code>xid</code></em> value
+                in its output, because
+                <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+                RECOVER</code></a> lists all XA transactions that are in
+                the <code class="literal">PREPARED</code> state.
+              </p></li><li class="listitem"><p>
+                <code class="literal">XA COMMIT ... ONE PHASE</code> prepares and
+                commits the transaction. The
+                <em class="replaceable"><code>xid</code></em> value is not listed by
+                <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+                RECOVER</code></a> because the transaction terminates.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+            For a <code class="literal">PREPARED</code> XA transaction, you can
+            issue an <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+            COMMIT</code></a> statement to commit and terminate the
+            transaction, or
+            <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+            ROLLBACK</code></a> to roll back and terminate the
+            transaction.
+</p></li></ol>
+</div>
+<p>
+        Here is a simple XA transaction that inserts a row into a table
+        as part of a global transaction:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; XA START 'xatest';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; INSERT INTO mytable (i) VALUES(10);
+Query OK, 1 row affected (0.04 sec)
+
+mysql&gt; XA END 'xatest';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; XA PREPARE 'xatest';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; XA COMMIT 'xatest';
+Query OK, 0 rows affected (0.00 sec)</code></pre><p>
+        Within the context of a given client connection, XA transactions
+        and local (non-XA) transactions are mutually exclusive. For
+        example, if <a class="link" href="xa-statements.html" title="13.3.7.1&nbsp;XA Transaction SQL Statements"><code class="literal">XA
+        START</code></a> has been issued to begin an XA transaction, a
+        local transaction cannot be started until the XA transaction has
+        been committed or rolled back. Conversely, if a local
+        transaction has been started with
+        <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+        TRANSACTION</code></a>, no XA statements can be used until the
+        transaction has been committed or rolled back.
+      </p><p>
+        If an XA transaction is in the <code class="literal">ACTIVE</code> state,
+        you cannot issue any statements that cause an implicit commit.
+        That would violate the XA contract because you could not roll
+        back the XA transaction. The following error is raised if you
+        try to execute such a statement:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">ERROR 1399 (XAE07): XAER_RMFAIL: The command cannot be executed
+when global transaction is in the ACTIVE state</code></pre><p>
+        Statements to which the preceding remark applies are listed at
+        <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

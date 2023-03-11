@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW BINARY LOGS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-binary-logs"></a>13.7.5.1&nbsp;SHOW BINARY LOGS Statement</h4>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852571575216"></a><a class="indexterm" name="idm45852571574160"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW BINARY LOGS
+SHOW MASTER LOGS</code></pre><p>
+        Lists the binary log files on the server. This statement is used
+        as part of the procedure described in
+        <a class="xref" href="purge-binary-logs.html" title="13.4.1.1&nbsp;PURGE BINARY LOGS Statement">Section&nbsp;13.4.1.1, “PURGE BINARY LOGS Statement”</a>, that shows how to determine
+        which logs can be purged. A user with the
+        <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> or
+        <a class="link" href="privileges-provided.html#priv_replication-client"><code class="literal">REPLICATION CLIENT</code></a> privilege may
+        execute this statement.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW BINARY LOGS;
++---------------+-----------+
+| Log_name      | File_size |
++---------------+-----------+
+| binlog.000015 |    724935 |
+| binlog.000016 |    733481 |
++---------------+-----------+</code></pre><p>
+        <a class="link" href="show-binary-logs.html" title="13.7.5.1&nbsp;SHOW BINARY LOGS Statement"><code class="literal">SHOW MASTER
+        LOGS</code></a> is equivalent to <a class="link" href="show-binary-logs.html" title="13.7.5.1&nbsp;SHOW BINARY LOGS Statement"><code class="literal">SHOW BINARY
+        LOGS</code></a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DO Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="do"></a>13.2.3&nbsp;DO Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580128304"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DO <em class="replaceable">expr</em> [, <em class="replaceable">expr</em>] ...</code></pre><p>
+      <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> executes the expressions but
+      does not return any results. In most respects,
+      <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> is shorthand for <code class="literal">SELECT
+      <em class="replaceable"><code>expr</code></em>, ...</code>, but has the
+      advantage that it is slightly faster when you do not care about
+      the result.
+    </p><p>
+      <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> is useful primarily with
+      functions that have side effects, such as
+      <a class="link" href="locking-functions.html#function_release-lock"><code class="literal">RELEASE_LOCK()</code></a>.
+    </p><p>
+      Example: This <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement
+      pauses, but also produces a result set:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT SLEEP(5);
++----------+
+| SLEEP(5) |
++----------+
+|        0 |
++----------+
+1 row in set (5.02 sec)</code></pre><p>
+      <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a>, on the other hand, pauses
+      without producing a result set.:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; DO SLEEP(5);
+Query OK, 0 rows affected (4.99 sec)</code></pre><p>
+      This could be useful, for example in a stored function or trigger,
+      which prohibit statements that produce result sets.
+    </p><p>
+      <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> only executes expressions. It
+      cannot be used in all cases where <code class="literal">SELECT</code> can be
+      used. For example, <code class="literal">DO id FROM t1</code> is invalid
+      because it references a table.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE EVENT Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="create-event"></a>13.1.12&nbsp;CREATE EVENT Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852584383888"></a><a class="indexterm" name="idm45852584382400"></a><a class="indexterm" name="idm45852584380912"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE
+    [DEFINER = <em class="replaceable">user</em>]
+    EVENT
+    [IF NOT EXISTS]
+    <em class="replaceable">event_name</em>
+    ON SCHEDULE <em class="replaceable">schedule</em>
+    [ON COMPLETION [NOT] PRESERVE]
+    [ENABLE | DISABLE | DISABLE ON SLAVE]
+    [COMMENT '<em class="replaceable">string</em>']
+    DO <em class="replaceable">event_body</em>;
+
+<em class="replaceable">schedule</em>: {
+    AT <em class="replaceable">timestamp</em> [+ INTERVAL <em class="replaceable">interval</em>] ...
+  | EVERY <em class="replaceable">interval</em>
+    [STARTS <em class="replaceable">timestamp</em> [+ INTERVAL <em class="replaceable">interval</em>] ...]
+    [ENDS <em class="replaceable">timestamp</em> [+ INTERVAL <em class="replaceable">interval</em>] ...]
+}
+
+<em class="replaceable">interval</em>:
+    <em class="replaceable">quantity</em> {YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE |
+              WEEK | SECOND | YEAR_MONTH | DAY_HOUR | DAY_MINUTE |
+              DAY_SECOND | HOUR_MINUTE | HOUR_SECOND | MINUTE_SECOND}</code></pre><p>
+      This statement creates and schedules a new event. The event does
+      not run unless the Event Scheduler is enabled. For information
+      about checking Event Scheduler status and enabling it if
+      necessary, see <a class="xref" href="events-configuration.html" title="23.4.2&nbsp;Event Scheduler Configuration">Section&nbsp;23.4.2, “Event Scheduler Configuration”</a>.
+    </p><p>
+      <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE EVENT</code></a> requires the
+      <a class="link" href="privileges-provided.html#priv_event"><code class="literal">EVENT</code></a> privilege for the schema in
+      which the event is to be created. If the
+      <code class="literal">DEFINER</code> clause is present, the privileges
+      required depend on the <em class="replaceable"><code>user</code></em> value, as
+      discussed in <a class="xref" href="stored-objects-security.html" title="23.6&nbsp;Stored Object Access Control">Section&nbsp;23.6, “Stored Object Access Control”</a>.
+    </p><p>
+      The minimum requirements for a valid <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE
+      EVENT</code></a> statement are as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          The keywords <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE EVENT</code></a> plus
+          an event name, which uniquely identifies the event in a
+          database schema.
+        </p></li><li class="listitem"><p>
+          An <code class="literal">ON SCHEDULE</code> clause, which determines
+          when and how often the event executes.
+        </p></li><li class="listitem"><p>
+          A <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> clause, which contains the
+          SQL statement to be executed by an event.
+</p></li></ul>
+</div>
+<p>
+      This is an example of a minimal <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE
+      EVENT</code></a> statement:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE EVENT myevent
+    ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 1 HOUR
+    DO
+      UPDATE myschema.mytable SET mycol = mycol + 1;</code></pre><p>
+      The previous statement creates an event named
+      <code class="literal">myevent</code>. This event executes once—one
+      hour following its creation—by running an SQL statement that
+      increments the value of the <code class="literal">myschema.mytable</code>
+      table's <code class="literal">mycol</code> column by 1.
+    </p><p>
+      The <em class="replaceable"><code>event_name</code></em> must be a valid MySQL
+      identifier with a maximum length of 64 characters. Event names are
+      not case-sensitive, so you cannot have two events named
+      <code class="literal">myevent</code> and <code class="literal">MyEvent</code> in the
+      same schema. In general, the rules governing event names are the
+      same as those for names of stored routines. See
+      <a class="xref" href="identifiers.html" title="9.2&nbsp;Schema Object Names">Section&nbsp;9.2, “Schema Object Names”</a>.
+    </p><p>
+      An event is associated with a schema. If no schema is indicated as
+      part of <em class="replaceable"><code>event_name</code></em>, the default
+      (current) schema is assumed. To create an event in a specific
+      schema, qualify the event name with a schema using
+      <code class="literal"><em class="replaceable"><code>schema_name</code></em>.<em class="replaceable"><code>event_name</code></em></code>
+      syntax.
+    </p><p>
+      The <code class="literal">DEFINER</code> clause specifies the MySQL account
+      to be used when checking access privileges at event execution
+      time. If the <code class="literal">DEFINER</code> clause is present, the
+      <em class="replaceable"><code>user</code></em> value should be a MySQL account
+      specified as
+      <code class="literal">'<em class="replaceable"><code>user_name</code></em>'@'<em class="replaceable"><code>host_name</code></em>'</code>,
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a>, or
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER()</code></a>. The permitted
+      <em class="replaceable"><code>user</code></em> values depend on the privileges
+      you hold, as discussed in
+      <a class="xref" href="stored-objects-security.html" title="23.6&nbsp;Stored Object Access Control">Section&nbsp;23.6, “Stored Object Access Control”</a>. Also see that section
+      for additional information about event security.
+    </p><p>
+      If the <code class="literal">DEFINER</code> clause is omitted, the default
+      definer is the user who executes the <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE
+      EVENT</code></a> statement. This is the same as specifying
+      <code class="literal">DEFINER = CURRENT_USER</code> explicitly.
+    </p><p>
+      Within an event body, the
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a> function returns the
+      account used to check privileges at event execution time, which is
+      the <code class="literal">DEFINER</code> user. For information about user
+      auditing within events, see
+      <a class="xref" href="account-activity-auditing.html" title="6.2.18&nbsp;SQL-Based Account Activity Auditing">Section&nbsp;6.2.18, “SQL-Based Account Activity Auditing”</a>.
+    </p><p>
+      <code class="literal">IF NOT EXISTS</code> has the same meaning for
+      <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE EVENT</code></a> as for
+      <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>: If an event named
+      <em class="replaceable"><code>event_name</code></em> already exists in the same
+      schema, no action is taken, and no error results. (However, a
+      warning is generated in such cases.)
+    </p><p>
+      The <code class="literal">ON SCHEDULE</code> clause determines when, how
+      often, and for how long the <em class="replaceable"><code>event_body</code></em>
+      defined for the event repeats. This clause takes one of two forms:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">AT <em class="replaceable"><code>timestamp</code></em></code> is
+          used for a one-time event. It specifies that the event
+          executes one time only at the date and time given by
+          <em class="replaceable"><code>timestamp</code></em>, which must include both
+          the date and time, or must be an expression that resolves to a
+          datetime value. You may use a value of either the
+          <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">DATETIME</code></a> or
+          <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">TIMESTAMP</code></a> type for this
+          purpose. If the date is in the past, a warning occurs, as
+          shown here:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT NOW();
++---------------------+
+| NOW()               |
++---------------------+
+| 2006-02-10 23:59:01 |
++---------------------+
+1 row in set (0.04 sec)
+
+mysql&gt; CREATE EVENT e_totals
+    -&gt;     ON SCHEDULE AT '2006-02-10 23:59:00'
+    -&gt;     DO INSERT INTO test.totals VALUES (NOW());
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql&gt; SHOW WARNINGS\G
+*************************** 1. row ***************************
+  Level: Note
+   Code: 1588
+Message: Event execution time is in the past and ON COMPLETION NOT
+         PRESERVE is set. The event was dropped immediately after
+         creation.</code></pre><p>
+          <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE EVENT</code></a> statements which
+          are themselves invalid—for whatever reason—fail
+          with an error.
+        </p><p>
+          You may use <a class="link" href="date-and-time-functions.html#function_current-timestamp"><code class="literal">CURRENT_TIMESTAMP</code></a>
+          to specify the current date and time. In such a case, the
+          event acts as soon as it is created.
+        </p><p>
+          To create an event which occurs at some point in the future
+          relative to the current date and time—such as that
+          expressed by the phrase <span class="quote">“<span class="quote">three weeks from
+          now</span>”</span>—you can use the optional clause <code class="literal">+
+          INTERVAL <em class="replaceable"><code>interval</code></em></code>. The
+          <em class="replaceable"><code>interval</code></em> portion consists of two
+          parts, a quantity and a unit of time, and follows the syntax
+          rules described in <a class="xref" href="expressions.html#temporal-intervals" title="Temporal Intervals">Temporal Intervals</a>,
+          except that you cannot use any units keywords that involving
+          microseconds when defining an event. With some interval types,
+          complex time units may be used. For example, <span class="quote">“<span class="quote">two
+          minutes and ten seconds</span>”</span> can be expressed as <code class="literal">+
+          INTERVAL '2:10' MINUTE_SECOND</code>.
+        </p><p>
+          You can also combine intervals. For example, <code class="literal">AT
+          CURRENT_TIMESTAMP + INTERVAL 3 WEEK + INTERVAL 2 DAY</code>
+          is equivalent to <span class="quote">“<span class="quote">three weeks and two days from
+          now</span>”</span>. Each portion of such a clause must begin with
+          <code class="literal">+ INTERVAL</code>.
+        </p></li><li class="listitem"><p>
+          To repeat actions at a regular interval, use an
+          <code class="literal">EVERY</code> clause. The <code class="literal">EVERY</code>
+          keyword is followed by an <em class="replaceable"><code>interval</code></em>
+          as described in the previous discussion of the
+          <code class="literal">AT</code> keyword. (<code class="literal">+ INTERVAL</code>
+          is <span class="emphasis"><em>not</em></span> used with
+          <code class="literal">EVERY</code>.) For example, <code class="literal">EVERY 6
+          WEEK</code> means <span class="quote">“<span class="quote">every six weeks</span>”</span>.
+        </p><p>
+          Although <code class="literal">+ INTERVAL</code> clauses are not
+          permitted in an <code class="literal">EVERY</code> clause, you can use
+          the same complex time units permitted in a <code class="literal">+
+          INTERVAL</code>.
+        </p><p>
+          An <code class="literal">EVERY</code> clause may contain an optional
+          <code class="literal">STARTS</code> clause. <code class="literal">STARTS</code> is
+          followed by a <em class="replaceable"><code>timestamp</code></em> value that
+          indicates when the action should begin repeating, and may also
+          use <code class="literal">+ INTERVAL
+          <em class="replaceable"><code>interval</code></em></code> to specify an
+          amount of time <span class="quote">“<span class="quote">from now</span>”</span>. For example,
+          <code class="literal">EVERY 3 MONTH STARTS CURRENT_TIMESTAMP + INTERVAL 1
+          WEEK</code> means <span class="quote">“<span class="quote">every three months, beginning one
+          week from now</span>”</span>. Similarly, you can express <span class="quote">“<span class="quote">every
+          two weeks, beginning six hours and fifteen minutes from
+          now</span>”</span> as <code class="literal">EVERY 2 WEEK STARTS CURRENT_TIMESTAMP
+          + INTERVAL '6:15' HOUR_MINUTE</code>. Not specifying
+          <code class="literal">STARTS</code> is the same as using <code class="literal">STARTS
+          CURRENT_TIMESTAMP</code>—that is, the action
+          specified for the event begins repeating immediately upon
+          creation of the event.
+        </p><p>
+          An <code class="literal">EVERY</code> clause may contain an optional
+          <code class="literal">ENDS</code> clause. The <code class="literal">ENDS</code>
+          keyword is followed by a <em class="replaceable"><code>timestamp</code></em>
+          value that tells MySQL when the event should stop repeating.
+          You may also use <code class="literal">+ INTERVAL
+          <em class="replaceable"><code>interval</code></em></code> with
+          <code class="literal">ENDS</code>; for instance, <code class="literal">EVERY 12 HOUR
+          STARTS CURRENT_TIMESTAMP + INTERVAL 30 MINUTE ENDS
+          CURRENT_TIMESTAMP + INTERVAL 4 WEEK</code> is equivalent to
+          <span class="quote">“<span class="quote">every twelve hours, beginning thirty minutes from now,
+          and ending four weeks from now</span>”</span>. Not using
+          <code class="literal">ENDS</code> means that the event continues
+          executing indefinitely.
+        </p><p>
+          <code class="literal">ENDS</code> supports the same syntax for complex
+          time units as <code class="literal">STARTS</code> does.
+        </p><p>
+          You may use <code class="literal">STARTS</code>,
+          <code class="literal">ENDS</code>, both, or neither in an
+          <code class="literal">EVERY</code> clause.
+        </p><p>
+          If a repeating event does not terminate within its scheduling
+          interval, the result may be multiple instances of the event
+          executing simultaneously. If this is undesirable, you should
+          institute a mechanism to prevent simultaneous instances. For
+          example, you could use the
+          <a class="link" href="locking-functions.html#function_get-lock"><code class="literal">GET_LOCK()</code></a> function, or row or
+          table locking.
+</p></li></ul>
+</div>
+<p>
+      The <code class="literal">ON SCHEDULE</code> clause may use expressions
+      involving built-in MySQL functions and user variables to obtain
+      any of the <em class="replaceable"><code>timestamp</code></em> or
+      <em class="replaceable"><code>interval</code></em> values which it contains. You
+      may not use stored functions or loadable functions in such
+      expressions, nor may you use any table references; however, you
+      may use <code class="literal">SELECT FROM DUAL</code>. This is true for both
+      <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE EVENT</code></a> and
+      <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> statements. References
+      to stored functions, loadable functions, and tables in such cases
+      are specifically not permitted, and fail with an error (see Bug
+      #22830).
+    </p><p>
+      Times in the <code class="literal">ON SCHEDULE</code> clause are interpreted
+      using the current session
+      <a class="link" href="server-system-variables.html#sysvar_time_zone"><code class="literal">time_zone</code></a> value. This becomes the
+      event time zone; that is, the time zone that is used for event
+      scheduling and is in effect within the event as it executes. These
+      times are converted to UTC and stored along with the event time
+      zone in the <code class="literal">mysql.event</code> table. This enables
+      event execution to proceed as defined regardless of any subsequent
+      changes to the server time zone or daylight saving time effects.
+      For additional information about representation of event times,
+      see <a class="xref" href="events-metadata.html" title="23.4.4&nbsp;Event Metadata">Section&nbsp;23.4.4, “Event Metadata”</a>. See also
+      <a class="xref" href="show-events.html" title="13.7.5.18&nbsp;SHOW EVENTS Statement">Section&nbsp;13.7.5.18, “SHOW EVENTS Statement”</a>, and
+      <a class="xref" href="information-schema-events-table.html" title="24.3.8&nbsp;The INFORMATION_SCHEMA EVENTS Table">Section&nbsp;24.3.8, “The INFORMATION_SCHEMA EVENTS Table”</a>.
+    </p><p>
+      Normally, once an event has expired, it is immediately dropped.
+      You can override this behavior by specifying <code class="literal">ON
+      COMPLETION PRESERVE</code>. Using <code class="literal">ON COMPLETION NOT
+      PRESERVE</code> merely makes the default nonpersistent behavior
+      explicit.
+    </p><p>
+      You can create an event but prevent it from being active using the
+      <code class="literal">DISABLE</code> keyword. Alternatively, you can use
+      <code class="literal">ENABLE</code> to make explicit the default status,
+      which is active. This is most useful in conjunction with
+      <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> (see
+      <a class="xref" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement">Section&nbsp;13.1.2, “ALTER EVENT Statement”</a>).
+    </p><p>
+      A third value may also appear in place of
+      <code class="literal">ENABLE</code> or <code class="literal">DISABLE</code>;
+      <code class="literal">DISABLE ON SLAVE</code> is set for the status of an
+      event on a replica to indicate that the event was created on the
+      source and replicated to the replica, but is not executed on the
+      replica. See <a class="xref" href="replication-features-invoked.html" title="16.4.1.16&nbsp;Replication of Invoked Features">Section&nbsp;16.4.1.16, “Replication of Invoked Features”</a>.
+    </p><p>
+      You may supply a comment for an event using a
+      <code class="literal">COMMENT</code> clause.
+      <em class="replaceable"><code>comment</code></em> may be any string of up to 64
+      characters that you wish to use for describing the event. The
+      comment text, being a string literal, must be surrounded by
+      quotation marks.
+    </p><p>
+      The <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> clause specifies an action
+      carried by the event, and consists of an SQL statement. Nearly any
+      valid MySQL statement that can be used in a stored routine can
+      also be used as the action statement for a scheduled event. (See
+      <a class="xref" href="stored-program-restrictions.html" title="23.8&nbsp;Restrictions on Stored Programs">Section&nbsp;23.8, “Restrictions on Stored Programs”</a>.) For example, the
+      following event <code class="literal">e_hourly</code> deletes all rows from
+      the <code class="literal">sessions</code> table once per hour, where this
+      table is part of the <code class="literal">site_activity</code> schema:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE EVENT e_hourly
+    ON SCHEDULE
+      EVERY 1 HOUR
+    COMMENT 'Clears out sessions table each hour.'
+    DO
+      DELETE FROM site_activity.sessions;</code></pre><p>
+      MySQL stores the <a class="link" href="server-system-variables.html#sysvar_sql_mode"><code class="literal">sql_mode</code></a> system
+      variable setting in effect when an event is created or altered,
+      and always executes the event with this setting in force,
+      <span class="emphasis"><em>regardless of the current server SQL mode when the event
+      begins executing</em></span>.
+    </p><p>
+      A <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE EVENT</code></a> statement that
+      contains an <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> statement
+      in its <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> clause appears to
+      succeed; however, when the server attempts to execute the
+      resulting scheduled event, the execution fails with an error.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        Statements such as <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> or
+        <a class="link" href="show.html" title="13.7.5&nbsp;SHOW Statements"><code class="literal">SHOW</code></a> that merely return a result
+        set have no effect when used in an event; the output from these
+        is not sent to the MySQL Monitor, nor is it stored anywhere.
+        However, you can use statements such as
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT ...
+        INTO</code></a> and
+        <a class="link" href="insert-select.html" title="13.2.5.1&nbsp;INSERT ... SELECT Statement"><code class="literal">INSERT INTO ...
+        SELECT</code></a> that store a result. (See the next example in
+        this section for an instance of the latter.)
+</p>
+</div>
+<p>
+      The schema to which an event belongs is the default schema for
+      table references in the <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> clause.
+      Any references to tables in other schemas must be qualified with
+      the proper schema name.
+    </p><p>
+      As with stored routines, you can use compound-statement syntax in
+      the <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> clause by using the
+      <code class="literal">BEGIN</code> and <code class="literal">END</code> keywords, as
+      shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">delimiter |
+
+CREATE EVENT e_daily
+    ON SCHEDULE
+      EVERY 1 DAY
+    COMMENT 'Saves total number of sessions then clears the table each day'
+    DO
+      BEGIN
+        INSERT INTO site_activity.totals (time, total)
+          SELECT CURRENT_TIMESTAMP, COUNT(*)
+            FROM site_activity.sessions;
+        DELETE FROM site_activity.sessions;
+      END |
+
+delimiter ;</code></pre><p>
+      This example uses the <code class="literal">delimiter</code> command to
+      change the statement delimiter. See
+      <a class="xref" href="stored-programs-defining.html" title="23.1&nbsp;Defining Stored Programs">Section&nbsp;23.1, “Defining Stored Programs”</a>.
+    </p><p>
+      More complex compound statements, such as those used in stored
+      routines, are possible in an event. This example uses local
+      variables, an error handler, and a flow control construct:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">delimiter |
+
+CREATE EVENT e
+    ON SCHEDULE
+      EVERY 5 SECOND
+    DO
+      BEGIN
+        DECLARE v INTEGER;
+        DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
+
+        SET v = 0;
+
+        WHILE v &lt; 5 DO
+          INSERT INTO t1 VALUES (0);
+          UPDATE t2 SET s1 = s1 + 1;
+          SET v = v + 1;
+        END WHILE;
+    END |
+
+delimiter ;</code></pre><p>
+      There is no way to pass parameters directly to or from events;
+      however, it is possible to invoke a stored routine with parameters
+      within an event:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE EVENT e_call_myproc
+    ON SCHEDULE
+      AT CURRENT_TIMESTAMP + INTERVAL 1 DAY
+    DO CALL myproc(5, 27);</code></pre><p>
+      If an event's definer has privileges sufficient to set global
+      system variables (see
+      <a class="xref" href="system-variable-privileges.html" title="5.1.8.1&nbsp;System Variable Privileges">Section&nbsp;5.1.8.1, “System Variable Privileges”</a>), the event can read
+      and write global variables. As granting such privileges entails a
+      potential for abuse, extreme care must be taken in doing so.
+    </p><p>
+      Generally, any statements that are valid in stored routines may be
+      used for action statements executed by events. For more
+      information about statements permissible within stored routines,
+      see <a class="xref" href="stored-routines-syntax.html" title="23.2.1&nbsp;Stored Routine Syntax">Section&nbsp;23.2.1, “Stored Routine Syntax”</a>. You can create an
+      event as part of a stored routine, but an event cannot be created
+      by another event.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

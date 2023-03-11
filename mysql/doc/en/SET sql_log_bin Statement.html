@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SET sql_log_bin Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="set-sql-log-bin"></a>13.4.1.3&nbsp;SET sql_log_bin Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852576294976"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET sql_log_bin = {OFF|ON}</code></pre><p>
+        The <a class="link" href="replication-options-binary-log.html#sysvar_sql_log_bin"><code class="literal">sql_log_bin</code></a> variable
+        controls whether logging to the binary log is enabled for the
+        current session (assuming that the binary log itself is
+        enabled). The default value is <code class="literal">ON</code>. To disable
+        or enable binary logging for the current session, set the
+        session <a class="link" href="replication-options-binary-log.html#sysvar_sql_log_bin"><code class="literal">sql_log_bin</code></a> variable to
+        <code class="literal">OFF</code> or <code class="literal">ON</code>.
+      </p><p>
+        Set this variable to <code class="literal">OFF</code> for a session to
+        temporarily disable binary logging while making changes to the
+        source you do not want replicated to the replica.
+      </p><p>
+        Setting the session value of this system variable is a
+        restricted operation. The session user must have privileges
+        sufficient to set restricted session variables. See
+        <a class="xref" href="system-variable-privileges.html" title="5.1.8.1&nbsp;System Variable Privileges">Section&nbsp;5.1.8.1, “System Variable Privileges”</a>.
+      </p><p>
+        It is not possible to set the session value of
+        <a class="link" href="replication-options-binary-log.html#sysvar_sql_log_bin"><code class="literal">sql_log_bin</code></a> within a
+        transaction or subquery.
+      </p><p>
+        <span class="emphasis"><em>Setting this variable to <code class="literal">OFF</code>
+        prevents GTIDs from being assigned to transactions in the binary
+        log</em></span>. If you are using GTIDs for replication, this
+        means that even when binary logging is later enabled again, the
+        GTIDs written into the log from this point do not account for
+        any transactions that occurred in the meantime, so in effect
+        those transactions are lost.
+      </p><p>
+        The global <a class="link" href="replication-options-binary-log.html#sysvar_sql_log_bin"><code class="literal">sql_log_bin</code></a> variable
+        is read only and cannot be modified. The global scope is
+        deprecated; expect it to be removed in a future MySQL release.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

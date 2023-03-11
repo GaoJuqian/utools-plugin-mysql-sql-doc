@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Cursors</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="cursors"></a>13.6.6&nbsp;Cursors</h3>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="close.html">13.6.6.1 Cursor CLOSE Statement</a></span></dt><dt><span class="section"><a href="declare-cursor.html">13.6.6.2 Cursor DECLARE Statement</a></span></dt><dt><span class="section"><a href="fetch.html">13.6.6.3 Cursor FETCH Statement</a></span></dt><dt><span class="section"><a href="open.html">13.6.6.4 Cursor OPEN Statement</a></span></dt><dt><span class="section"><a href="cursor-restrictions.html">13.6.6.5 Restrictions on Server-Side Cursors</a></span></dt></dl>
+</div>
+<a class="indexterm" name="idm45852575047248"></a><p>
+      MySQL supports cursors inside stored programs. The syntax is as in
+      embedded SQL. Cursors have these properties:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Asensitive: The server may or may not make a copy of its
+          result table
+        </p></li><li class="listitem"><p>
+          Read only: Not updatable
+        </p></li><li class="listitem"><p>
+          Nonscrollable: Can be traversed only in one direction and
+          cannot skip rows
+</p></li></ul>
+</div>
+<p>
+      Cursor declarations must appear before handler declarations and
+      after variable and condition declarations.
+    </p><p>
+      Example:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE curdemo()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE a CHAR(16);
+  DECLARE b, c INT;
+  DECLARE cur1 CURSOR FOR SELECT id,data FROM test.t1;
+  DECLARE cur2 CURSOR FOR SELECT i FROM test.t2;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur1;
+  OPEN cur2;
+
+  read_loop: LOOP
+    FETCH cur1 INTO a, b;
+    FETCH cur2 INTO c;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+    IF b &lt; c THEN
+      INSERT INTO test.t3 VALUES (a,b);
+    ELSE
+      INSERT INTO test.t3 VALUES (a,c);
+    END IF;
+  END LOOP;
+
+  CLOSE cur1;
+  CLOSE cur2;
+END;</code></pre>
+</div><br>
+        
+</body>
+</html>

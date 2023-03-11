@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>ALTER LOGFILE GROUP Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="alter-logfile-group"></a>13.1.5&nbsp;ALTER LOGFILE GROUP Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852585622896"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER LOGFILE GROUP <em class="replaceable">logfile_group</em>
+    ADD UNDOFILE '<em class="replaceable">file_name</em>'
+    [INITIAL_SIZE [=] <em class="replaceable">size</em>]
+    [WAIT]
+    ENGINE [=] <em class="replaceable">engine_name</em></code></pre><p>
+      This statement adds an <code class="literal">UNDO</code> file named
+      '<em class="replaceable"><code>file_name</code></em>' to an existing log file
+      group <em class="replaceable"><code>logfile_group</code></em>. An
+      <a class="link" href="alter-logfile-group.html" title="13.1.5&nbsp;ALTER LOGFILE GROUP Statement"><code class="literal">ALTER LOGFILE GROUP</code></a> statement has
+      one and only one <code class="literal">ADD UNDOFILE</code> clause. No
+      <code class="literal">DROP UNDOFILE</code> clause is currently supported.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        All NDB Cluster Disk Data objects share the same namespace. This
+        means that <span class="emphasis"><em>each Disk Data object</em></span> must be
+        uniquely named (and not merely each Disk Data object of a given
+        type). For example, you cannot have a tablespace and an undo log
+        file with the same name, or an undo log file and a data file
+        with the same name.
+</p>
+</div>
+<p>
+      The optional <code class="literal">INITIAL_SIZE</code> parameter sets the
+      <code class="literal">UNDO</code> file's initial size in bytes; if not
+      specified, the initial size defaults to 134217728 (128 MB). You
+      may optionally follow <em class="replaceable"><code>size</code></em> with a
+      one-letter abbreviation for an order of magnitude, similar to
+      those used in <code class="filename">my.cnf</code>. Generally, this is one
+      of the letters <code class="literal">M</code> (megabytes) or
+      <code class="literal">G</code> (gigabytes). (Bug #13116514, Bug #16104705,
+      Bug #62858)
+    </p><p>
+      On 32-bit systems, the maximum supported value for
+      <code class="literal">INITIAL_SIZE</code> is 4294967296 (4 GB). (Bug #29186)
+    </p><p>
+      The minimum allowed value for <code class="literal">INITIAL_SIZE</code> is
+      1048576 (1 MB). (Bug #29574)
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        <code class="literal">WAIT</code> is parsed but otherwise ignored. This
+        keyword currently has no effect, and is intended for future
+        expansion.
+</p>
+</div>
+<p>
+      The <code class="literal">ENGINE</code> parameter (required) determines the
+      storage engine which is used by this log file group, with
+      <em class="replaceable"><code>engine_name</code></em> being the name of the
+      storage engine. Currently, the only accepted values for
+      <em class="replaceable"><code>engine_name</code></em> are
+      <span class="quote">“<span class="quote"><a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDBCLUSTER</code></a></span>”</span> and
+      <span class="quote">“<span class="quote"><a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a></span>”</span>. The two values
+      are equivalent.
+    </p><p>
+      Here is an example, which assumes that the log file group
+      <code class="literal">lg_3</code> has already been created using
+      <a class="link" href="create-logfile-group.html" title="13.1.15&nbsp;CREATE LOGFILE GROUP Statement"><code class="literal">CREATE LOGFILE GROUP</code></a> (see
+      <a class="xref" href="create-logfile-group.html" title="13.1.15&nbsp;CREATE LOGFILE GROUP Statement">Section&nbsp;13.1.15, “CREATE LOGFILE GROUP Statement”</a>):
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER LOGFILE GROUP lg_3
+    ADD UNDOFILE 'undo_10.dat'
+    INITIAL_SIZE=32M
+    ENGINE=NDBCLUSTER;</code></pre><p>
+      When <a class="link" href="alter-logfile-group.html" title="13.1.5&nbsp;ALTER LOGFILE GROUP Statement"><code class="literal">ALTER LOGFILE GROUP</code></a> is used
+      with <code class="literal">ENGINE = NDBCLUSTER</code> (alternatively,
+      <code class="literal">ENGINE = NDB</code>), an <code class="literal">UNDO</code> log
+      file is created on each NDB Cluster data node. You can verify that
+      the <code class="literal">UNDO</code> files were created and obtain
+      information about them by querying the Information Schema
+      <a class="link" href="information-schema-files-table.html" title="24.3.9&nbsp;The INFORMATION_SCHEMA FILES Table"><code class="literal">FILES</code></a> table. For example:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT FILE_NAME, LOGFILE_GROUP_NUMBER, EXTRA
+    -&gt; FROM INFORMATION_SCHEMA.FILES
+    -&gt; WHERE LOGFILE_GROUP_NAME = 'lg_3';
++-------------+----------------------+----------------+
+| FILE_NAME   | LOGFILE_GROUP_NUMBER | EXTRA          |
++-------------+----------------------+----------------+
+| newdata.dat |                    0 | CLUSTER_NODE=3 |
+| newdata.dat |                    0 | CLUSTER_NODE=4 |
+| undo_10.dat |                   11 | CLUSTER_NODE=3 |
+| undo_10.dat |                   11 | CLUSTER_NODE=4 |
++-------------+----------------------+----------------+
+4 rows in set (0.01 sec)</code></pre><p>
+      (See <a class="xref" href="information-schema-files-table.html" title="24.3.9&nbsp;The INFORMATION_SCHEMA FILES Table">Section&nbsp;24.3.9, “The INFORMATION_SCHEMA FILES Table”</a>.)
+    </p><p>
+      Memory used for <code class="literal">UNDO_BUFFER_SIZE</code> comes from the
+      global pool whose size is determined by the value of the
+      <a class="link" href="mysql-cluster-ndbd-definition.html#ndbparam-ndbd-sharedglobalmemory"><code class="literal">SharedGlobalMemory</code></a> data
+      node configuration parameter. This includes any default value
+      implied for this option by the setting of the
+      <a class="link" href="mysql-cluster-ndbd-definition.html#ndbparam-ndbd-initiallogfilegroup"><code class="literal">InitialLogFileGroup</code></a> data
+      node configuration parameter.
+    </p><p>
+      <a class="link" href="alter-logfile-group.html" title="13.1.5&nbsp;ALTER LOGFILE GROUP Statement"><code class="literal">ALTER LOGFILE GROUP</code></a> is useful only
+      with Disk Data storage for NDB Cluster. For more information, see
+      <a class="xref" href="mysql-cluster-disk-data.html" title="21.6.11&nbsp;NDB Cluster Disk Data Tables">Section&nbsp;21.6.11, “NDB Cluster Disk Data Tables”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

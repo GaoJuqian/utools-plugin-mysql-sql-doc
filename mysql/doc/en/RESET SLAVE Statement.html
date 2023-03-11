@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>RESET SLAVE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="reset-slave"></a>13.4.2.4&nbsp;RESET SLAVE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575883344"></a><a class="indexterm" name="idm45852575882272"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">RESET SLAVE [ALL] [<em class="replaceable">channel_option</em>]
+
+<em class="replaceable">channel_option</em>:
+    FOR CHANNEL <em class="replaceable">channel</em></code></pre><p>
+        <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> makes the replica
+        forget its replication position in the source's binary log. This
+        statement is meant to be used for a clean start: It clears the
+        replication metadata repositories, deletes all the relay log
+        files, and starts a new relay log file. It also resets to 0 the
+        replication delay specified with the
+        <code class="literal">MASTER_DELAY</code> option to <code class="literal">CHANGE MASTER
+        TO</code>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          All relay log files are deleted, even if they have not been
+          completely executed by the replication SQL thread. (This is a
+          condition likely to exist on a replica if you have issued a
+          <a class="link" href="stop-slave.html" title="13.4.2.7&nbsp;STOP SLAVE Statement"><code class="literal">STOP SLAVE</code></a> statement or if the
+          replica is highly loaded.)
+</p>
+</div>
+<p>
+        For a server where GTIDs are in use
+        (<a class="link" href="replication-options-gtids.html#sysvar_gtid_mode"><code class="literal">gtid_mode</code></a> is
+        <code class="literal">ON</code>), issuing <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET
+        SLAVE</code></a> has no effect on the GTID execution history. The
+        statement does not change the values of
+        <code class="literal">gtid_executed</code> or
+        <code class="literal">gtid_purged</code>, or the
+        <code class="literal">mysql.gtid_executed</code> table. If you need to
+        reset the GTID execution history, use <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET
+        MASTER</code></a>, even if the GTID-enabled server is a replica
+        where binary logging is disabled.
+      </p><p>
+        <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> requires the
+        <a class="link" href="privileges-provided.html#priv_reload"><code class="literal">RELOAD</code></a> privilege.
+      </p><p>
+        To use <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a>, the
+        replication threads must be stopped, so on a running replica use
+        <a class="link" href="stop-slave.html" title="13.4.2.7&nbsp;STOP SLAVE Statement"><code class="literal">STOP SLAVE</code></a> before issuing
+        <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a>. To use
+        <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> on a Group
+        Replication group member, the member status must be
+        <code class="literal">OFFLINE</code>, meaning that the plugin is loaded
+        but the member does not currently belong to any group. A group
+        member can be taken offline by using a <a class="link" href="stop-group-replication.html" title="13.4.3.2&nbsp;STOP GROUP_REPLICATION Statement"><code class="literal">STOP
+        GROUP REPLICATION</code></a> statement.
+      </p><p>
+        The optional <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause enables you
+        to name which replication channel the statement applies to.
+        Providing a <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause applies the
+        <code class="literal">RESET SLAVE</code> statement to a specific
+        replication channel. Combining a <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause with the
+        <code class="literal">ALL</code> option deletes the specified channel. If
+        no channel is named and no extra channels exist, the statement
+        applies to the default channel. Issuing a
+        <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE
+        ALL</code></a> statement without a <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause when
+        multiple replication channels exist deletes
+        <span class="emphasis"><em>all</em></span> replication channels and recreates only
+        the default channel. See <a class="xref" href="replication-channels.html" title="16.2.2&nbsp;Replication Channels">Section&nbsp;16.2.2, “Replication Channels”</a>
+        for more information.
+      </p><p>
+        <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> does not change any
+        replication connection parameters such as the source's host name
+        and port, or the replication user account name and its password.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            From MySQL 5.7.24, when
+            <a class="link" href="replication-options-replica.html#sysvar_master_info_repository"><code class="literal">master_info_repository=TABLE</code></a>
+            is set on the server, replication connection parameters are
+            preserved in the crash-safe <code class="literal">InnoDB</code> table
+            <code class="literal">mysql.slave_master_info</code> as part of the
+            <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> operation. They
+            are also retained in memory. In the event of an unexpected
+            server exit or deliberate restart after issuing
+            <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> but before
+            issuing <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START SLAVE</code></a>, the
+            replication connection parameters are retrieved from the
+            table and reused for the new connection.
+          </p></li><li class="listitem"><p>
+            When
+            <a class="link" href="replication-options-replica.html#sysvar_master_info_repository"><code class="literal">master_info_repository=FILE</code></a>
+            is set on the server (which is the default in MySQL 5.7),
+            replication connection parameters are only retained in
+            memory. If the replica <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> is
+            restarted immediately after issuing
+            <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> due to an
+            unexpected server exit or deliberate restart, the connection
+            parameters are lost. In that case, you must issue a
+            <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a> statement
+            after the server start to respecify the connection
+            parameters before issuing <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START
+            SLAVE</code></a>.
+</p></li></ul>
+</div>
+<p>
+        If you want to reset the connection parameters intentionally,
+        you need to use
+        <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE
+        ALL</code></a>, which clears the connection parameters. In that
+        case, you must issue a <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER
+        TO</code></a> statement after the server start to specify the new
+        connection parameters.
+      </p><p>
+        <code class="literal">RESET SLAVE</code> causes an implicit commit of an
+        ongoing transaction. See <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+      </p><p>
+        If the replication SQL thread was in the middle of replicating
+        temporary tables when it was stopped, and
+        <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> is issued, these
+        replicated temporary tables are deleted on the replica.
+      </p><p>
+        Prior to MySQL 5.7.5, <code class="literal">RESET SLAVE</code> also had
+        the effect of resetting both the heartbeat period
+        (<a class="link" href="server-status-variables.html#statvar_Slave_heartbeat_period"><code class="literal">Slave_heartbeat_period</code></a>) and
+        <code class="literal">SSL_VERIFY_SERVER_CERT</code>. This issue is fixed
+        in MySQL 5.7.5 and later. (Bug #18777899, Bug #18778485)
+      </p><p>
+        Prior to MySQL 5.7.5, <code class="literal">RESET SLAVE ALL</code> did not
+        clear the <code class="literal">IGNORE_SERVER_IDS</code> list set by
+        <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a>. In MySQL 5.7.5
+        and later, the statement clears the list. (Bug #18816897)
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          When used on an NDB Cluster replica SQL node, <code class="literal">RESET
+          SLAVE</code> clears the
+          <code class="literal">mysql.ndb_apply_status</code> table. You should
+          keep in mind when using this statement that
+          <code class="literal">ndb_apply_status</code> uses the
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage engine and so is
+          shared by all SQL nodes attached to the replica cluster.
+        </p><p>
+          You can override this behavior by issuing
+          <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+          <code class="literal">GLOBAL
+          @@</code><a class="link" href="mysql-cluster-options-variables.html#sysvar_ndb_clear_apply_status"><code class="literal">ndb_clear_apply_status=OFF</code></a>
+          prior to executing <code class="literal">RESET SLAVE</code>, which keeps
+          the replica from purging the
+          <code class="literal">ndb_apply_status</code> table in such cases.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

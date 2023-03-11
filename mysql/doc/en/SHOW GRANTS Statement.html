@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW GRANTS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-grants"></a>13.7.5.21&nbsp;SHOW GRANTS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570713488"></a><a class="indexterm" name="idm45852570712000"></a><a class="indexterm" name="idm45852570710512"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW GRANTS [FOR <em class="replaceable">user</em>]</code></pre><p>
+        This statement displays the privileges that are assigned to a
+        MySQL user account, in the form of
+        <a class="link" href="grant.html" title="13.7.1.4&nbsp;GRANT Statement"><code class="literal">GRANT</code></a> statements that must be
+        executed to duplicate the privilege assignments.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          To display nonprivilege information for MySQL accounts, use
+          the <a class="link" href="show-create-user.html" title="13.7.5.12&nbsp;SHOW CREATE USER Statement"><code class="literal">SHOW CREATE USER</code></a> statement.
+          See <a class="xref" href="show-create-user.html" title="13.7.5.12&nbsp;SHOW CREATE USER Statement">Section&nbsp;13.7.5.12, “SHOW CREATE USER Statement”</a>.
+</p>
+</div>
+<p>
+        <a class="link" href="show-grants.html" title="13.7.5.21&nbsp;SHOW GRANTS Statement"><code class="literal">SHOW GRANTS</code></a> requires the
+        <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for the
+        <code class="literal">mysql</code> system database, except to display
+        privileges for the current user.
+      </p><p>
+        To name the account for <a class="link" href="show-grants.html" title="13.7.5.21&nbsp;SHOW GRANTS Statement"><code class="literal">SHOW
+        GRANTS</code></a>, use the same format as for the
+        <a class="link" href="grant.html" title="13.7.1.4&nbsp;GRANT Statement"><code class="literal">GRANT</code></a> statement (for example,
+        <code class="literal">'jeffrey'@'localhost'</code>):
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW GRANTS FOR 'jeffrey'@'localhost';
++------------------------------------------------------------------+
+| Grants for jeffrey@localhost                                     |
++------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `jeffrey`@`localhost`                      |
+| GRANT SELECT, INSERT, UPDATE ON `db1`.* TO `jeffrey`@`localhost` |
++------------------------------------------------------------------+</code></pre><p>
+        The host part, if omitted, defaults to <code class="literal">'%'</code>.
+        For additional information about specifying account names, see
+        <a class="xref" href="account-names.html" title="6.2.4&nbsp;Specifying Account Names">Section&nbsp;6.2.4, “Specifying Account Names”</a>.
+      </p><p>
+        To display the privileges granted to the current user (the
+        account you are using to connect to the server), you can use any
+        of the following statements:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW GRANTS;
+SHOW GRANTS FOR CURRENT_USER;
+SHOW GRANTS FOR CURRENT_USER();</code></pre><a class="indexterm" name="idm45852570688080"></a><a class="indexterm" name="idm45852570686592"></a><a class="indexterm" name="idm45852570685520"></a><a class="indexterm" name="idm45852570684032"></a><p>
+        If <code class="literal">SHOW GRANTS FOR CURRENT_USER</code> (or any
+        equivalent syntax) is used in definer context, such as within a
+        stored procedure that executes with definer rather than invoker
+        privileges, the grants displayed are those of the definer and
+        not the invoker.
+      </p><p>
+        <a class="link" href="show-grants.html" title="13.7.5.21&nbsp;SHOW GRANTS Statement"><code class="literal">SHOW GRANTS</code></a> does not display
+        privileges that are available to the named account but are
+        granted to a different account. For example, if an anonymous
+        account exists, the named account might be able to use its
+        privileges, but <a class="link" href="show-grants.html" title="13.7.5.21&nbsp;SHOW GRANTS Statement"><code class="literal">SHOW GRANTS</code></a> does
+        not display them.
+      </p><p>
+        <code class="literal">SHOW GRANTS</code> output does not include
+        <code class="literal">IDENTIFIED BY PASSWORD</code> clauses. Use the
+        <a class="link" href="show-create-user.html" title="13.7.5.12&nbsp;SHOW CREATE USER Statement"><code class="literal">SHOW CREATE USER</code></a> statement
+        instead. See <a class="xref" href="show-create-user.html" title="13.7.5.12&nbsp;SHOW CREATE USER Statement">Section&nbsp;13.7.5.12, “SHOW CREATE USER Statement”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

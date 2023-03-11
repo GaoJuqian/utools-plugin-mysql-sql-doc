@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SELECT Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="select"></a>13.2.9&nbsp;SELECT Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="select-into.html">13.2.9.1 SELECT ... INTO Statement</a></span></dt><dt><span class="section"><a href="join.html">13.2.9.2 JOIN Clause</a></span></dt><dt><span class="section"><a href="union.html">13.2.9.3 UNION Clause</a></span></dt></dl>
+</div>
+<a class="indexterm" name="idm45852578744752"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT
+    [ALL | DISTINCT | DISTINCTROW ]
+    [HIGH_PRIORITY]
+    [STRAIGHT_JOIN]
+    [SQL_SMALL_RESULT] [SQL_BIG_RESULT] [SQL_BUFFER_RESULT]
+    [SQL_CACHE | SQL_NO_CACHE] [SQL_CALC_FOUND_ROWS]
+    <em class="replaceable">select_expr</em> [, <em class="replaceable">select_expr</em>] ...
+    [<em class="replaceable">into_option</em>]
+    [FROM <em class="replaceable">table_references</em>
+      [PARTITION <em class="replaceable">partition_list</em>]]
+    [WHERE <em class="replaceable">where_condition</em>]
+    [GROUP BY {<em class="replaceable">col_name</em> | <em class="replaceable">expr</em> | <em class="replaceable">position</em>}
+      [ASC | DESC], ... [WITH ROLLUP]]
+    [HAVING <em class="replaceable">where_condition</em>]
+    [ORDER BY {<em class="replaceable">col_name</em> | <em class="replaceable">expr</em> | <em class="replaceable">position</em>}
+      [ASC | DESC], ...]
+    [LIMIT {[<em class="replaceable">offset</em>,] <em class="replaceable">row_count</em> | <em class="replaceable">row_count</em> OFFSET <em class="replaceable">offset</em>}]
+    [PROCEDURE <em class="replaceable">procedure_name</em>(<em class="replaceable">argument_list</em>)]
+    [<em class="replaceable">into_option</em>]
+    [FOR UPDATE | LOCK IN SHARE MODE]
+
+<em class="replaceable">into_option</em>: {
+    INTO OUTFILE '<em class="replaceable">file_name</em>'
+        [CHARACTER SET <em class="replaceable">charset_name</em>]
+        <em class="replaceable">export_options</em>
+  | INTO DUMPFILE '<em class="replaceable">file_name</em>'
+  | INTO <em class="replaceable">var_name</em> [, <em class="replaceable">var_name</em>] ...
+}</code></pre><p>
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> is used to retrieve rows
+      selected from one or more tables, and can include
+      <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> statements and subqueries.
+      See <a class="xref" href="union.html" title="13.2.9.3&nbsp;UNION Clause">Section&nbsp;13.2.9.3, “UNION Clause”</a>, and <a class="xref" href="subqueries.html" title="13.2.10&nbsp;Subqueries">Section&nbsp;13.2.10, “Subqueries”</a>.
+    </p><p>
+      The most commonly used clauses of
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements are these:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Each <em class="replaceable"><code>select_expr</code></em> indicates a column
+          that you want to retrieve. There must be at least one
+          <em class="replaceable"><code>select_expr</code></em>.
+        </p></li><li class="listitem"><p>
+          <em class="replaceable"><code>table_references</code></em> indicates the
+          table or tables from which to retrieve rows. Its syntax is
+          described in <a class="xref" href="join.html" title="13.2.9.2&nbsp;JOIN Clause">Section&nbsp;13.2.9.2, “JOIN Clause”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">SELECT</code> supports explicit partition
+          selection using the <code class="literal">PARTITION</code> clause with a
+          list of partitions or subpartitions (or both) following the
+          name of the table in a
+          <em class="replaceable"><code>table_reference</code></em> (see
+          <a class="xref" href="join.html" title="13.2.9.2&nbsp;JOIN Clause">Section&nbsp;13.2.9.2, “JOIN Clause”</a>). In this case, rows are selected only
+          from the partitions listed, and any other partitions of the
+          table are ignored. For more information and examples, see
+          <a class="xref" href="partitioning-selection.html" title="22.5&nbsp;Partition Selection">Section&nbsp;22.5, “Partition Selection”</a>.
+        </p><p>
+          <code class="literal">SELECT ... PARTITION</code> from tables using
+          storage engines such as <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a>
+          that perform table-level locks (and thus partition locks) lock
+          only the partitions or subpartitions named by the
+          <code class="literal">PARTITION</code> option.
+        </p><p>
+          For more information, see
+          <a class="xref" href="partitioning-limitations-locking.html" title="22.6.4&nbsp;Partitioning and Locking">Section&nbsp;22.6.4, “Partitioning and Locking”</a>.
+        </p></li><li class="listitem"><p>
+          The <code class="literal">WHERE</code> clause, if given, indicates the
+          condition or conditions that rows must satisfy to be selected.
+          <em class="replaceable"><code>where_condition</code></em> is an expression
+          that evaluates to true for each row to be selected. The
+          statement selects all rows if there is no
+          <code class="literal">WHERE</code> clause.
+        </p><p>
+          In the <code class="literal">WHERE</code> expression, you can use any of
+          the functions and operators that MySQL supports, except for
+          aggregate (group) functions. See
+          <a class="xref" href="expressions.html" title="9.5&nbsp;Expressions">Section&nbsp;9.5, “Expressions”</a>, and
+          <a class="xref" href="functions.html" title="Chapter&nbsp;12&nbsp;Functions and Operators">Chapter&nbsp;12, <i>Functions and Operators</i></a>.
+</p></li></ul>
+</div>
+<p>
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> can also be used to retrieve
+      rows computed without reference to any table.
+    </p><p>
+      For example:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT 1 + 1;
+        -&gt; 2</code></pre><p>
+      <a class="indexterm" name="idm45852578696160"></a>
+
+      You are permitted to specify <code class="literal">DUAL</code> as a dummy
+      table name in situations where no tables are referenced:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT 1 + 1 FROM DUAL;
+        -&gt; 2</code></pre><p>
+      <code class="literal">DUAL</code> is purely for the convenience of people
+      who require that all <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+      statements should have <code class="literal">FROM</code> and possibly other
+      clauses. MySQL may ignore the clauses. MySQL does not require
+      <code class="literal">FROM DUAL</code> if no tables are referenced.
+    </p><p>
+      In general, clauses used must be given in exactly the order shown
+      in the syntax description. For example, a
+      <code class="literal">HAVING</code> clause must come after any
+      <code class="literal">GROUP BY</code> clause and before any <code class="literal">ORDER
+      BY</code> clause. The <code class="literal">INTO</code> clause, if
+      present, can appear in any position indicated by the syntax
+      description, but within a given statement can appear only once,
+      not in multiple positions. For more information about
+      <code class="literal">INTO</code>, see <a class="xref" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement">Section&nbsp;13.2.9.1, “SELECT ... INTO Statement”</a>.
+    </p><p>
+      The list of <em class="replaceable"><code>select_expr</code></em> terms comprises
+      the select list that indicates which columns to retrieve. Terms
+      specify a column or expression or can use
+      <code class="literal">*</code>-shorthand:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          A select list consisting only of a single unqualified
+          <code class="literal">*</code> can be used as shorthand to select all
+          columns from all tables:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 INNER JOIN t2 ...</code></pre></li><li class="listitem"><p>
+          <code class="literal"><em class="replaceable"><code>tbl_name</code></em>.*</code> can
+          be used as a qualified shorthand to select all columns from
+          the named table:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT t1.*, t2.* FROM t1 INNER JOIN t2 ...</code></pre></li><li class="listitem"><p>
+          Use of an unqualified <code class="literal">*</code> with other items in
+          the select list may produce a parse error. For example:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT id, * FROM t1</code></pre><p>
+          To avoid this problem, use a qualified
+          <code class="literal"><em class="replaceable"><code>tbl_name</code></em>.*</code>
+          reference:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT id, t1.* FROM t1</code></pre><p>
+          Use qualified
+          <code class="literal"><em class="replaceable"><code>tbl_name</code></em>.*</code>
+          references for each table in the select list:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT AVG(score), t1.* FROM t1 ...</code></pre></li></ul>
+</div>
+<p>
+      The following list provides additional information about other
+      <code class="literal">SELECT</code> clauses:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <a class="indexterm" name="idm45852578666304"></a>
+
+          <a class="indexterm" name="idm45852578664816"></a>
+
+          A <em class="replaceable"><code>select_expr</code></em> can be given an alias
+          using <code class="literal">AS
+          <em class="replaceable"><code>alias_name</code></em></code>. The alias is
+          used as the expression's column name and can be used in
+          <code class="literal">GROUP BY</code>, <code class="literal">ORDER BY</code>, or
+          <code class="literal">HAVING</code> clauses. For example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT CONCAT(last_name,', ',first_name) AS full_name
+  FROM mytable ORDER BY full_name;</code></pre><p>
+          The <code class="literal">AS</code> keyword is optional when aliasing a
+          <em class="replaceable"><code>select_expr</code></em> with an identifier. The
+          preceding example could have been written like this:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT CONCAT(last_name,', ',first_name) full_name
+  FROM mytable ORDER BY full_name;</code></pre><p>
+          However, because the <code class="literal">AS</code> is optional, a
+          subtle problem can occur if you forget the comma between two
+          <em class="replaceable"><code>select_expr</code></em> expressions: MySQL
+          interprets the second as an alias name. For example, in the
+          following statement, <code class="literal">columnb</code> is treated as
+          an alias name:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT columna columnb FROM mytable;</code></pre><p>
+          For this reason, it is good practice to be in the habit of
+          using <code class="literal">AS</code> explicitly when specifying column
+          aliases.
+        </p><p>
+          It is not permissible to refer to a column alias in a
+          <code class="literal">WHERE</code> clause, because the column value
+          might not yet be determined when the <code class="literal">WHERE</code>
+          clause is executed. See <a class="xref" href="problems-with-alias.html" title="B.3.4.4&nbsp;Problems with Column Aliases">Section&nbsp;B.3.4.4, “Problems with Column Aliases”</a>.
+        </p></li><li class="listitem"><p>
+          <a class="indexterm" name="idm45852578648064"></a>
+
+          <a class="indexterm" name="idm45852578646992"></a>
+
+          The <code class="literal">FROM
+          <em class="replaceable"><code>table_references</code></em></code> clause
+          indicates the table or tables from which to retrieve rows. If
+          you name more than one table, you are performing a join. For
+          information on join syntax, see <a class="xref" href="join.html" title="13.2.9.2&nbsp;JOIN Clause">Section&nbsp;13.2.9.2, “JOIN Clause”</a>. For
+          each table specified, you can optionally specify an alias.
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql"><em class="replaceable">tbl_name</em> [[AS] <em class="replaceable">alias</em>] [<em class="replaceable">index_hint</em>]</code></pre><a class="indexterm" name="idm45852578641824"></a><a class="indexterm" name="idm45852578640752"></a><p>
+          The use of index hints provides the optimizer with information
+          about how to choose indexes during query processing. For a
+          description of the syntax for specifying these hints, see
+          <a class="xref" href="index-hints.html" title="8.9.4&nbsp;Index Hints">Section&nbsp;8.9.4, “Index Hints”</a>.
+        </p><p>
+          You can use <code class="literal">SET
+          max_seeks_for_key=<em class="replaceable"><code>value</code></em></code>
+          as an alternative way to force MySQL to prefer key scans
+          instead of table scans. See
+          <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>.
+        </p></li><li class="listitem"><p>
+          You can refer to a table within the default database as
+          <em class="replaceable"><code>tbl_name</code></em>, or as
+          <em class="replaceable"><code>db_name</code></em>.<em class="replaceable"><code>tbl_name</code></em>
+          to specify a database explicitly. You can refer to a column as
+          <em class="replaceable"><code>col_name</code></em>,
+          <em class="replaceable"><code>tbl_name</code></em>.<em class="replaceable"><code>col_name</code></em>,
+          or
+          <em class="replaceable"><code>db_name</code></em>.<em class="replaceable"><code>tbl_name</code></em>.<em class="replaceable"><code>col_name</code></em>.
+          You need not specify a <em class="replaceable"><code>tbl_name</code></em> or
+          <em class="replaceable"><code>db_name</code></em>.<em class="replaceable"><code>tbl_name</code></em>
+          prefix for a column reference unless the reference would be
+          ambiguous. See <a class="xref" href="identifier-qualifiers.html" title="9.2.2&nbsp;Identifier Qualifiers">Section&nbsp;9.2.2, “Identifier Qualifiers”</a>, for
+          examples of ambiguity that require the more explicit column
+          reference forms.
+        </p></li><li class="listitem"><p>
+          <a class="indexterm" name="idm45852578627936"></a>
+
+          <a class="indexterm" name="idm45852578626480"></a>
+
+          A table reference can be aliased using
+          <code class="literal"><em class="replaceable"><code>tbl_name</code></em> AS
+          <em class="replaceable"><code>alias_name</code></em></code> or
+          <em class="replaceable"><code>tbl_name alias_name</code></em>. These
+          statements are equivalent:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT t1.name, t2.salary FROM employee AS t1, info AS t2
+  WHERE t1.name = t2.name;
+
+SELECT t1.name, t2.salary FROM employee t1, info t2
+  WHERE t1.name = t2.name;</code></pre></li><li class="listitem"><p>
+          <a class="indexterm" name="idm45852578621712"></a>
+
+          Columns selected for output can be referred to in
+          <code class="literal">ORDER BY</code> and <code class="literal">GROUP BY</code>
+          clauses using column names, column aliases, or column
+          positions. Column positions are integers and begin with 1:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT college, region, seed FROM tournament
+  ORDER BY region, seed;
+
+SELECT college, region AS r, seed AS s FROM tournament
+  ORDER BY r, s;
+
+SELECT college, region, seed FROM tournament
+  ORDER BY 2, 3;</code></pre><p>
+          To sort in reverse order, add the <code class="literal">DESC</code>
+          (descending) keyword to the name of the column in the
+          <code class="literal">ORDER BY</code> clause that you are sorting by.
+          The default is ascending order; this can be specified
+          explicitly using the <code class="literal">ASC</code> keyword.
+        </p><p>
+          If <code class="literal">ORDER BY</code> occurs within a parenthesized
+          query expression and also is applied in the outer query, the
+          results are undefined and may change in a future MySQL
+          version.
+        </p><p>
+          Use of column positions is deprecated because the syntax has
+          been removed from the SQL standard.
+        </p></li><li class="listitem"><p>
+          <a class="indexterm" name="idm45852578612496"></a>
+
+          MySQL extends the <code class="literal">GROUP BY</code> clause so that
+          you can also specify <code class="literal">ASC</code> and
+          <code class="literal">DESC</code> after columns named in the clause.
+          However, this syntax is deprecated. To produce a given sort
+          order, provide an <code class="literal">ORDER BY</code> clause.
+        </p></li><li class="listitem"><p>
+          <a class="indexterm" name="idm45852578607184"></a>
+
+          <a class="indexterm" name="idm45852578605696"></a>
+
+          If you use <code class="literal">GROUP BY</code>, output rows are sorted
+          according to the <code class="literal">GROUP BY</code> columns as if you
+          had an <code class="literal">ORDER BY</code> for the same columns. To
+          avoid the overhead of sorting that <code class="literal">GROUP BY</code>
+          produces, add <code class="literal">ORDER BY NULL</code>:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT a, COUNT(b) FROM test_table GROUP BY a ORDER BY NULL;</code></pre><p>
+          Relying on implicit <code class="literal">GROUP BY</code> sorting (that
+          is, sorting in the absence of <code class="literal">ASC</code> or
+          <code class="literal">DESC</code> designators) or explicit sorting for
+          <code class="literal">GROUP BY</code> (that is, by using explicit
+          <code class="literal">ASC</code> or <code class="literal">DESC</code> designators
+          for <code class="literal">GROUP BY</code> columns) is deprecated. To
+          produce a given sort order, provide an <code class="literal">ORDER
+          BY</code> clause.
+        </p></li><li class="listitem"><p>
+          <a class="indexterm" name="idm45852578592432"></a>
+
+          <a class="indexterm" name="idm45852578590944"></a>
+
+          When you use <code class="literal">ORDER BY</code> or <code class="literal">GROUP
+          BY</code> to sort a column in a
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>, the server sorts values
+          using only the initial number of bytes indicated by the
+          <a class="link" href="server-system-variables.html#sysvar_max_sort_length"><code class="literal">max_sort_length</code></a> system
+          variable.
+        </p></li><li class="listitem"><p>
+          MySQL extends the use of <code class="literal">GROUP BY</code> to permit
+          selecting fields that are not mentioned in the <code class="literal">GROUP
+          BY</code> clause. If you are not getting the results that
+          you expect from your query, please read the description of
+          <code class="literal">GROUP BY</code> found in
+          <a class="xref" href="aggregate-functions-and-modifiers.html" title="12.20&nbsp;Aggregate Functions">Section&nbsp;12.20, “Aggregate Functions”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">GROUP BY</code> permits a <code class="literal">WITH
+          ROLLUP</code> modifier. See
+          <a class="xref" href="group-by-modifiers.html" title="12.20.2&nbsp;GROUP BY Modifiers">Section&nbsp;12.20.2, “GROUP BY Modifiers”</a>.
+        </p></li><li class="listitem"><p>
+          The <code class="literal">HAVING</code> clause, like the
+          <code class="literal">WHERE</code> clause, specifies selection
+          conditions. The <code class="literal">WHERE</code> clause specifies
+          conditions on columns in the select list, but cannot refer to
+          aggregate functions. The <code class="literal">HAVING</code> clause
+          specifies conditions on groups, typically formed by the
+          <code class="literal">GROUP BY</code> clause. The query result includes
+          only groups satisfying the <code class="literal">HAVING</code>
+          conditions. (If no <code class="literal">GROUP BY</code> is present, all
+          rows implicitly form a single aggregate group.)
+        </p><p>
+          The <code class="literal">HAVING</code> clause is applied nearly last,
+          just before items are sent to the client, with no
+          optimization. (<code class="literal">LIMIT</code> is applied after
+          <code class="literal">HAVING</code>.)
+        </p><a class="indexterm" name="idm45852578569504"></a><p>
+          The SQL standard requires that <code class="literal">HAVING</code> must
+          reference only columns in the <code class="literal">GROUP BY</code>
+          clause or columns used in aggregate functions. However, MySQL
+          supports an extension to this behavior, and permits
+          <code class="literal">HAVING</code> to refer to columns in the
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> list and columns in
+          outer subqueries as well.
+        </p><p>
+          If the <code class="literal">HAVING</code> clause refers to a column
+          that is ambiguous, a warning occurs. In the following
+          statement, <code class="literal">col2</code> is ambiguous because it is
+          used as both an alias and a column name:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT COUNT(col1) AS col2 FROM t GROUP BY col2 HAVING col2 = 2;</code></pre><p>
+          Preference is given to standard SQL behavior, so if a
+          <code class="literal">HAVING</code> column name is used both in
+          <code class="literal">GROUP BY</code> and as an aliased column in the
+          select column list, preference is given to the column in the
+          <code class="literal">GROUP BY</code> column.
+        </p></li><li class="listitem"><p>
+          Do not use <code class="literal">HAVING</code> for items that should be
+          in the <code class="literal">WHERE</code> clause. For example, do not
+          write the following:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT <em class="replaceable">col_name</em> FROM <em class="replaceable">tbl_name</em> HAVING <em class="replaceable">col_name</em> &gt; 0;</code></pre><p>
+          Write this instead:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT <em class="replaceable">col_name</em> FROM <em class="replaceable">tbl_name</em> WHERE <em class="replaceable">col_name</em> &gt; 0;</code></pre></li><li class="listitem"><p>
+          The <code class="literal">HAVING</code> clause can refer to aggregate
+          functions, which the <code class="literal">WHERE</code> clause cannot:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT user, MAX(salary) FROM users
+  GROUP BY user HAVING MAX(salary) &gt; 10;</code></pre><p>
+          (This did not work in some older versions of MySQL.)
+        </p></li><li class="listitem"><p>
+          MySQL permits duplicate column names. That is, there can be
+          more than one <em class="replaceable"><code>select_expr</code></em> with the
+          same name. This is an extension to standard SQL. Because MySQL
+          also permits <code class="literal">GROUP BY</code> and
+          <code class="literal">HAVING</code> to refer to
+          <em class="replaceable"><code>select_expr</code></em> values, this can result
+          in an ambiguity:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT 12 AS a, a FROM t GROUP BY a;</code></pre><p>
+          In that statement, both columns have the name
+          <code class="literal">a</code>. To ensure that the correct column is
+          used for grouping, use different names for each
+          <em class="replaceable"><code>select_expr</code></em>.
+        </p></li><li class="listitem"><p>
+          MySQL resolves unqualified column or alias references in
+          <code class="literal">ORDER BY</code> clauses by searching in the
+          <em class="replaceable"><code>select_expr</code></em> values, then in the
+          columns of the tables in the <code class="literal">FROM</code> clause.
+          For <code class="literal">GROUP BY</code> or <code class="literal">HAVING</code>
+          clauses, it searches the <code class="literal">FROM</code> clause before
+          searching in the <em class="replaceable"><code>select_expr</code></em>
+          values. (For <code class="literal">GROUP BY</code> and
+          <code class="literal">HAVING</code>, this differs from the pre-MySQL 5.0
+          behavior that used the same rules as for <code class="literal">ORDER
+          BY</code>.)
+        </p></li><li class="listitem"><p>
+          <a class="indexterm" name="idm45852578533120"></a>
+
+          The <code class="literal">LIMIT</code> clause can be used to constrain
+          the number of rows returned by the
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement.
+          <code class="literal">LIMIT</code> takes one or two numeric arguments,
+          which must both be nonnegative integer constants, with these
+          exceptions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              Within prepared statements, <code class="literal">LIMIT</code>
+              parameters can be specified using <code class="literal">?</code>
+              placeholder markers.
+            </p></li><li class="listitem"><p>
+              Within stored programs, <code class="literal">LIMIT</code>
+              parameters can be specified using integer-valued routine
+              parameters or local variables.
+</p></li></ul>
+</div>
+<p>
+          With two arguments, the first argument specifies the offset of
+          the first row to return, and the second specifies the maximum
+          number of rows to return. The offset of the initial row is 0
+          (not 1):
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM tbl LIMIT 5,10;  # Retrieve rows 6-15</code></pre><p>
+          To retrieve all rows from a certain offset up to the end of
+          the result set, you can use some large number for the second
+          parameter. This statement retrieves all rows from the 96th row
+          to the last:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM tbl LIMIT 95,18446744073709551615;</code></pre><p>
+          With one argument, the value specifies the number of rows to
+          return from the beginning of the result set:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM tbl LIMIT 5;     # Retrieve first 5 rows</code></pre><p>
+          In other words, <code class="literal">LIMIT
+          <em class="replaceable"><code>row_count</code></em></code> is equivalent
+          to <code class="literal">LIMIT 0,
+          <em class="replaceable"><code>row_count</code></em></code>.
+        </p><p>
+          For prepared statements, you can use placeholders. The
+          following statements return one row from the
+          <code class="literal">tbl</code> table:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET @a=1;
+PREPARE STMT FROM 'SELECT * FROM tbl LIMIT ?';
+EXECUTE STMT USING @a;</code></pre><p>
+          The following statements return the second to sixth row from
+          the <code class="literal">tbl</code> table:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET @skip=1; SET @numrows=5;
+PREPARE STMT FROM 'SELECT * FROM tbl LIMIT ?, ?';
+EXECUTE STMT USING @skip, @numrows;</code></pre><p>
+          For compatibility with PostgreSQL, MySQL also supports the
+          <code class="literal">LIMIT <em class="replaceable"><code>row_count</code></em> OFFSET
+          <em class="replaceable"><code>offset</code></em></code> syntax.
+        </p><p>
+          If <code class="literal">LIMIT</code> occurs within a parenthesized
+          query expression and also is applied in the outer query, the
+          results are undefined and may change in a future MySQL
+          version.
+        </p></li><li class="listitem"><p>
+          <a class="indexterm" name="idm45852578509232"></a>
+
+          A <code class="literal">PROCEDURE</code> clause names a procedure that
+          should process the data in the result set. For an example, see
+          <a class="xref" href="procedure-analyse.html" title="8.4.2.4&nbsp;Using PROCEDURE ANALYSE">Section&nbsp;8.4.2.4, “Using PROCEDURE ANALYSE”</a>, which describes
+          <code class="literal">ANALYSE</code>, a procedure that can be used to
+          obtain suggestions for optimal column data types that may help
+          reduce table sizes.
+        </p><p>
+          A <code class="literal">PROCEDURE</code> clause is not permitted in a
+          <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> statement.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            <code class="literal">PROCEDURE</code> syntax is deprecated as of
+            MySQL 5.7.18, and is removed in MySQL 8.0.
+</p>
+</div>
+</li><li class="listitem"><p>
+          The <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ...
+          INTO</code></a> form of <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+          enables the query result to be written to a file or stored in
+          variables. For more information, see
+          <a class="xref" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement">Section&nbsp;13.2.9.1, “SELECT ... INTO Statement”</a>.
+        </p></li><li class="listitem"><p>
+          <a class="indexterm" name="idm45852578496976"></a>
+
+          <a class="indexterm" name="idm45852578495904"></a>
+
+          If you use <code class="literal">FOR UPDATE</code> with a storage engine
+          that uses page or row locks, rows examined by the query are
+          write-locked until the end of the current transaction. Using
+          <code class="literal">LOCK IN SHARE MODE</code> sets a shared lock that
+          permits other transactions to read the examined rows but not
+          to update or delete them. See
+          <a class="xref" href="innodb-locking-reads.html" title="14.7.2.4&nbsp;Locking Reads">Section&nbsp;14.7.2.4, “Locking Reads”</a>.
+        </p><p>
+          In addition, you cannot use <code class="literal">FOR UPDATE</code> as
+          part of the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> in a
+          statement such as
+          <a class="link" href="create-table-select.html" title="13.1.18.4&nbsp;CREATE TABLE ... SELECT Statement"><code class="literal">CREATE
+          TABLE <em class="replaceable"><code>new_table</code></em> SELECT ... FROM
+          <em class="replaceable"><code>old_table</code></em> ...</code></a>. (If you
+          attempt to do so, the statement is rejected with the error
+          <span class="errortext">Can't update table
+          '<em class="replaceable"><code>old_table</code></em>' while
+          '<em class="replaceable"><code>new_table</code></em>' is being
+          created</span>.) This is a change in behavior from MySQL
+          5.5 and earlier, which permitted
+          <a class="link" href="create-table-select.html" title="13.1.18.4&nbsp;CREATE TABLE ... SELECT Statement"><code class="literal">CREATE
+          TABLE ... SELECT</code></a> statements to make changes in
+          tables other than the table being created.
+</p></li></ul>
+</div>
+<p>
+      Following the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> keyword, you
+      can use a number of modifiers that affect the operation of the
+      statement. <code class="literal">HIGH_PRIORITY</code>,
+      <code class="literal">STRAIGHT_JOIN</code>, and modifiers beginning with
+      <code class="literal">SQL_</code> are MySQL extensions to standard SQL.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          The <code class="literal">ALL</code> and <code class="literal">DISTINCT</code>
+          modifiers specify whether duplicate rows should be returned.
+          <code class="literal">ALL</code> (the default) specifies that all
+          matching rows should be returned, including duplicates.
+          <code class="literal">DISTINCT</code> specifies removal of duplicate
+          rows from the result set. It is an error to specify both
+          modifiers. <code class="literal">DISTINCTROW</code> is a synonym for
+          <code class="literal">DISTINCT</code>.
+        </p><a class="indexterm" name="idm45852578474992"></a><a class="indexterm" name="idm45852578473536"></a><a class="indexterm" name="idm45852578472048"></a></li><li class="listitem"><p>
+          <code class="literal">HIGH_PRIORITY</code> gives the
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> higher priority than a
+          statement that updates a table. You should use this only for
+          queries that are very fast and must be done at once. A
+          <code class="literal">SELECT HIGH_PRIORITY</code> query that is issued
+          while the table is locked for reading runs even if there is an
+          update statement waiting for the table to be free. This
+          affects only storage engines that use only table-level locking
+          (such as <code class="literal">MyISAM</code>, <code class="literal">MEMORY</code>,
+          and <code class="literal">MERGE</code>).
+        </p><a class="indexterm" name="idm45852578464592"></a><p>
+          <code class="literal">HIGH_PRIORITY</code> cannot be used with
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements that are part
+          of a <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">STRAIGHT_JOIN</code> forces the optimizer to join
+          the tables in the order in which they are listed in the
+          <code class="literal">FROM</code> clause. You can use this to speed up a
+          query if the optimizer joins the tables in nonoptimal order.
+          <code class="literal">STRAIGHT_JOIN</code> also can be used in the
+          <em class="replaceable"><code>table_references</code></em> list. See
+          <a class="xref" href="join.html" title="13.2.9.2&nbsp;JOIN Clause">Section&nbsp;13.2.9.2, “JOIN Clause”</a>.
+        </p><a class="indexterm" name="idm45852578455216"></a><a class="indexterm" name="idm45852578453728"></a><a class="indexterm" name="idm45852578452240"></a><p>
+          <code class="literal">STRAIGHT_JOIN</code> does not apply to any table
+          that the optimizer treats as a
+          <a class="link" href="explain-output.html#jointype_const"><code class="literal">const</code></a> or
+          <a class="link" href="explain-output.html#jointype_system"><code class="literal">system</code></a> table. Such a table
+          produces a single row, is read during the optimization phase
+          of query execution, and references to its columns are replaced
+          with the appropriate column values before query execution
+          proceeds. These tables appear first in the query plan
+          displayed by <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a>. See
+          <a class="xref" href="using-explain.html" title="8.8.1&nbsp;Optimizing Queries with EXPLAIN">Section&nbsp;8.8.1, “Optimizing Queries with EXPLAIN”</a>. This exception may not apply
+          to <a class="link" href="explain-output.html#jointype_const"><code class="literal">const</code></a> or
+          <a class="link" href="explain-output.html#jointype_system"><code class="literal">system</code></a> tables that are used
+          on the <code class="literal">NULL</code>-complemented side of an outer
+          join (that is, the right-side table of a <code class="literal">LEFT
+          JOIN</code> or the left-side table of a <code class="literal">RIGHT
+          JOIN</code>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">SQL_BIG_RESULT</code> or
+          <code class="literal">SQL_SMALL_RESULT</code> can be used with
+          <code class="literal">GROUP BY</code> or <code class="literal">DISTINCT</code> to
+          tell the optimizer that the result set has many rows or is
+          small, respectively. For <code class="literal">SQL_BIG_RESULT</code>,
+          MySQL directly uses disk-based temporary tables if they are
+          created, and prefers sorting to using a temporary table with a
+          key on the <code class="literal">GROUP BY</code> elements. For
+          <code class="literal">SQL_SMALL_RESULT</code>, MySQL uses in-memory
+          temporary tables to store the resulting table instead of using
+          sorting. This should not normally be needed.
+        </p><a class="indexterm" name="idm45852578433936"></a><a class="indexterm" name="idm45852578432448"></a></li><li class="listitem"><p>
+          <code class="literal">SQL_BUFFER_RESULT</code> forces the result to be
+          put into a temporary table. This helps MySQL free the table
+          locks early and helps in cases where it takes a long time to
+          send the result set to the client. This modifier can be used
+          only for top-level <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+          statements, not for subqueries or following
+          <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a>.
+        </p><a class="indexterm" name="idm45852578426704"></a></li><li class="listitem"><p>
+          <code class="literal">SQL_CALC_FOUND_ROWS</code> tells MySQL to
+          calculate how many rows there would be in the result set,
+          disregarding any <code class="literal">LIMIT</code> clause. The number
+          of rows can then be retrieved with <code class="literal">SELECT
+          FOUND_ROWS()</code>. See
+          <a class="xref" href="information-functions.html" title="12.16&nbsp;Information Functions">Section&nbsp;12.16, “Information Functions”</a>.
+        </p><a class="indexterm" name="idm45852578421456"></a></li><li class="listitem"><p>
+          The <code class="literal">SQL_CACHE</code> and
+          <code class="literal">SQL_NO_CACHE</code> modifiers affect caching of
+          query results in the query cache (see
+          <a class="xref" href="query-cache.html" title="8.10.3&nbsp;The MySQL Query Cache">Section&nbsp;8.10.3, “The MySQL Query Cache”</a>). <code class="literal">SQL_CACHE</code>
+          tells MySQL to store the result in the query cache if it is
+          cacheable and the value of the
+          <a class="link" href="server-system-variables.html#sysvar_query_cache_type"><code class="literal">query_cache_type</code></a> system
+          variable is <code class="literal">2</code> or <code class="literal">DEMAND</code>.
+          With <code class="literal">SQL_NO_CACHE</code>, the server does not use
+          the query cache. It neither checks the query cache to see
+          whether the result is already cached, nor does it cache the
+          query result.
+        </p><a class="indexterm" name="idm45852578412640"></a><a class="indexterm" name="idm45852578411152"></a><p>
+          These two modifiers are mutually exclusive and an error occurs
+          if they are both specified. Also, these modifiers are not
+          permitted in subqueries (including subqueries in the
+          <code class="literal">FROM</code> clause), and
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements in unions
+          other than the first <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>.
+        </p><p>
+          For views, <code class="literal">SQL_NO_CACHE</code> applies if it
+          appears in any <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> in the
+          query. For a cacheable query, <code class="literal">SQL_CACHE</code>
+          applies if it appears in the first
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> of a view referred to by
+          the query.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            The query cache is deprecated as of MySQL 5.7.20, and is
+            removed in MySQL 8.0. Deprecation includes
+            <code class="literal">SQL_CACHE</code> and
+            <code class="literal">SQL_NO_CACHE</code>.
+</p>
+</div>
+</li></ul>
+</div>
+<p>
+      A <code class="literal">SELECT</code> from a partitioned table using a
+      storage engine such as <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> that
+      employs table-level locks locks only those partitions containing
+      rows that match the <code class="literal">SELECT</code> statement
+      <code class="literal">WHERE</code> clause. (This does not occur with storage
+      engines such as <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> that employ
+      row-level locking.) For more information, see
+      <a class="xref" href="partitioning-limitations-locking.html" title="22.6.4&nbsp;Partitioning and Locking">Section&nbsp;22.6.4, “Partitioning and Locking”</a>.
+</p>
+</div><br>
+        
+</body>
+</html>

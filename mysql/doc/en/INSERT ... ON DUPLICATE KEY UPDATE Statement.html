@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>INSERT ... ON DUPLICATE KEY UPDATE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="insert-on-duplicate"></a>13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        If you specify an <code class="literal">ON DUPLICATE KEY UPDATE</code>
+        clause and a row to be inserted would cause a duplicate value in
+        a <code class="literal">UNIQUE</code> index or <code class="literal">PRIMARY
+        KEY</code>, an <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> of the
+        old row occurs. For example, if column <code class="literal">a</code> is
+        declared as <code class="literal">UNIQUE</code> and contains the value
+        <code class="literal">1</code>, the following two statements have similar
+        effect:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">INSERT INTO t1 (a,b,c) VALUES (1,2,3)
+  ON DUPLICATE KEY UPDATE c=c+1;
+
+UPDATE t1 SET c=c+1 WHERE a=1;</code></pre><p>
+        The effects are not quite identical: For an
+        <code class="literal">InnoDB</code> table where <code class="literal">a</code> is an
+        auto-increment column, the <code class="literal">INSERT</code> statement
+        increases the auto-increment value but the
+        <code class="literal">UPDATE</code> does not.
+      </p><p>
+        If column <code class="literal">b</code> is also unique, the
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> is equivalent to this
+        <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statement instead:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">UPDATE t1 SET c=c+1 WHERE a=1 OR b=2 LIMIT 1;</code></pre><p>
+        If <code class="literal">a=1 OR b=2</code> matches several rows, only
+        <span class="emphasis"><em>one</em></span> row is updated. In general, you should
+        try to avoid using an <code class="literal">ON DUPLICATE KEY UPDATE</code>
+        clause on tables with multiple unique indexes.
+      </p><p>
+        With <code class="literal">ON DUPLICATE KEY UPDATE</code>, the
+        affected-rows value per row is 1 if the row is inserted as a new
+        row, 2 if an existing row is updated, and 0 if an existing row
+        is set to its current values. If you specify the
+        <code class="literal">CLIENT_FOUND_ROWS</code> flag to the
+        <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-real-connect.html" target="_top"><code class="literal">mysql_real_connect()</code></a> C API
+        function when connecting to <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a>, the
+        affected-rows value is 1 (not 0) if an existing row is set to
+        its current values.
+      </p><p>
+        If a table contains an <code class="literal">AUTO_INCREMENT</code> column
+        and <a class="link" href="insert-on-duplicate.html" title="13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement"><code class="literal">INSERT
+        ... ON DUPLICATE KEY UPDATE</code></a> inserts or updates a row,
+        the <a class="link" href="information-functions.html#function_last-insert-id"><code class="literal">LAST_INSERT_ID()</code></a> function
+        returns the <code class="literal">AUTO_INCREMENT</code> value.
+      </p><p>
+        The <code class="literal">ON DUPLICATE KEY UPDATE</code> clause can
+        contain multiple column assignments, separated by commas.
+      </p><p>
+        In assignment value expressions in the <code class="literal">ON DUPLICATE KEY
+        UPDATE</code> clause, you can use the
+        <a class="link" href="miscellaneous-functions.html#function_values"><code class="literal">VALUES(<em class="replaceable"><code>col_name</code></em>)</code></a>
+        function to refer to column values from the
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> portion of the
+        <a class="link" href="insert-on-duplicate.html" title="13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement"><code class="literal">INSERT ...
+        ON DUPLICATE KEY UPDATE</code></a> statement. In other words,
+        <a class="link" href="miscellaneous-functions.html#function_values"><code class="literal">VALUES(<em class="replaceable"><code>col_name</code></em>)</code></a>
+        in the <code class="literal">ON DUPLICATE KEY UPDATE</code> clause refers
+        to the value of <em class="replaceable"><code>col_name</code></em> that would
+        be inserted, had no duplicate-key conflict occurred. This
+        function is especially useful in multiple-row inserts. The
+        <a class="link" href="miscellaneous-functions.html#function_values"><code class="literal">VALUES()</code></a> function is meaningful
+        only in the <code class="literal">ON DUPLICATE KEY UPDATE</code> clause or
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> statements and returns
+        <code class="literal">NULL</code> otherwise. Example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">INSERT INTO t1 (a,b,c) VALUES (1,2,3),(4,5,6)
+  ON DUPLICATE KEY UPDATE c=VALUES(a)+VALUES(b);</code></pre><p>
+        That statement is identical to the following two statements:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">INSERT INTO t1 (a,b,c) VALUES (1,2,3)
+  ON DUPLICATE KEY UPDATE c=3;
+INSERT INTO t1 (a,b,c) VALUES (4,5,6)
+  ON DUPLICATE KEY UPDATE c=9;</code></pre><p>
+        For <a class="link" href="insert-on-duplicate.html" title="13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement"><code class="literal">INSERT
+        ... SELECT</code></a> statements, these rules apply regarding
+        acceptable forms of <code class="literal">SELECT</code> query expressions
+        that you can refer to in an <code class="literal">ON DUPLICATE KEY
+        UPDATE</code> clause:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            References to columns from queries on a single table, which
+            may be a derived table.
+          </p></li><li class="listitem"><p>
+            References to columns from queries on a join over multiple
+            tables.
+          </p></li><li class="listitem"><p>
+            References to columns from <code class="literal">DISTINCT</code>
+            queries.
+          </p></li><li class="listitem"><p>
+            References to columns in other tables, as long as the
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> does not use
+            <code class="literal">GROUP BY</code>. One side effect is that you
+            must qualify references to nonunique column names.
+</p></li></ul>
+</div>
+<p>
+        References to columns from a
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> do not work reliably. To
+        work around this restriction, rewrite the
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> as a derived table so that
+        its rows can be treated as a single-table result set. For
+        example, this statement can produce incorrect results:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">INSERT INTO t1 (a, b)
+  SELECT c, d FROM t2
+  UNION
+  SELECT e, f FROM t3
+ON DUPLICATE KEY UPDATE b = b + c;</code></pre><p>
+        Instead, use an equivalent statement that rewrites the
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> as a derived table:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">INSERT INTO t1 (a, b)
+SELECT * FROM
+  (SELECT c, d FROM t2
+   UNION
+   SELECT e, f FROM t3) AS dt
+ON DUPLICATE KEY UPDATE b = b + c;</code></pre><p>
+        The technique of rewriting a query as a derived table also
+        enables references to columns from <code class="literal">GROUP BY</code>
+        queries.
+      </p><p>
+        Because the results of
+        <a class="link" href="insert-select.html" title="13.2.5.1&nbsp;INSERT ... SELECT Statement"><code class="literal">INSERT ...
+        SELECT</code></a> statements depend on the ordering of rows from
+        the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> and this order cannot
+        always be guaranteed, it is possible when logging
+        <a class="link" href="insert-on-duplicate.html" title="13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement"><code class="literal">INSERT ...
+        SELECT ON DUPLICATE KEY UPDATE</code></a> statements for the
+        source and the replica to diverge. Thus,
+        <a class="link" href="insert-on-duplicate.html" title="13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement"><code class="literal">INSERT ...
+        SELECT ON DUPLICATE KEY UPDATE</code></a> statements are flagged
+        as unsafe for statement-based replication. Such statements
+        produce a warning in the error log when using statement-based
+        mode and are written to the binary log using the row-based
+        format when using <code class="literal">MIXED</code> mode. An
+        <a class="link" href="insert-on-duplicate.html" title="13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement"><code class="literal">INSERT ...
+        ON DUPLICATE KEY UPDATE</code></a> statement against a table
+        having more than one unique or primary key is also marked as
+        unsafe. (Bug #11765650, Bug #58637)
+      </p><p>
+        See also <a class="xref" href="replication-sbr-rbr.html" title="16.2.1.1&nbsp;Advantages and Disadvantages of Statement-Based and Row-Based Replication">Section&nbsp;16.2.1.1, “Advantages and Disadvantages of Statement-Based and Row-Based
+        Replication”</a>.
+      </p><p>
+        An <code class="literal">INSERT ... ON DUPLICATE KEY UPDATE</code> on a
+        partitioned table using a storage engine such as
+        <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> that employs table-level
+        locks locks any partitions of the table in which a partitioning
+        key column is updated. (This does not occur with tables using
+        storage engines such as <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> that
+        employ row-level locking.) For more information, see
+        <a class="xref" href="partitioning-limitations-locking.html" title="22.6.4&nbsp;Partitioning and Locking">Section&nbsp;22.6.4, “Partitioning and Locking”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

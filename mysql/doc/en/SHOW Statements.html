@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW Statements</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="show"></a>13.7.5&nbsp;SHOW Statements</h3>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="show-binary-logs.html">13.7.5.1 SHOW BINARY LOGS Statement</a></span></dt><dt><span class="section"><a href="show-binlog-events.html">13.7.5.2 SHOW BINLOG EVENTS Statement</a></span></dt><dt><span class="section"><a href="show-character-set.html">13.7.5.3 SHOW CHARACTER SET Statement</a></span></dt><dt><span class="section"><a href="show-collation.html">13.7.5.4 SHOW COLLATION Statement</a></span></dt><dt><span class="section"><a href="show-columns.html">13.7.5.5 SHOW COLUMNS Statement</a></span></dt><dt><span class="section"><a href="show-create-database.html">13.7.5.6 SHOW CREATE DATABASE Statement</a></span></dt><dt><span class="section"><a href="show-create-event.html">13.7.5.7 SHOW CREATE EVENT Statement</a></span></dt><dt><span class="section"><a href="show-create-function.html">13.7.5.8 SHOW CREATE FUNCTION Statement</a></span></dt><dt><span class="section"><a href="show-create-procedure.html">13.7.5.9 SHOW CREATE PROCEDURE Statement</a></span></dt><dt><span class="section"><a href="show-create-table.html">13.7.5.10 SHOW CREATE TABLE Statement</a></span></dt><dt><span class="section"><a href="show-create-trigger.html">13.7.5.11 SHOW CREATE TRIGGER Statement</a></span></dt><dt><span class="section"><a href="show-create-user.html">13.7.5.12 SHOW CREATE USER Statement</a></span></dt><dt><span class="section"><a href="show-create-view.html">13.7.5.13 SHOW CREATE VIEW Statement</a></span></dt><dt><span class="section"><a href="show-databases.html">13.7.5.14 SHOW DATABASES Statement</a></span></dt><dt><span class="section"><a href="show-engine.html">13.7.5.15 SHOW ENGINE Statement</a></span></dt><dt><span class="section"><a href="show-engines.html">13.7.5.16 SHOW ENGINES Statement</a></span></dt><dt><span class="section"><a href="show-errors.html">13.7.5.17 SHOW ERRORS Statement</a></span></dt><dt><span class="section"><a href="show-events.html">13.7.5.18 SHOW EVENTS Statement</a></span></dt><dt><span class="section"><a href="show-function-code.html">13.7.5.19 SHOW FUNCTION CODE Statement</a></span></dt><dt><span class="section"><a href="show-function-status.html">13.7.5.20 SHOW FUNCTION STATUS Statement</a></span></dt><dt><span class="section"><a href="show-grants.html">13.7.5.21 SHOW GRANTS Statement</a></span></dt><dt><span class="section"><a href="show-index.html">13.7.5.22 SHOW INDEX Statement</a></span></dt><dt><span class="section"><a href="show-master-status.html">13.7.5.23 SHOW MASTER STATUS Statement</a></span></dt><dt><span class="section"><a href="show-open-tables.html">13.7.5.24 SHOW OPEN TABLES Statement</a></span></dt><dt><span class="section"><a href="show-plugins.html">13.7.5.25 SHOW PLUGINS Statement</a></span></dt><dt><span class="section"><a href="show-privileges.html">13.7.5.26 SHOW PRIVILEGES Statement</a></span></dt><dt><span class="section"><a href="show-procedure-code.html">13.7.5.27 SHOW PROCEDURE CODE Statement</a></span></dt><dt><span class="section"><a href="show-procedure-status.html">13.7.5.28 SHOW PROCEDURE STATUS Statement</a></span></dt><dt><span class="section"><a href="show-processlist.html">13.7.5.29 SHOW PROCESSLIST Statement</a></span></dt><dt><span class="section"><a href="show-profile.html">13.7.5.30 SHOW PROFILE Statement</a></span></dt><dt><span class="section"><a href="show-profiles.html">13.7.5.31 SHOW PROFILES Statement</a></span></dt><dt><span class="section"><a href="show-relaylog-events.html">13.7.5.32 SHOW RELAYLOG EVENTS Statement</a></span></dt><dt><span class="section"><a href="show-slave-hosts.html">13.7.5.33 SHOW SLAVE HOSTS Statement</a></span></dt><dt><span class="section"><a href="show-slave-status.html">13.7.5.34 SHOW SLAVE STATUS Statement</a></span></dt><dt><span class="section"><a href="show-status.html">13.7.5.35 SHOW STATUS Statement</a></span></dt><dt><span class="section"><a href="show-table-status.html">13.7.5.36 SHOW TABLE STATUS Statement</a></span></dt><dt><span class="section"><a href="show-tables.html">13.7.5.37 SHOW TABLES Statement</a></span></dt><dt><span class="section"><a href="show-triggers.html">13.7.5.38 SHOW TRIGGERS Statement</a></span></dt><dt><span class="section"><a href="show-variables.html">13.7.5.39 SHOW VARIABLES Statement</a></span></dt><dt><span class="section"><a href="show-warnings.html">13.7.5.40 SHOW WARNINGS Statement</a></span></dt></dl>
+</div>
+<a class="indexterm" name="idm45852571671504"></a><a class="indexterm" name="idm45852571668688"></a><a class="indexterm" name="idm45852571667200"></a><a class="indexterm" name="idm45852571666112"></a><a class="indexterm" name="idm45852571665024"></a><a class="indexterm" name="idm45852571663936"></a><a class="indexterm" name="idm45852571662848"></a><a class="indexterm" name="idm45852571661776"></a><a class="indexterm" name="idm45852571660688"></a><a class="indexterm" name="idm45852571659600"></a><a class="indexterm" name="idm45852571658512"></a><a class="indexterm" name="idm45852571657424"></a><a class="indexterm" name="idm45852571656336"></a><a class="indexterm" name="idm45852571655248"></a><a class="indexterm" name="idm45852571654160"></a><a class="indexterm" name="idm45852571653072"></a><a class="indexterm" name="idm45852571651984"></a><a class="indexterm" name="idm45852571650912"></a><a class="indexterm" name="idm45852571649840"></a><a class="indexterm" name="idm45852571648768"></a><a class="indexterm" name="idm45852571647696"></a><a class="indexterm" name="idm45852571646624"></a><a class="indexterm" name="idm45852571645536"></a><a class="indexterm" name="idm45852571644448"></a><a class="indexterm" name="idm45852571643376"></a><a class="indexterm" name="idm45852571642304"></a><a class="indexterm" name="idm45852571641232"></a><a class="indexterm" name="idm45852571640144"></a><a class="indexterm" name="idm45852571639056"></a><a class="indexterm" name="idm45852571637968"></a><a class="indexterm" name="idm45852571636896"></a><a class="indexterm" name="idm45852571635808"></a><a class="indexterm" name="idm45852571634720"></a><a class="indexterm" name="idm45852571633632"></a><a class="indexterm" name="idm45852571632544"></a><a class="indexterm" name="idm45852571631472"></a><a class="indexterm" name="idm45852571630400"></a><a class="indexterm" name="idm45852571629312"></a><a class="indexterm" name="idm45852571628224"></a><a class="indexterm" name="idm45852571627136"></a><a class="indexterm" name="idm45852571626064"></a><a class="indexterm" name="idm45852571624992"></a><a class="indexterm" name="idm45852571623904"></a><a class="indexterm" name="idm45852571622832"></a><a class="indexterm" name="idm45852571621744"></a><p>
+      <a class="link" href="show.html" title="13.7.5&nbsp;SHOW Statements"><code class="literal">SHOW</code></a> has many forms that provide
+      information about databases, tables, columns, or status
+      information about the server. This section describes those
+      following:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW {BINARY | MASTER} LOGS
+SHOW BINLOG EVENTS [IN '<em class="replaceable">log_name</em>'] [FROM <em class="replaceable">pos</em>] [LIMIT [<em class="replaceable">offset</em>,] <em class="replaceable">row_count</em>]
+SHOW {CHARACTER SET | CHARSET} [<em class="replaceable">like_or_where</em>]
+SHOW COLLATION [<em class="replaceable">like_or_where</em>]
+SHOW [FULL] COLUMNS FROM <em class="replaceable">tbl_name</em> [FROM <em class="replaceable">db_name</em>] [<em class="replaceable">like_or_where</em>]
+SHOW CREATE DATABASE <em class="replaceable">db_name</em>
+SHOW CREATE EVENT <em class="replaceable">event_name</em>
+SHOW CREATE FUNCTION <em class="replaceable">func_name</em>
+SHOW CREATE PROCEDURE <em class="replaceable">proc_name</em>
+SHOW CREATE TABLE <em class="replaceable">tbl_name</em>
+SHOW CREATE TRIGGER <em class="replaceable">trigger_name</em>
+SHOW CREATE VIEW <em class="replaceable">view_name</em>
+SHOW DATABASES [<em class="replaceable">like_or_where</em>]
+SHOW ENGINE <em class="replaceable">engine_name</em> {STATUS | MUTEX}
+SHOW [STORAGE] ENGINES
+SHOW ERRORS [LIMIT [<em class="replaceable">offset</em>,] <em class="replaceable">row_count</em>]
+SHOW EVENTS
+SHOW FUNCTION CODE <em class="replaceable">func_name</em>
+SHOW FUNCTION STATUS [<em class="replaceable">like_or_where</em>]
+SHOW GRANTS FOR <em class="replaceable">user</em>
+SHOW INDEX FROM <em class="replaceable">tbl_name</em> [FROM <em class="replaceable">db_name</em>]
+SHOW MASTER STATUS
+SHOW OPEN TABLES [FROM <em class="replaceable">db_name</em>] [<em class="replaceable">like_or_where</em>]
+SHOW PLUGINS
+SHOW PROCEDURE CODE <em class="replaceable">proc_name</em>
+SHOW PROCEDURE STATUS [<em class="replaceable">like_or_where</em>]
+SHOW PRIVILEGES
+SHOW [FULL] PROCESSLIST
+SHOW PROFILE [<em class="replaceable">types</em>] [FOR QUERY <em class="replaceable">n</em>] [OFFSET <em class="replaceable">n</em>] [LIMIT <em class="replaceable">n</em>]
+SHOW PROFILES
+SHOW RELAYLOG EVENTS [IN '<em class="replaceable">log_name</em>'] [FROM <em class="replaceable">pos</em>] [LIMIT [<em class="replaceable">offset</em>,] <em class="replaceable">row_count</em>]
+SHOW SLAVE HOSTS
+SHOW SLAVE STATUS [FOR CHANNEL <em class="replaceable">channel</em>]
+SHOW [GLOBAL | SESSION] STATUS [<em class="replaceable">like_or_where</em>]
+SHOW TABLE STATUS [FROM <em class="replaceable">db_name</em>] [<em class="replaceable">like_or_where</em>]
+SHOW [FULL] TABLES [FROM <em class="replaceable">db_name</em>] [<em class="replaceable">like_or_where</em>]
+SHOW TRIGGERS [FROM <em class="replaceable">db_name</em>] [<em class="replaceable">like_or_where</em>]
+SHOW [GLOBAL | SESSION] VARIABLES [<em class="replaceable">like_or_where</em>]
+SHOW WARNINGS [LIMIT [<em class="replaceable">offset</em>,] <em class="replaceable">row_count</em>]
+
+<em class="replaceable">like_or_where</em>: {
+    LIKE '<em class="replaceable">pattern</em>'
+  | WHERE <em class="replaceable">expr</em>
+}</code></pre><p>
+      If the syntax for a given <a class="link" href="show.html" title="13.7.5&nbsp;SHOW Statements"><code class="literal">SHOW</code></a>
+      statement includes a <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE
+      '<em class="replaceable"><code>pattern</code></em>'</code></a> part,
+      <code class="literal">'<em class="replaceable"><code>pattern</code></em>'</code> is a
+      string that can contain the SQL <code class="literal">%</code> and
+      <code class="literal">_</code> wildcard characters. The pattern is useful
+      for restricting statement output to matching values.
+    </p><p>
+      Several <a class="link" href="show.html" title="13.7.5&nbsp;SHOW Statements"><code class="literal">SHOW</code></a> statements also accept
+      a <code class="literal">WHERE</code> clause that provides more flexibility
+      in specifying which rows to display. See
+      <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+    </p><p>
+      Many MySQL APIs (such as PHP) enable you to treat the result
+      returned from a <a class="link" href="show.html" title="13.7.5&nbsp;SHOW Statements"><code class="literal">SHOW</code></a> statement as
+      you would a result set from a
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>; see
+      <a class="xref" href="connectors-apis.html" title="Chapter&nbsp;27&nbsp;Connectors and APIs">Chapter&nbsp;27, <i>Connectors and APIs</i></a>, or your API documentation for
+      more information. In addition, you can work in SQL with results
+      from queries on tables in the
+      <code class="literal">INFORMATION_SCHEMA</code> database, which you cannot
+      easily do with results from <a class="link" href="show.html" title="13.7.5&nbsp;SHOW Statements"><code class="literal">SHOW</code></a>
+      statements. See <a class="xref" href="information-schema.html" title="Chapter&nbsp;24&nbsp;INFORMATION_SCHEMA Tables">Chapter&nbsp;24, <i>INFORMATION_SCHEMA Tables</i></a>.
+</p>
+</div><br>
+        
+</body>
+</html>

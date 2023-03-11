@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP TABLE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="drop-table"></a>13.1.29&nbsp;DROP TABLE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580630736"></a><a class="indexterm" name="idm45852580629664"></a><a class="indexterm" name="idm45852580628176"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DROP [TEMPORARY] TABLE [IF EXISTS]
+    <em class="replaceable">tbl_name</em> [, <em class="replaceable">tbl_name</em>] ...
+    [RESTRICT | CASCADE]</code></pre><p>
+      <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> removes one or more
+      tables. You must have the <a class="link" href="privileges-provided.html#priv_drop"><code class="literal">DROP</code></a>
+      privilege for each table.
+    </p><p>
+      <span class="emphasis"><em>Be careful</em></span> with this statement! For each
+      table, it removes the table definition and all table data. If the
+      table is partitioned, the statement removes the table definition,
+      all its partitions, all data stored in those partitions, and all
+      partition definitions associated with the dropped table.
+    </p><p>
+      Dropping a table also drops any triggers for the table.
+    </p><p>
+      <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> causes an implicit
+      commit, except when used with the <code class="literal">TEMPORARY</code>
+      keyword. See <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+        When a table is dropped, privileges granted specifically for the
+        table are <span class="emphasis"><em>not</em></span> automatically dropped. They
+        must be dropped manually. See <a class="xref" href="grant.html" title="13.7.1.4&nbsp;GRANT Statement">Section&nbsp;13.7.1.4, “GRANT Statement”</a>.
+</p>
+</div>
+<p>
+      If any tables named in the argument list do not exist,
+      <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> behavior depends on
+      whether the <code class="literal">IF EXISTS</code> clause is given:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Without <code class="literal">IF EXISTS</code>, the statement drops all
+          named tables that do exist, and returns an error indicating
+          which nonexisting tables it was unable to drop.
+        </p></li><li class="listitem"><p>
+          With <code class="literal">IF EXISTS</code>, no error occurs for
+          nonexisting tables. The statement drops all named tables that
+          do exist, and generates a <code class="literal">NOTE</code> diagnostic
+          for each nonexistent table. These notes can be displayed with
+          <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW WARNINGS</code></a>. See
+          <a class="xref" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement">Section&nbsp;13.7.5.40, “SHOW WARNINGS Statement”</a>.
+</p></li></ul>
+</div>
+<p>
+      <code class="literal">IF EXISTS</code> can also be useful for dropping
+      tables in unusual circumstances under which there is an
+      <code class="filename">.frm</code> file but no table managed by the storage
+      engine. (For example, if an abnormal server exit occurs after
+      removal of the table from the storage engine but before
+      <code class="filename">.frm</code> file removal.)
+    </p><p>
+      The <code class="literal">TEMPORARY</code> keyword has the following
+      effects:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          The statement drops only <code class="literal">TEMPORARY</code> tables.
+        </p></li><li class="listitem"><p>
+          The statement does not cause an implicit commit.
+        </p></li><li class="listitem"><p>
+          No access rights are checked. A <code class="literal">TEMPORARY</code>
+          table is visible only with the session that created it, so no
+          check is necessary.
+</p></li></ul>
+</div>
+<p>
+      Including the <code class="literal">TEMPORARY</code> keyword is a good way
+      to prevent accidentally dropping non-<code class="literal">TEMPORARY</code>
+      tables.
+    </p><p>
+      The <code class="literal">RESTRICT</code> and <code class="literal">CASCADE</code>
+      keywords do nothing. They are permitted to make porting easier
+      from other database systems.
+    </p><p>
+      <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> is not supported with
+      all <a class="link" href="innodb-parameters.html#sysvar_innodb_force_recovery"><code class="literal">innodb_force_recovery</code></a>
+      settings. See <a class="xref" href="forcing-innodb-recovery.html" title="14.22.2&nbsp;Forcing InnoDB Recovery">Section&nbsp;14.22.2, “Forcing InnoDB Recovery”</a>.
+</p><a class="indexterm" name="idm45852580588064"></a>
+</div>
+<br>
+        
+</body>
+</html>

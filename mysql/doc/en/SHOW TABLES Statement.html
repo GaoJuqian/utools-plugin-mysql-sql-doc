@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW TABLES Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-tables"></a>13.7.5.37&nbsp;SHOW TABLES Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852569662816"></a><a class="indexterm" name="idm45852569660048"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW [FULL] TABLES
+    [{FROM | IN} <em class="replaceable">db_name</em>]
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        <a class="link" href="show-tables.html" title="13.7.5.37&nbsp;SHOW TABLES Statement"><code class="literal">SHOW TABLES</code></a> lists the
+        non-<code class="literal">TEMPORARY</code> tables in a given database. You
+        can also get this list using the <a class="link" href="mysqlshow.html" title="4.5.7&nbsp;mysqlshow — Display Database, Table, and Column Information"><span class="command"><strong>mysqlshow
+        <em class="replaceable"><code>db_name</code></em></strong></span></a> command. The
+        <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, if present, indicates
+        which table names to match. The <code class="literal">WHERE</code> clause
+        can be given to select rows using more general conditions, as
+        discussed in <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+      </p><p>
+        Matching performed by the <code class="literal">LIKE</code> clause is
+        dependent on the setting of the
+        <a class="link" href="server-system-variables.html#sysvar_lower_case_table_names"><code class="literal">lower_case_table_names</code></a> system
+        variable.
+      </p><p>
+        This statement also lists any views in the database. The
+        optional <code class="literal">FULL</code> modifier causes
+        <a class="link" href="show-tables.html" title="13.7.5.37&nbsp;SHOW TABLES Statement"><code class="literal">SHOW TABLES</code></a> to display a second
+        output column with values of <code class="literal">BASE TABLE</code> for a
+        table, <code class="literal">VIEW</code> for a view, or <code class="literal">SYSTEM
+        VIEW</code> for an <code class="literal">INFORMATION_SCHEMA</code>
+        table.
+      </p><p>
+        If you have no privileges for a base table or view, it does not
+        show up in the output from <a class="link" href="show-tables.html" title="13.7.5.37&nbsp;SHOW TABLES Statement"><code class="literal">SHOW
+        TABLES</code></a> or <a class="link" href="mysqlshow.html" title="4.5.7&nbsp;mysqlshow — Display Database, Table, and Column Information"><span class="command"><strong>mysqlshow db_name</strong></span></a>.
+      </p><p>
+        Table information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-tables-table.html" title="24.3.25&nbsp;The INFORMATION_SCHEMA TABLES Table"><code class="literal">TABLES</code></a> table. See
+        <a class="xref" href="information-schema-tables-table.html" title="24.3.25&nbsp;The INFORMATION_SCHEMA TABLES Table">Section&nbsp;24.3.25, “The INFORMATION_SCHEMA TABLES Table”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

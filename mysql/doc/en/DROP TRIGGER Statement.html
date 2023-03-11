@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP TRIGGER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="drop-trigger"></a>13.1.31&nbsp;DROP TRIGGER Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580528304"></a><a class="indexterm" name="idm45852580527232"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DROP TRIGGER [IF EXISTS] [<em class="replaceable">schema_name</em>.]<em class="replaceable">trigger_name</em></code></pre><p>
+      This statement drops a trigger. The schema (database) name is
+      optional. If the schema is omitted, the trigger is dropped from
+      the default schema. <a class="link" href="drop-trigger.html" title="13.1.31&nbsp;DROP TRIGGER Statement"><code class="literal">DROP TRIGGER</code></a>
+      requires the <a class="link" href="privileges-provided.html#priv_trigger"><code class="literal">TRIGGER</code></a> privilege for
+      the table associated with the trigger.
+    </p><p>
+      Use <code class="literal">IF EXISTS</code> to prevent an error from
+      occurring for a trigger that does not exist. A
+      <code class="literal">NOTE</code> is generated for a nonexistent trigger
+      when using <code class="literal">IF EXISTS</code>. See
+      <a class="xref" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement">Section&nbsp;13.7.5.40, “SHOW WARNINGS Statement”</a>.
+    </p><p>
+      Triggers for a table are also dropped if you drop the table.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW ENGINES Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-engines"></a>13.7.5.16&nbsp;SHOW ENGINES Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570923680"></a><a class="indexterm" name="idm45852570922608"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW [STORAGE] ENGINES</code></pre><p>
+        <a class="link" href="show-engines.html" title="13.7.5.16&nbsp;SHOW ENGINES Statement"><code class="literal">SHOW ENGINES</code></a> displays status
+        information about the server's storage engines. This is
+        particularly useful for checking whether a storage engine is
+        supported, or to see what the default engine is.
+      </p><p>
+        For information about MySQL storage engines, see
+        <a class="xref" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine">Chapter&nbsp;14, <i>The InnoDB Storage Engine</i></a>, and
+        <a class="xref" href="storage-engines.html" title="Chapter&nbsp;15&nbsp;Alternative Storage Engines">Chapter&nbsp;15, <i>Alternative Storage Engines</i></a>.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW ENGINES\G
+*************************** 1. row ***************************
+      Engine: InnoDB
+     Support: DEFAULT
+     Comment: Supports transactions, row-level locking, and foreign keys
+Transactions: YES
+          XA: YES
+  Savepoints: YES
+*************************** 2. row ***************************
+      Engine: MRG_MYISAM
+     Support: YES
+     Comment: Collection of identical MyISAM tables
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 3. row ***************************
+      Engine: MEMORY
+     Support: YES
+     Comment: Hash based, stored in memory, useful for temporary tables
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 4. row ***************************
+      Engine: BLACKHOLE
+     Support: YES
+     Comment: /dev/null storage engine (anything you write to it disappears)
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 5. row ***************************
+      Engine: MyISAM
+     Support: YES
+     Comment: MyISAM storage engine
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 6. row ***************************
+      Engine: CSV
+     Support: YES
+     Comment: CSV storage engine
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 7. row ***************************
+      Engine: ARCHIVE
+     Support: YES
+     Comment: Archive storage engine
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 8. row ***************************
+      Engine: PERFORMANCE_SCHEMA
+     Support: YES
+     Comment: Performance Schema
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 9. row ***************************
+      Engine: FEDERATED
+     Support: YES
+     Comment: Federated MySQL storage engine
+Transactions: NO
+          XA: NO
+  Savepoints: NO</code></pre><p>
+        The output from <a class="link" href="show-engines.html" title="13.7.5.16&nbsp;SHOW ENGINES Statement"><code class="literal">SHOW ENGINES</code></a> may
+        vary according to the MySQL version used and other factors.
+      </p><p>
+        <a class="link" href="show-engines.html" title="13.7.5.16&nbsp;SHOW ENGINES Statement"><code class="literal">SHOW ENGINES</code></a> output has these
+        columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Engine</code>
+          </p><p>
+            The name of the storage engine.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Support</code>
+          </p><p>
+            The server's level of support for the storage engine, as
+            shown in the following table.
+</p>
+<div class="informaltable">
+<table summary="Values for the Support column in the output of the SHOW ENGINES statement."><colgroup><col style="width: 15%"><col style="width: 85%"></colgroup><thead><tr>
+                <th>Value</th>
+                <th>Meaning</th>
+              </tr></thead><tbody><tr>
+                <td><code class="literal">YES</code></td>
+                <td>The engine is supported and is active</td>
+              </tr><tr>
+                <td><code class="literal">DEFAULT</code></td>
+                <td>Like <code class="literal">YES</code>, plus this is the default engine</td>
+              </tr><tr>
+                <td><code class="literal">NO</code></td>
+                <td>The engine is not supported</td>
+              </tr><tr>
+                <td><code class="literal">DISABLED</code></td>
+                <td>The engine is supported but has been disabled</td>
+</tr></tbody></table>
+</div>
+<p>
+            A value of <code class="literal">NO</code> means that the server was
+            compiled without support for the engine, so it cannot be
+            enabled at runtime.
+          </p><p>
+            A value of <code class="literal">DISABLED</code> occurs either because
+            the server was started with an option that disables the
+            engine, or because not all options required to enable it
+            were given. In the latter case, the error log should contain
+            a reason indicating why the option is disabled. See
+            <a class="xref" href="error-log.html" title="5.4.2&nbsp;The Error Log">Section&nbsp;5.4.2, “The Error Log”</a>.
+          </p><p>
+            You might also see <code class="literal">DISABLED</code> for a storage
+            engine if the server was compiled to support it, but was
+            started with a
+            <code class="option">--skip-<em class="replaceable"><code>engine_name</code></em></code>
+            option. For the <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage
+            engine, <code class="literal">DISABLED</code> means the server was
+            compiled with support for NDB Cluster, but was not started
+            with the <a class="link" href="mysql-cluster-options-variables.html#option_mysqld_ndbcluster"><code class="option">--ndbcluster</code></a> option.
+          </p><p>
+            All MySQL servers support <code class="literal">MyISAM</code> tables.
+            It is not possible to disable <code class="literal">MyISAM</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Comment</code>
+          </p><p>
+            A brief description of the storage engine.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Transactions</code>
+          </p><p>
+            Whether the storage engine supports transactions.
+          </p></li><li class="listitem"><p>
+            <code class="literal">XA</code>
+          </p><p>
+            Whether the storage engine supports XA transactions.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Savepoints</code>
+          </p><p>
+            Whether the storage engine supports savepoints.
+</p></li></ul>
+</div>
+<p>
+        Storage engine information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-engines-table.html" title="24.3.7&nbsp;The INFORMATION_SCHEMA ENGINES Table"><code class="literal">ENGINES</code></a> table. See
+        <a class="xref" href="information-schema-engines-table.html" title="24.3.7&nbsp;The INFORMATION_SCHEMA ENGINES Table">Section&nbsp;24.3.7, “The INFORMATION_SCHEMA ENGINES Table”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

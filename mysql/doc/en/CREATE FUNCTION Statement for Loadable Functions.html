@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE FUNCTION Statement for Loadable Functions</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="create-function-loadable"></a>13.7.3.1&nbsp;CREATE FUNCTION Statement for Loadable Functions</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572031872"></a><a class="indexterm" name="idm45852572030832"></a><a class="indexterm" name="idm45852572029344"></a><a class="indexterm" name="idm45852572027856"></a><a class="indexterm" name="idm45852572026368"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE [AGGREGATE] FUNCTION <em class="replaceable">function_name</em>
+    RETURNS {STRING|INTEGER|REAL|DECIMAL}
+    SONAME <em class="replaceable">shared_library_name</em></code></pre><p>
+        This statement loads the loadable function named
+        <em class="replaceable"><code>function_name</code></em>. (<code class="literal">CREATE
+        FUNCTION</code> is also used to created stored functions; see
+        <a class="xref" href="create-procedure.html" title="13.1.16&nbsp;CREATE PROCEDURE and CREATE FUNCTION Statements">Section&nbsp;13.1.16, “CREATE PROCEDURE and CREATE FUNCTION Statements”</a>.)
+      </p><p>
+        A loadable function is a way to extend MySQL with a new function
+        that works like a native (built-in) MySQL function such as
+        <a class="link" href="mathematical-functions.html#function_abs"><code class="literal">ABS()</code></a> or
+        <a class="link" href="string-functions.html#function_concat"><code class="literal">CONCAT()</code></a>. See
+        <a class="ulink" href="https://dev.mysql.com/doc/extending-mysql/5.7/en/adding-loadable-function.html" target="_top">Adding a Loadable Function</a>.
+      </p><p>
+        <em class="replaceable"><code>function_name</code></em> is the name that should
+        be used in SQL statements to invoke the function. The
+        <code class="literal">RETURNS</code> clause indicates the type of the
+        function's return value. <code class="literal">DECIMAL</code> is a legal
+        value after <code class="literal">RETURNS</code>, but currently
+        <code class="literal">DECIMAL</code> functions return string values and
+        should be written like <code class="literal">STRING</code> functions.
+      </p><p>
+        The <code class="literal">AGGREGATE</code> keyword, if given, signifies
+        that the function is an aggregate (group) function. An aggregate
+        function works exactly like a native MySQL aggregate function
+        such as <a class="link" href="aggregate-functions.html#function_sum"><code class="literal">SUM()</code></a> or
+        <a class="link" href="aggregate-functions.html#function_count"><code class="literal">COUNT()</code></a>.
+      </p><p>
+        <em class="replaceable"><code>shared_library_name</code></em> is the base name
+        of the shared library file containing the code that implements
+        the function. The file must be located in the plugin directory.
+        This directory is given by the value of the
+        <a class="link" href="server-system-variables.html#sysvar_plugin_dir"><code class="literal">plugin_dir</code></a> system variable. For
+        more information, see <a class="xref" href="function-loading.html" title="5.6.1&nbsp;Installing and Uninstalling Loadable Functions">Section&nbsp;5.6.1, “Installing and Uninstalling Loadable Functions”</a>.
+      </p><p>
+        <a class="link" href="create-function-loadable.html" title="13.7.3.1&nbsp;CREATE FUNCTION Statement for Loadable Functions"><code class="literal">CREATE
+        FUNCTION</code></a> requires the
+        <a class="link" href="privileges-provided.html#priv_insert"><code class="literal">INSERT</code></a> privilege for the
+        <code class="literal">mysql</code> system database because it adds a row
+        to the <code class="literal">mysql.func</code> system table to register
+        the function.
+      </p><p>
+        During the normal startup sequence, the server loads functions
+        registered in the <code class="literal">mysql.func</code> table. If the
+        server is started with the
+        <a class="link" href="server-options.html#option_mysqld_skip-grant-tables"><code class="option">--skip-grant-tables</code></a> option,
+        functions registered in the table are not loaded and are
+        unavailable.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          To upgrade the shared library associated with a loadable
+          function, issue a
+          <a class="link" href="drop-function-loadable.html" title="13.7.3.2&nbsp;DROP FUNCTION Statement for Loadable Functions"><code class="literal">DROP
+          FUNCTION</code></a> statement, upgrade the shared library, and
+          then issue a
+          <a class="link" href="create-function-loadable.html" title="13.7.3.1&nbsp;CREATE FUNCTION Statement for Loadable Functions"><code class="literal">CREATE
+          FUNCTION</code></a> statement. If you upgrade the shared
+          library first and then use
+          <a class="link" href="drop-function-loadable.html" title="13.7.3.2&nbsp;DROP FUNCTION Statement for Loadable Functions"><code class="literal">DROP
+          FUNCTION</code></a>, the server may unexpectedly shut down.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

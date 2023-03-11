@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>ALTER DATABASE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="alter-database"></a>13.1.1&nbsp;ALTER DATABASE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852585791344"></a><a class="indexterm" name="idm45852585790304"></a><a class="indexterm" name="idm45852585789232"></a><a class="indexterm" name="idm45852585787744"></a><a class="indexterm" name="idm45852585786256"></a><a class="indexterm" name="idm45852585784768"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER {DATABASE | SCHEMA} [<em class="replaceable">db_name</em>]
+    <em class="replaceable">alter_option</em> ...
+ALTER {DATABASE | SCHEMA} <em class="replaceable">db_name</em>
+    UPGRADE DATA DIRECTORY NAME
+
+<em class="replaceable">alter_option</em>: {
+    [DEFAULT] CHARACTER SET [=] <em class="replaceable">charset_name</em>
+  | [DEFAULT] COLLATE [=] <em class="replaceable">collation_name</em>
+}</code></pre><p>
+      <a class="link" href="alter-database.html" title="13.1.1&nbsp;ALTER DATABASE Statement"><code class="literal">ALTER DATABASE</code></a> enables you to
+      change the overall characteristics of a database. These
+      characteristics are stored in the <code class="filename">db.opt</code> file
+      in the database directory. This statement requires the
+      <a class="link" href="privileges-provided.html#priv_alter"><code class="literal">ALTER</code></a> privilege on the database.
+      <a class="link" href="alter-database.html" title="13.1.1&nbsp;ALTER DATABASE Statement"><code class="literal">ALTER
+      SCHEMA</code></a> is a synonym for <a class="link" href="alter-database.html" title="13.1.1&nbsp;ALTER DATABASE Statement"><code class="literal">ALTER
+      DATABASE</code></a>.
+    </p><p>
+      The database name can be omitted from the first syntax, in which
+      case the statement applies to the default database. An error
+      occurs if there is no default database.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="alter-database.html#alter-database-charset" title="Character Set and Collation Options">Character Set and Collation Options</a></p></li><li class="listitem"><p><a class="xref" href="alter-database.html#alter-database-upgrading" title="Upgrading from Versions Older than MySQL 5.1">Upgrading from Versions Older than MySQL 5.1</a></p></li></ul>
+</div>
+<h4><a name="alter-database-charset"></a>Character Set and Collation Options</h4>
+<p>
+      The <code class="literal">CHARACTER SET</code> clause changes the default
+      database character set. The <code class="literal">COLLATE</code> clause
+      changes the default database collation. For information about
+      character set and collation names, see <a class="xref" href="charset.html" title="Chapter&nbsp;10&nbsp;Character Sets, Collations, Unicode">Chapter&nbsp;10, <i>Character Sets, Collations, Unicode</i></a>.
+    </p><p>
+      To see the available character sets and collations, use the
+      <a class="link" href="show-character-set.html" title="13.7.5.3&nbsp;SHOW CHARACTER SET Statement"><code class="literal">SHOW CHARACTER SET</code></a> and
+      <a class="link" href="show-collation.html" title="13.7.5.4&nbsp;SHOW COLLATION Statement"><code class="literal">SHOW COLLATION</code></a> statements,
+      respectively. See <a class="xref" href="show-character-set.html" title="13.7.5.3&nbsp;SHOW CHARACTER SET Statement">Section&nbsp;13.7.5.3, “SHOW CHARACTER SET Statement”</a>, and
+      <a class="xref" href="show-collation.html" title="13.7.5.4&nbsp;SHOW COLLATION Statement">Section&nbsp;13.7.5.4, “SHOW COLLATION Statement”</a>.
+    </p><p>
+      A stored routine that uses the database defaults when the routine
+      is created includes those defaults as part of its definition. (In
+      a stored routine, variables with character data types use the
+      database defaults if the character set or collation are not
+      specified explicitly. See <a class="xref" href="create-procedure.html" title="13.1.16&nbsp;CREATE PROCEDURE and CREATE FUNCTION Statements">Section&nbsp;13.1.16, “CREATE PROCEDURE and CREATE FUNCTION Statements”</a>.) If
+      you change the default character set or collation for a database,
+      any stored routines that are to use the new defaults must be
+      dropped and recreated.
+</p>
+<h4><a name="alter-database-upgrading"></a>Upgrading from Versions Older than MySQL 5.1</h4>
+<p>
+      The syntax that includes the <code class="literal">UPGRADE DATA DIRECTORY
+      NAME</code> clause updates the name of the directory associated
+      with the database to use the encoding implemented in MySQL 5.1 for
+      mapping database names to database directory names (see
+      <a class="xref" href="identifier-mapping.html" title="9.2.4&nbsp;Mapping of Identifiers to File Names">Section&nbsp;9.2.4, “Mapping of Identifiers to File Names”</a>). This clause is for use
+      under these conditions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          It is intended when upgrading MySQL to 5.1 or later from older
+          versions.
+        </p></li><li class="listitem"><p>
+          It is intended to update a database directory name to the
+          current encoding format if the name contains special
+          characters that need encoding.
+        </p></li><li class="listitem"><p>
+          The statement is used by <a class="link" href="mysqlcheck.html" title="4.5.3&nbsp;mysqlcheck — A Table Maintenance Program"><span class="command"><strong>mysqlcheck</strong></span></a> (as
+          invoked by <a class="link" href="mysql-upgrade.html" title="4.4.7&nbsp;mysql_upgrade — Check and Upgrade MySQL Tables"><span class="command"><strong>mysql_upgrade</strong></span></a>).
+</p></li></ul>
+</div>
+<p>
+      For example, if a database in MySQL 5.0 has the name
+      <code class="literal">a-b-c</code>, the name contains instances of the
+      <code class="literal">-</code> (dash) character. In MySQL 5.0, the database
+      directory is also named <code class="literal">a-b-c</code>, which is not
+      necessarily safe for all file systems. In MySQL 5.1 and later, the
+      same database name is encoded as <code class="literal">a@002db@002dc</code>
+      to produce a file system-neutral directory name.
+    </p><p>
+      When a MySQL installation is upgraded to MySQL 5.1 or later from
+      an older version,the server displays a name such as
+      <code class="literal">a-b-c</code> (which is in the old format) as
+      <code class="literal">#mysql50#a-b-c</code>, and you must refer to the name
+      using the <code class="literal">#mysql50#</code> prefix. Use
+      <code class="literal">UPGRADE DATA DIRECTORY NAME</code> in this case to
+      explicitly tell the server to re-encode the database directory
+      name to the current encoding format:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER DATABASE `#mysql50#a-b-c` UPGRADE DATA DIRECTORY NAME;</code></pre><p>
+      After executing this statement, you can refer to the database as
+      <code class="literal">a-b-c</code> without the special
+      <code class="literal">#mysql50#</code> prefix.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        The <code class="literal">UPGRADE DATA DIRECTORY NAME</code> clause is
+        deprecated in MySQL 5.7 and removed in MySQL
+        8.0. If it is necessary to convert MySQL 5.0 database
+        or table names, a workaround is to upgrade a MySQL 5.0
+        installation to MySQL 5.1 before upgrading to MySQL
+        8.0.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

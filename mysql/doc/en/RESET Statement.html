@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>RESET Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="reset"></a>13.7.6.6&nbsp;RESET Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852568920400"></a><a class="indexterm" name="idm45852568919328"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">RESET <em class="replaceable">reset_option</em> [, <em class="replaceable">reset_option</em>] ...
+
+<em class="replaceable">reset_option</em>: {
+    MASTER
+  | QUERY CACHE
+  | SLAVE
+}</code></pre><p>
+        The <a class="link" href="reset.html" title="13.7.6.6&nbsp;RESET Statement"><code class="literal">RESET</code></a> statement is used to
+        clear the state of various server operations. You must have the
+        <a class="link" href="privileges-provided.html#priv_reload"><code class="literal">RELOAD</code></a> privilege to execute
+        <a class="link" href="reset.html" title="13.7.6.6&nbsp;RESET Statement"><code class="literal">RESET</code></a>.
+      </p><p>
+        <a class="link" href="reset.html" title="13.7.6.6&nbsp;RESET Statement"><code class="literal">RESET</code></a> acts as a stronger version
+        of the <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a> statement. See
+        <a class="xref" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement">Section&nbsp;13.7.6.3, “FLUSH Statement”</a>.
+      </p><p>
+        The <a class="link" href="reset.html" title="13.7.6.6&nbsp;RESET Statement"><code class="literal">RESET</code></a> statement causes an
+        implicit commit. See <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+      </p><p>
+        The following list describes the permitted
+        <a class="link" href="reset.html" title="13.7.6.6&nbsp;RESET Statement"><code class="literal">RESET</code></a> statement
+        <em class="replaceable"><code>reset_option</code></em> values:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">RESET MASTER</code>
+          </p><p>
+            Deletes all binary logs listed in the index file, resets the
+            binary log index file to be empty, and creates a new binary
+            log file.
+          </p></li><li class="listitem"><p>
+            <code class="literal">RESET QUERY CACHE</code>
+          </p><p>
+            Removes all query results from the query cache.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              The query cache is deprecated as of MySQL 5.7.20, and is
+              removed in MySQL 8.0. Deprecation includes
+              <a class="link" href="reset.html" title="13.7.6.6&nbsp;RESET Statement"><code class="literal">RESET QUERY
+              CACHE</code></a>.
+</p>
+</div>
+</li><li class="listitem"><p>
+            <code class="literal">RESET SLAVE</code>
+          </p><p>
+            Makes the replica forget its replication position in the
+            source binary logs. Also resets the relay log by deleting
+            any existing relay log files and beginning a new one.
+</p></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

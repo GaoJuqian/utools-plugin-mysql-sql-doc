@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SET CHARACTER SET Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="set-character-set"></a>13.7.4.2&nbsp;SET CHARACTER SET Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571721472"></a><a class="indexterm" name="idm45852571720416"></a><a class="indexterm" name="idm45852571719344"></a><a class="indexterm" name="idm45852571717856"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET {CHARACTER SET | CHARSET}
+    {'<em class="replaceable">charset_name</em>' | DEFAULT}</code></pre><p>
+        This statement maps all strings sent between the server and the
+        current client with the given mapping. <code class="literal">SET CHARACTER
+        SET</code> sets three session system variables:
+        <a class="link" href="server-system-variables.html#sysvar_character_set_client"><code class="literal">character_set_client</code></a> and
+        <a class="link" href="server-system-variables.html#sysvar_character_set_results"><code class="literal">character_set_results</code></a> are set
+        to the given character set, and
+        <a class="link" href="server-system-variables.html#sysvar_character_set_connection"><code class="literal">character_set_connection</code></a> to the
+        value of
+        <a class="link" href="server-system-variables.html#sysvar_character_set_database"><code class="literal">character_set_database</code></a>. See
+        <a class="xref" href="charset-connection.html" title="10.4&nbsp;Connection Character Sets and Collations">Section&nbsp;10.4, “Connection Character Sets and Collations”</a>.
+      </p><p>
+        <em class="replaceable"><code>charset_name</code></em> may be quoted or
+        unquoted.
+      </p><p>
+        The default character set mapping can be restored by using the
+        value <code class="literal">DEFAULT</code>. The default depends on the
+        server configuration.
+      </p><p>
+        Some character sets cannot be used as the client character set.
+        Attempting to use them with <a class="link" href="set-character-set.html" title="13.7.4.2&nbsp;SET CHARACTER SET Statement"><code class="literal">SET CHARACTER
+        SET</code></a> produces an error. See
+        <a class="xref" href="charset-connection.html#charset-connection-impermissible-client-charset" title="Impermissible Client Character Sets">Impermissible Client Character Sets</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>LOAD DATA StatementNon-LOCAL Versus LOCAL OperationInput File Character SetInput File LocationSecurity RequirementsDuplicate-Key and Error HandlingIndex HandlingField and Line HandlingColumn List SpecificationInput PreprocessingColumn Value AssignmentPartitioned Table SupportConcurrency ConsiderationsStatement Result InformationReplication ConsiderationsMiscellaneous Topics</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="load-data"></a>13.2.6&nbsp;LOAD DATA Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852579614960"></a><a class="indexterm" name="idm45852579613888"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD DATA
+    [LOW_PRIORITY | CONCURRENT] [LOCAL]
+    INFILE '<em class="replaceable">file_name</em>'
+    [REPLACE | IGNORE]
+    INTO TABLE <em class="replaceable">tbl_name</em>
+    [PARTITION (<em class="replaceable">partition_name</em> [, <em class="replaceable">partition_name</em>] ...)]
+    [CHARACTER SET <em class="replaceable">charset_name</em>]
+    [{FIELDS | COLUMNS}
+        [TERMINATED BY '<em class="replaceable">string</em>']
+        [[OPTIONALLY] ENCLOSED BY '<em class="replaceable">char</em>']
+        [ESCAPED BY '<em class="replaceable">char</em>']
+    ]
+    [LINES
+        [STARTING BY '<em class="replaceable">string</em>']
+        [TERMINATED BY '<em class="replaceable">string</em>']
+    ]
+    [IGNORE <em class="replaceable">number</em> {LINES | ROWS}]
+    [(<em class="replaceable">col_name_or_user_var</em>
+        [, <em class="replaceable">col_name_or_user_var</em>] ...)]
+    [SET <em class="replaceable">col_name</em>={<em class="replaceable">expr</em> | DEFAULT}
+        [, <em class="replaceable">col_name</em>={<em class="replaceable">expr</em> | DEFAULT}] ...]</code></pre><p>
+      The <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> statement reads rows
+      from a text file into a table at a very high speed. The file can
+      be read from the server host or the client host, depending on
+      whether the <code class="literal">LOCAL</code> modifier is given.
+      <code class="literal">LOCAL</code> also affects data interpretation and
+      error handling.
+    </p><p>
+      <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> is the complement of
+      <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ... INTO
+      OUTFILE</code></a>. (See <a class="xref" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement">Section&nbsp;13.2.9.1, “SELECT ... INTO Statement”</a>.) To write
+      data from a table to a file, use
+      <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ... INTO
+      OUTFILE</code></a>. To read the file back into a table, use
+      <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>. The syntax of the
+      <code class="literal">FIELDS</code> and <code class="literal">LINES</code> clauses is
+      the same for both statements.
+    </p><a class="indexterm" name="idm45852579590032"></a><p>
+      The <a class="link" href="mysqlimport.html" title="4.5.5&nbsp;mysqlimport — A Data Import Program"><span class="command"><strong>mysqlimport</strong></span></a> utility provides another way to
+      load data files; it operates by sending a
+      <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> statement to the server.
+      See <a class="xref" href="mysqlimport.html" title="4.5.5&nbsp;mysqlimport — A Data Import Program">Section&nbsp;4.5.5, “mysqlimport — A Data Import Program”</a>.
+    </p><p>
+      For information about the efficiency of
+      <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> versus
+      <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> and speeding up
+      <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>, see
+      <a class="xref" href="insert-optimization.html" title="8.2.4.1&nbsp;Optimizing INSERT Statements">Section&nbsp;8.2.4.1, “Optimizing INSERT Statements”</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="load-data.html#load-data-local" title="Non-LOCAL Versus LOCAL Operation">Non-LOCAL Versus LOCAL Operation</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-character-set" title="Input File Character Set">Input File Character Set</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-file-location" title="Input File Location">Input File Location</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-security-requirements" title="Security Requirements">Security Requirements</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-error-handling" title="Duplicate-Key and Error Handling">Duplicate-Key and Error Handling</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-index-handling" title="Index Handling">Index Handling</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-field-line-handling" title="Field and Line Handling">Field and Line Handling</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-column-list" title="Column List Specification">Column List Specification</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-input-preprocessing" title="Input Preprocessing">Input Preprocessing</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-column-assignments" title="Column Value Assignment">Column Value Assignment</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-partitioning-support" title="Partitioned Table Support">Partitioned Table Support</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-concurrency" title="Concurrency Considerations">Concurrency Considerations</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-statement-result-information" title="Statement Result Information">Statement Result Information</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-replication" title="Replication Considerations">Replication Considerations</a></p></li><li class="listitem"><p><a class="xref" href="load-data.html#load-data-miscellaneous" title="Miscellaneous Topics">Miscellaneous Topics</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h4 class="title"><a name="load-data-local"></a>Non-LOCAL Versus LOCAL Operation</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        The <code class="literal">LOCAL</code> modifier affects these aspects of
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>, compared to
+        non-<code class="literal">LOCAL</code> operation:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            It changes the expected location of the input file; see
+            <a class="xref" href="load-data.html#load-data-file-location" title="Input File Location">Input File Location</a>.
+          </p></li><li class="listitem"><p>
+            It changes the statement security requirements; see
+            <a class="xref" href="load-data.html#load-data-security-requirements" title="Security Requirements">Security Requirements</a>.
+          </p></li><li class="listitem"><p>
+            It has the same effect as the <code class="literal">IGNORE</code>
+            modifier on the interpretation of input file contents and
+            error handling; see
+            <a class="xref" href="load-data.html#load-data-error-handling" title="Duplicate-Key and Error Handling">Duplicate-Key and Error Handling</a>, and
+            <a class="xref" href="load-data.html#load-data-column-assignments" title="Column Value Assignment">Column Value Assignment</a>.
+</p></li></ul>
+</div>
+<p>
+        <code class="literal">LOCAL</code> works only if the server and your
+        client both have been configured to permit it. For example, if
+        <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> was started with the
+        <a class="link" href="server-system-variables.html#sysvar_local_infile"><code class="literal">local_infile</code></a> system variable
+        disabled, <code class="literal">LOCAL</code> produces an error. See
+        <a class="xref" href="load-data-local-security.html" title="6.1.6&nbsp;Security Considerations for LOAD DATA LOCAL">Section&nbsp;6.1.6, “Security Considerations for LOAD DATA LOCAL”</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-character-set"></a>Input File Character Set</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        The file name must be given as a literal string. On Windows,
+        specify backslashes in path names as forward slashes or doubled
+        backslashes. The server interprets the file name using the
+        character set indicated by the
+        <a class="link" href="server-system-variables.html#sysvar_character_set_filesystem"><code class="literal">character_set_filesystem</code></a> system
+        variable.
+      </p><p>
+        By default, the server interprets the file contents using the
+        character set indicated by the
+        <a class="link" href="server-system-variables.html#sysvar_character_set_database"><code class="literal">character_set_database</code></a> system
+        variable. If the file contents use a character set different
+        from this default, it is a good idea to specify that character
+        set by using the <code class="literal">CHARACTER SET</code> clause. A
+        character set of <code class="literal">binary</code> specifies <span class="quote">“<span class="quote">no
+        conversion.</span>”</span>
+      </p><p>
+        <a class="link" href="set-names.html" title="13.7.4.3&nbsp;SET NAMES Statement"><code class="literal">SET NAMES</code></a> and the setting of
+        <a class="link" href="server-system-variables.html#sysvar_character_set_client"><code class="literal">character_set_client</code></a> do not
+        affect interpretation of file contents.
+      </p><p>
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> interprets all fields
+        in the file as having the same character set, regardless of the
+        data types of the columns into which field values are loaded.
+        For proper interpretation of the file, you must ensure that it
+        was written with the correct character set. For example, if you
+        write a data file with <a class="link" href="mysqldump.html" title="4.5.4&nbsp;mysqldump — A Database Backup Program"><span class="command"><strong>mysqldump -T</strong></span></a> or by
+        issuing a <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT
+        ... INTO OUTFILE</code></a> statement in
+        <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a>, be sure to use a
+        <a class="link" href="mysql-command-options.html#option_mysql_default-character-set"><code class="option">--default-character-set</code></a> option to
+        write output in the character set to be used when the file is
+        loaded with <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          It is not possible to load data files that use the
+          <code class="literal">ucs2</code>, <code class="literal">utf16</code>,
+          <code class="literal">utf16le</code>, or <code class="literal">utf32</code>
+          character set.
+</p>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-file-location"></a>Input File Location</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        These rules determine the <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+        DATA</code></a> input file location:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            If <code class="literal">LOCAL</code> is not specified, the file must
+            be located on the server host. The server reads the file
+            directly, locating it as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                If the file name is an absolute path name, the server
+                uses it as given.
+              </p></li><li class="listitem"><p>
+                If the file name is a relative path name with leading
+                components, the server looks for the file relative to
+                its data directory.
+              </p></li><li class="listitem"><p>
+                If the file name has no leading components, the server
+                looks for the file in the database directory of the
+                default database.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+            If <code class="literal">LOCAL</code> is specified, the file must be
+            located on the client host. The client program reads the
+            file, locating it as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                If the file name is an absolute path name, the client
+                program uses it as given.
+              </p></li><li class="listitem"><p>
+                If the file name is a relative path name, the client
+                program looks for the file relative to its invocation
+                directory.
+</p></li></ul>
+</div>
+<p>
+            When <code class="literal">LOCAL</code> is used, the client program
+            reads the file and sends its contents to the server. The
+            server creates a copy of the file in the directory where it
+            stores temporary files. See
+            <a class="xref" href="temporary-files.html" title="B.3.3.5&nbsp;Where MySQL Stores Temporary Files">Section&nbsp;B.3.3.5, “Where MySQL Stores Temporary Files”</a>. Lack of sufficient space
+            for the copy in this directory can cause the
+            <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA
+            LOCAL</code></a> statement to fail.
+</p></li></ul>
+</div>
+<p>
+        The non-<code class="literal">LOCAL</code> rules mean that the server
+        reads a file named as <code class="filename">./myfile.txt</code> relative
+        to its data directory, whereas it reads a file named as
+        <code class="filename">myfile.txt</code> from the database directory of
+        the default database. For example, if the following
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> statement is executed
+        while <code class="literal">db1</code> is the default database, the server
+        reads the file <code class="filename">data.txt</code> from the database
+        directory for <code class="literal">db1</code>, even though the statement
+        explicitly loads the file into a table in the
+        <code class="literal">db2</code> database:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">LOAD DATA INFILE 'data.txt' INTO TABLE db2.my_table;</code></pre>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-security-requirements"></a>Security Requirements</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        For a non-<code class="literal">LOCAL</code> load operation, the server
+        reads a text file located on the server host, so these security
+        requirements must be satisified:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            You must have the <a class="link" href="privileges-provided.html#priv_file"><code class="literal">FILE</code></a>
+            privilege. See <a class="xref" href="privileges-provided.html" title="6.2.2&nbsp;Privileges Provided by MySQL">Section&nbsp;6.2.2, “Privileges Provided by MySQL”</a>.
+          </p></li><li class="listitem"><p>
+            The operation is subject to the
+            <a class="link" href="server-system-variables.html#sysvar_secure_file_priv"><code class="literal">secure_file_priv</code></a> system
+            variable setting:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                If the variable value is a nonempty directory name, the
+                file must be located in that directory.
+              </p></li><li class="listitem"><p>
+                If the variable value is empty (which is insecure), the
+                file need only be readable by the server.
+</p></li></ul>
+</div>
+</li></ul>
+</div>
+<p>
+        For a <code class="literal">LOCAL</code> load operation, the client
+        program reads a text file located on the client host. Because
+        the file contents are sent over the connection by the client to
+        the server, using <code class="literal">LOCAL</code> is a bit slower than
+        when the server accesses the file directly. On the other hand,
+        you do not need the <a class="link" href="privileges-provided.html#priv_file"><code class="literal">FILE</code></a>
+        privilege, and the file can be located in any directory the
+        client program can access.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-error-handling"></a>Duplicate-Key and Error Handling</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        The <code class="literal">REPLACE</code> and <code class="literal">IGNORE</code>
+        modifiers control handling of new (input) rows that duplicate
+        existing table rows on unique key values (<code class="literal">PRIMARY
+        KEY</code> or <code class="literal">UNIQUE</code> index values):
+</p><a class="indexterm" name="idm45852579484224"></a><a class="indexterm" name="idm45852579482736"></a>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            With <code class="literal">REPLACE</code>, new rows that have the same
+            value as a unique key value in an existing row replace the
+            existing row. See <a class="xref" href="replace.html" title="13.2.8&nbsp;REPLACE Statement">Section&nbsp;13.2.8, “REPLACE Statement”</a>.
+          </p></li><li class="listitem"><p>
+            With <code class="literal">IGNORE</code>, new rows that duplicate an
+            existing row on a unique key value are discarded. For more
+            information, see
+            <a class="xref" href="sql-mode.html#ignore-effect-on-execution" title="The Effect of IGNORE on Statement Execution">The Effect of IGNORE on Statement Execution</a>.
+</p></li></ul>
+</div>
+<p>
+        The <code class="literal">LOCAL</code> modifier has the same effect as
+        <code class="literal">IGNORE</code>. This occurs because the server has no
+        way to stop transmission of the file in the middle of the
+        operation.
+      </p><p>
+        If none of <code class="literal">REPLACE</code>,
+        <code class="literal">IGNORE</code>, or <code class="literal">LOCAL</code> is
+        specified, an error occurs when a duplicate key value is found,
+        and the rest of the text file is ignored.
+      </p><p>
+        In addition to affecting duplicate-key handling as just
+        described, <code class="literal">IGNORE</code> and
+        <code class="literal">LOCAL</code> also affect error handling:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            With neither <code class="literal">IGNORE</code> nor
+            <code class="literal">LOCAL</code>, data-interpretation errors
+            terminate the operation.
+          </p></li><li class="listitem"><p>
+            With <code class="literal">IGNORE</code> or <code class="literal">LOCAL</code>,
+            data-interpretation errors become warnings and the load
+            operation continues, even if the SQL mode is restrictive.
+            For examples, see
+            <a class="xref" href="load-data.html#load-data-column-assignments" title="Column Value Assignment">Column Value Assignment</a>.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-index-handling"></a>Index Handling</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        To ignore foreign key constraints during the load operation,
+        execute a <code class="literal">SET foreign_key_checks = 0</code>
+        statement before executing <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+        DATA</code></a>.
+      </p><p>
+        If you use <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> on an empty
+        <code class="literal">MyISAM</code> table, all nonunique indexes are
+        created in a separate batch (as for <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR
+        TABLE</code></a>). Normally, this makes <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+        DATA</code></a> much faster when you have many indexes. In some
+        extreme cases, you can create the indexes even faster by turning
+        them off with <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+        TABLE ... DISABLE KEYS</code></a> before loading the file into
+        the table and re-creating the indexes with
+        <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE ...
+        ENABLE KEYS</code></a> after loading the file. See
+        <a class="xref" href="insert-optimization.html" title="8.2.4.1&nbsp;Optimizing INSERT Statements">Section&nbsp;8.2.4.1, “Optimizing INSERT Statements”</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-field-line-handling"></a>Field and Line Handling</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        For both the <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> and
+        <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ... INTO
+        OUTFILE</code></a> statements, the syntax of the
+        <code class="literal">FIELDS</code> and <code class="literal">LINES</code> clauses
+        is the same. Both clauses are optional, but
+        <code class="literal">FIELDS</code> must precede <code class="literal">LINES</code>
+        if both are specified.
+      </p><p>
+        If you specify a <code class="literal">FIELDS</code> clause, each of its
+        subclauses (<code class="literal">TERMINATED BY</code>,
+        <code class="literal">[OPTIONALLY] ENCLOSED BY</code>, and
+        <code class="literal">ESCAPED BY</code>) is also optional, except that you
+        must specify at least one of them. Arguments to these clauses
+        are permitted to contain only ASCII characters.
+      </p><p>
+        If you specify no <code class="literal">FIELDS</code> or
+        <code class="literal">LINES</code> clause, the defaults are the same as if
+        you had written this:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">FIELDS TERMINATED BY '\t' ENCLOSED BY '' ESCAPED BY '\\'
+LINES TERMINATED BY '\n' STARTING BY ''</code></pre><p>
+        Backslash is the MySQL escape character within strings in SQL
+        statements. Thus, to specify a literal backslash, you must
+        specify two backslashes for the value to be interpreted as a
+        single backslash. The escape sequences <code class="literal">'\t'</code>
+        and <code class="literal">'\n'</code> specify tab and newline characters,
+        respectively.
+      </p><p>
+        In other words, the defaults cause <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+        DATA</code></a> to act as follows when reading input:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Look for line boundaries at newlines.
+          </p></li><li class="listitem"><p>
+            Do not skip any line prefix.
+          </p></li><li class="listitem"><p>
+            Break lines into fields at tabs.
+          </p></li><li class="listitem"><p>
+            Do not expect fields to be enclosed within any quoting
+            characters.
+          </p></li><li class="listitem"><p>
+            Interpret characters preceded by the escape character
+            <code class="literal">\</code> as escape sequences. For example,
+            <code class="literal">\t</code>, <code class="literal">\n</code>, and
+            <code class="literal">\\</code> signify tab, newline, and backslash,
+            respectively. See the discussion of <code class="literal">FIELDS ESCAPED
+            BY</code> later for the full list of escape sequences.
+</p></li></ul>
+</div>
+<p>
+        Conversely, the defaults cause
+        <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ... INTO
+        OUTFILE</code></a> to act as follows when writing output:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Write tabs between fields.
+          </p></li><li class="listitem"><p>
+            Do not enclose fields within any quoting characters.
+          </p></li><li class="listitem"><p>
+            Use <code class="literal">\</code> to escape instances of tab,
+            newline, or <code class="literal">\</code> that occur within field
+            values.
+          </p></li><li class="listitem"><p>
+            Write newlines at the ends of lines.
+</p></li></ul>
+</div>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Note
+</div>
+<p>
+          For a text file generated on a Windows system, proper file
+          reading might require <code class="literal">LINES TERMINATED BY
+          '\r\n'</code> because Windows programs typically use two
+          characters as a line terminator. Some programs, such as
+          <span class="command"><strong>WordPad</strong></span>, might use <code class="literal">\r</code> as
+          a line terminator when writing files. To read such files, use
+          <code class="literal">LINES TERMINATED BY '\r'</code>.
+</p>
+</div>
+<p>
+        If all the input lines have a common prefix that you want to
+        ignore, you can use <code class="literal">LINES STARTING BY
+        '<em class="replaceable"><code>prefix_string</code></em>'</code> to skip the
+        prefix <span class="emphasis"><em>and anything before it</em></span>. If a line
+        does not include the prefix, the entire line is skipped. Suppose
+        that you issue the following statement:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD DATA INFILE '/tmp/test.txt' INTO TABLE test
+  FIELDS TERMINATED BY ','  LINES STARTING BY 'xxx';</code></pre><p>
+        If the data file looks like this:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">xxx"abc",1
+something xxx"def",2
+"ghi",3</code></pre><p>
+        The resulting rows are <code class="literal">("abc",1)</code> and
+        <code class="literal">("def",2)</code>. The third row in the file is
+        skipped because it does not contain the prefix.
+      </p><p>
+        The <code class="literal">IGNORE <em class="replaceable"><code>number</code></em>
+        LINES</code> clause can be used to ignore lines at the start
+        of the file. For example, you can use <code class="literal">IGNORE 1
+        LINES</code> to skip an initial header line containing column
+        names:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">LOAD DATA INFILE '/tmp/test.txt' INTO TABLE test IGNORE 1 LINES;</code></pre><p>
+        When you use <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT
+        ... INTO OUTFILE</code></a> in tandem with
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> to write data from a
+        database into a file and then read the file back into the
+        database later, the field- and line-handling options for both
+        statements must match. Otherwise, <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+        DATA</code></a> does not interpret the contents of the file
+        properly. Suppose that you use
+        <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ... INTO
+        OUTFILE</code></a> to write a file with fields delimited by
+        commas:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * INTO OUTFILE 'data.txt'
+  FIELDS TERMINATED BY ','
+  FROM table2;</code></pre><p>
+        To read the comma-delimited file, the correct statement is:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD DATA INFILE 'data.txt' INTO TABLE table2
+  FIELDS TERMINATED BY ',';</code></pre><p>
+        If instead you tried to read the file with the statement shown
+        following, it would not work because it instructs
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> to look for tabs
+        between fields:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD DATA INFILE 'data.txt' INTO TABLE table2
+  FIELDS TERMINATED BY '\t';</code></pre><p>
+        The likely result is that each input line would be interpreted
+        as a single field.
+      </p><a class="indexterm" name="idm45852579393664"></a><a class="indexterm" name="idm45852579392592"></a><p>
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> can be used to read
+        files obtained from external sources. For example, many programs
+        can export data in comma-separated values (CSV) format, such
+        that lines have fields separated by commas and enclosed within
+        double quotation marks, with an initial line of column names. If
+        the lines in such a file are terminated by carriage
+        return/newline pairs, the statement shown here illustrates the
+        field- and line-handling options you would use to load the file:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD DATA INFILE 'data.txt' INTO TABLE <em class="replaceable">tbl_name</em>
+  FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+  LINES TERMINATED BY '\r\n'
+  IGNORE 1 LINES;</code></pre><p>
+        If the input values are not necessarily enclosed within
+        quotation marks, use <code class="literal">OPTIONALLY</code> before the
+        <code class="literal">ENCLOSED BY</code> option.
+      </p><p>
+        Any of the field- or line-handling options can specify an empty
+        string (<code class="literal">''</code>). If not empty, the
+        <code class="literal">FIELDS [OPTIONALLY] ENCLOSED BY</code> and
+        <code class="literal">FIELDS ESCAPED BY</code> values must be a single
+        character. The <code class="literal">FIELDS TERMINATED BY</code>,
+        <code class="literal">LINES STARTING BY</code>, and <code class="literal">LINES
+        TERMINATED BY</code> values can be more than one character.
+        For example, to write lines that are terminated by carriage
+        return/linefeed pairs, or to read a file containing such lines,
+        specify a <code class="literal">LINES TERMINATED BY '\r\n'</code> clause.
+      </p><p>
+        To read a file containing jokes that are separated by lines
+        consisting of <code class="literal">%%</code>, you can do this
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE jokes
+  (a INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  joke TEXT NOT NULL);
+LOAD DATA INFILE '/tmp/jokes.txt' INTO TABLE jokes
+  FIELDS TERMINATED BY ''
+  LINES TERMINATED BY '\n%%\n' (joke);</code></pre><p>
+        <code class="literal">FIELDS [OPTIONALLY] ENCLOSED BY</code> controls
+        quoting of fields. For output
+        (<a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ... INTO
+        OUTFILE</code></a>), if you omit the word
+        <code class="literal">OPTIONALLY</code>, all fields are enclosed by the
+        <code class="literal">ENCLOSED BY</code> character. An example of such
+        output (using a comma as the field delimiter) is shown here:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">"1","a string","100.20"
+"2","a string containing a , comma","102.20"
+"3","a string containing a \" quote","102.20"
+"4","a string containing a \", quote and comma","102.20"</code></pre><p>
+        If you specify <code class="literal">OPTIONALLY</code>, the
+        <code class="literal">ENCLOSED BY</code> character is used only to enclose
+        values from columns that have a string data type (such as
+        <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+        <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a>,
+        <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a>, or
+        <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a>):
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">1,"a string",100.20
+2,"a string containing a , comma",102.20
+3,"a string containing a \" quote",102.20
+4,"a string containing a \", quote and comma",102.20</code></pre><p>
+        Occurrences of the <code class="literal">ENCLOSED BY</code> character
+        within a field value are escaped by prefixing them with the
+        <code class="literal">ESCAPED BY</code> character. Also, if you specify an
+        empty <code class="literal">ESCAPED BY</code> value, it is possible to
+        inadvertently generate output that cannot be read properly by
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>. For example, the
+        preceding output just shown would appear as follows if the
+        escape character is empty. Observe that the second field in the
+        fourth line contains a comma following the quote, which
+        (erroneously) appears to terminate the field:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">1,"a string",100.20
+2,"a string containing a , comma",102.20
+3,"a string containing a " quote",102.20
+4,"a string containing a ", quote and comma",102.20</code></pre><p>
+        For input, the <code class="literal">ENCLOSED BY</code> character, if
+        present, is stripped from the ends of field values. (This is
+        true regardless of whether <code class="literal">OPTIONALLY</code> is
+        specified; <code class="literal">OPTIONALLY</code> has no effect on input
+        interpretation.) Occurrences of the <code class="literal">ENCLOSED
+        BY</code> character preceded by the <code class="literal">ESCAPED
+        BY</code> character are interpreted as part of the current
+        field value.
+      </p><p>
+        If the field begins with the <code class="literal">ENCLOSED BY</code>
+        character, instances of that character are recognized as
+        terminating a field value only if followed by the field or line
+        <code class="literal">TERMINATED BY</code> sequence. To avoid ambiguity,
+        occurrences of the <code class="literal">ENCLOSED BY</code> character
+        within a field value can be doubled and are interpreted as a
+        single instance of the character. For example, if
+        <code class="literal">ENCLOSED BY '"'</code> is specified, quotation marks
+        are handled as shown here:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">"The ""BIG"" boss"  -&gt; The "BIG" boss
+The "BIG" boss      -&gt; The "BIG" boss
+The ""BIG"" boss    -&gt; The ""BIG"" boss</code></pre><p>
+        <code class="literal">FIELDS ESCAPED BY</code> controls how to read or
+        write special characters:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            For input, if the <code class="literal">FIELDS ESCAPED BY</code>
+            character is not empty, occurrences of that character are
+            stripped and the following character is taken literally as
+            part of a field value. Some two-character sequences that are
+            exceptions, where the first character is the escape
+            character. These sequences are shown in the following table
+            (using <code class="literal">\</code> for the escape character). The
+            rules for <code class="literal">NULL</code> handling are described
+            later in this section.
+</p>
+<div class="informaltable">
+<table summary="Two-character sequences for which the first character (a \) is the escape character."><colgroup><col style="width: 15%"><col style="width: 85%"></colgroup><thead><tr>
+                <th>Character</th>
+                <th>Escape Sequence</th>
+              </tr></thead><tbody><tr>
+                <td><code class="literal">\0</code><a class="indexterm" name="idm45852579339344"></a><a class="indexterm" name="idm45852579338400"></a></td>
+                <td>An ASCII NUL (<code class="literal">X'00'</code>) character</td>
+              </tr><tr>
+                <td><code class="literal">\b</code><a class="indexterm" name="idm45852579334224"></a><a class="indexterm" name="idm45852579333280"></a></td>
+                <td>A backspace character</td>
+              </tr><tr>
+                <td><code class="literal">\n</code><a class="indexterm" name="idm45852579329792"></a><a class="indexterm" name="idm45852579328848"></a><a class="indexterm" name="idm45852579327904"></a><a class="indexterm" name="idm45852579326960"></a></td>
+                <td>A newline (linefeed) character</td>
+              </tr><tr>
+                <td><code class="literal">\r</code><a class="indexterm" name="idm45852579323456"></a><a class="indexterm" name="idm45852579322512"></a><a class="indexterm" name="idm45852579321568"></a></td>
+                <td>A carriage return character</td>
+              </tr><tr>
+                <td><code class="literal">\t</code><a class="indexterm" name="idm45852579318064"></a><a class="indexterm" name="idm45852579317120"></a></td>
+                <td>A tab character.</td>
+              </tr><tr>
+                <td><code class="literal">\Z</code><a class="indexterm" name="idm45852579313632"></a><a class="indexterm" name="idm45852579312688"></a></td>
+                <td>ASCII 26 (Control+Z)</td>
+              </tr><tr>
+                <td><code class="literal">\N</code><a class="indexterm" name="idm45852579309200"></a></td>
+                <td>NULL</td>
+</tr></tbody></table>
+</div>
+<p>
+            For more information about <code class="literal">\</code>-escape
+            syntax, see <a class="xref" href="string-literals.html" title="9.1.1&nbsp;String Literals">Section&nbsp;9.1.1, “String Literals”</a>.
+          </p><p>
+            If the <code class="literal">FIELDS ESCAPED BY</code> character is
+            empty, escape-sequence interpretation does not occur.
+          </p></li><li class="listitem"><p>
+            For output, if the <code class="literal">FIELDS ESCAPED BY</code>
+            character is not empty, it is used to prefix the following
+            characters on output:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                The <code class="literal">FIELDS ESCAPED BY</code> character.
+              </p></li><li class="listitem"><p>
+                The <code class="literal">FIELDS [OPTIONALLY] ENCLOSED BY</code>
+                character.
+              </p></li><li class="listitem"><p>
+                The first character of the <code class="literal">FIELDS TERMINATED
+                BY</code> and <code class="literal">LINES TERMINATED BY</code>
+                values, if the <code class="literal">ENCLOSED BY</code> character
+                is empty or unspecified.
+              </p></li><li class="listitem"><p>
+                ASCII <code class="literal">0</code> (what is actually written
+                following the escape character is ASCII
+                <code class="literal">0</code>, not a zero-valued byte).
+</p></li></ul>
+</div>
+<p>
+            If the <code class="literal">FIELDS ESCAPED BY</code> character is
+            empty, no characters are escaped and <code class="literal">NULL</code>
+            is output as <code class="literal">NULL</code>, not
+            <code class="literal">\N</code>. It is probably not a good idea to
+            specify an empty escape character, particularly if field
+            values in your data contain any of the characters in the
+            list just given.
+</p></li></ul>
+</div>
+<p>
+        In certain cases, field- and line-handling options interact:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            If <code class="literal">LINES TERMINATED BY</code> is an empty string
+            and <code class="literal">FIELDS TERMINATED BY</code> is nonempty,
+            lines are also terminated with <code class="literal">FIELDS TERMINATED
+            BY</code>.
+          </p></li><li class="listitem"><p>
+            If the <code class="literal">FIELDS TERMINATED BY</code> and
+            <code class="literal">FIELDS ENCLOSED BY</code> values are both empty
+            (<code class="literal">''</code>), a fixed-row (nondelimited) format
+            is used. With fixed-row format, no delimiters are used
+            between fields (but you can still have a line terminator).
+            Instead, column values are read and written using a field
+            width wide enough to hold all values in the field. For
+            <a class="link" href="integer-types.html" title="11.1.2&nbsp;Integer Types (Exact Value) - INTEGER, INT, SMALLINT, TINYINT, MEDIUMINT, BIGINT"><code class="literal">TINYINT</code></a>,
+            <a class="link" href="integer-types.html" title="11.1.2&nbsp;Integer Types (Exact Value) - INTEGER, INT, SMALLINT, TINYINT, MEDIUMINT, BIGINT"><code class="literal">SMALLINT</code></a>,
+            <a class="link" href="integer-types.html" title="11.1.2&nbsp;Integer Types (Exact Value) - INTEGER, INT, SMALLINT, TINYINT, MEDIUMINT, BIGINT"><code class="literal">MEDIUMINT</code></a>,
+            <a class="link" href="integer-types.html" title="11.1.2&nbsp;Integer Types (Exact Value) - INTEGER, INT, SMALLINT, TINYINT, MEDIUMINT, BIGINT"><code class="literal">INT</code></a>, and
+            <a class="link" href="integer-types.html" title="11.1.2&nbsp;Integer Types (Exact Value) - INTEGER, INT, SMALLINT, TINYINT, MEDIUMINT, BIGINT"><code class="literal">BIGINT</code></a>, the field widths are
+            4, 6, 8, 11, and 20, respectively, no matter what the
+            declared display width is.
+          </p><p>
+            <code class="literal">LINES TERMINATED BY</code> is still used to
+            separate lines. If a line does not contain all fields, the
+            rest of the columns are set to their default values. If you
+            do not have a line terminator, you should set this to
+            <code class="literal">''</code>. In this case, the text file must
+            contain all fields for each row.
+          </p><p>
+            Fixed-row format also affects handling of
+            <code class="literal">NULL</code> values, as described later.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              Fixed-size format does not work if you are using a
+              multibyte character set.
+</p>
+</div>
+</li></ul>
+</div>
+<p>
+        Handling of <code class="literal">NULL</code> values varies according to
+        the <code class="literal">FIELDS</code> and <code class="literal">LINES</code>
+        options in use:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            For the default <code class="literal">FIELDS</code> and
+            <code class="literal">LINES</code> values, <code class="literal">NULL</code> is
+            written as a field value of <code class="literal">\N</code> for
+            output, and a field value of <code class="literal">\N</code> is read
+            as <code class="literal">NULL</code> for input (assuming that the
+            <code class="literal">ESCAPED BY</code> character is
+            <code class="literal">\</code>).
+          </p></li><li class="listitem"><p>
+            If <code class="literal">FIELDS ENCLOSED BY</code> is not empty, a
+            field containing the literal word <code class="literal">NULL</code> as
+            its value is read as a <code class="literal">NULL</code> value. This
+            differs from the word <code class="literal">NULL</code> enclosed
+            within <code class="literal">FIELDS ENCLOSED BY</code> characters,
+            which is read as the string <code class="literal">'NULL'</code>.
+          </p></li><li class="listitem"><p>
+            If <code class="literal">FIELDS ESCAPED BY</code> is empty,
+            <code class="literal">NULL</code> is written as the word
+            <code class="literal">NULL</code>.
+          </p></li><li class="listitem"><p>
+            With fixed-row format (which is used when <code class="literal">FIELDS
+            TERMINATED BY</code> and <code class="literal">FIELDS ENCLOSED
+            BY</code> are both empty), <code class="literal">NULL</code> is
+            written as an empty string. This causes both
+            <code class="literal">NULL</code> values and empty strings in the
+            table to be indistinguishable when written to the file
+            because both are written as empty strings. If you need to be
+            able to tell the two apart when reading the file back in,
+            you should not use fixed-row format.
+</p></li></ul>
+</div>
+<p>
+        An attempt to load <code class="literal">NULL</code> into a <code class="literal">NOT
+        NULL</code> column produces either a warning or an error
+        according to the rules described in
+        <a class="xref" href="load-data.html#load-data-column-assignments" title="Column Value Assignment">Column Value Assignment</a>.
+      </p><p>
+        Some cases are not supported by <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+        DATA</code></a>:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Fixed-size rows (<code class="literal">FIELDS TERMINATED BY</code> and
+            <code class="literal">FIELDS ENCLOSED BY</code> both empty) and
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> or
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns.
+          </p></li><li class="listitem"><p>
+            If you specify one separator that is the same as or a prefix
+            of another, <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> cannot
+            interpret the input properly. For example, the following
+            <code class="literal">FIELDS</code> clause would cause problems:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">FIELDS TERMINATED BY '"' ENCLOSED BY '"'</code></pre></li><li class="listitem"><p>
+            If <code class="literal">FIELDS ESCAPED BY</code> is empty, a field
+            value that contains an occurrence of <code class="literal">FIELDS
+            ENCLOSED BY</code> or <code class="literal">LINES TERMINATED
+            BY</code> followed by the <code class="literal">FIELDS TERMINATED
+            BY</code> value causes <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+            DATA</code></a> to stop reading a field or line too early.
+            This happens because <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+            DATA</code></a> cannot properly determine where the field or
+            line value ends.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-column-list"></a>Column List Specification</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        The following example loads all columns of the
+        <code class="literal">persondata</code> table:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">LOAD DATA INFILE 'persondata.txt' INTO TABLE persondata;</code></pre><p>
+        By default, when no column list is provided at the end of the
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> statement, input lines
+        are expected to contain a field for each table column. If you
+        want to load only some of a table's columns, specify a column
+        list:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD DATA INFILE 'persondata.txt' INTO TABLE persondata
+(<em class="replaceable">col_name_or_user_var</em> [, <em class="replaceable">col_name_or_user_var</em>] ...);</code></pre><p>
+        You must also specify a column list if the order of the fields
+        in the input file differs from the order of the columns in the
+        table. Otherwise, MySQL cannot tell how to match input fields
+        with table columns.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-input-preprocessing"></a>Input Preprocessing</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        Each instance of <em class="replaceable"><code>col_name_or_user_var</code></em>
+        in <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> syntax is either a
+        column name or a user variable. With user variables, the
+        <code class="literal">SET</code> clause enables you to perform
+        preprocessing transformations on their values before assigning
+        the result to columns.
+      </p><p>
+        User variables in the <code class="literal">SET</code> clause can be used
+        in several ways. The following example uses the first input
+        column directly for the value of <code class="literal">t1.column1</code>,
+        and assigns the second input column to a user variable that is
+        subjected to a division operation before being used for the
+        value of <code class="literal">t1.column2</code>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD DATA INFILE 'file.txt'
+  INTO TABLE t1
+  (column1, @var1)
+  SET column2 = @var1/100;</code></pre><p>
+        The <code class="literal">SET</code> clause can be used to supply values
+        not derived from the input file. The following statement sets
+        <code class="literal">column3</code> to the current date and time:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD DATA INFILE 'file.txt'
+  INTO TABLE t1
+  (column1, column2)
+  SET column3 = CURRENT_TIMESTAMP;</code></pre><p>
+        You can also discard an input value by assigning it to a user
+        variable and not assigning the variable to any table column:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD DATA INFILE 'file.txt'
+  INTO TABLE t1
+  (column1, @dummy, column2, @dummy, column3);</code></pre><p>
+        Use of the column/variable list and <code class="literal">SET</code>
+        clause is subject to the following restrictions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Assignments in the <code class="literal">SET</code> clause should have
+            only column names on the left hand side of assignment
+            operators.
+          </p></li><li class="listitem"><p>
+            You can use subqueries in the right hand side of
+            <code class="literal">SET</code> assignments. A subquery that returns
+            a value to be assigned to a column may be a scalar subquery
+            only. Also, you cannot use a subquery to select from the
+            table that is being loaded.
+          </p></li><li class="listitem"><p>
+            Lines ignored by an <code class="literal">IGNORE
+            <em class="replaceable"><code>number</code></em> LINES</code> clause are
+            not processed for the column/variable list or
+            <code class="literal">SET</code> clause.
+          </p></li><li class="listitem"><p>
+            User variables cannot be used when loading data with
+            fixed-row format because user variables do not have a
+            display width.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-column-assignments"></a>Column Value Assignment</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        To process an input line, <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+        DATA</code></a> splits it into fields and uses the values
+        according to the column/variable list and the
+        <code class="literal">SET</code> clause, if they are present. Then the
+        resulting row is inserted into the table. If there are
+        <code class="literal">BEFORE INSERT</code> or <code class="literal">AFTER
+        INSERT</code> triggers for the table, they are activated
+        before or after inserting the row, respectively.
+      </p><p>
+        Interpretation of field values and assignment to table columns
+        depends on these factors:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            The SQL mode (the value of the
+            <a class="link" href="server-system-variables.html#sysvar_sql_mode"><code class="literal">sql_mode</code></a> system variable).
+            The mode can be nonstrictive, or restrictive in various
+            ways. For example, strict SQL mode can be enabled, or the
+            mode can include values such as
+            <a class="link" href="sql-mode.html#sqlmode_no_zero_date"><code class="literal">NO_ZERO_DATE</code></a> or
+            <a class="link" href="sql-mode.html#sqlmode_no_zero_in_date"><code class="literal">NO_ZERO_IN_DATE</code></a>.
+          </p></li><li class="listitem"><p>
+            Presence or absence of the <code class="literal">IGNORE</code> and
+            <code class="literal">LOCAL</code> modifiers.
+</p></li></ul>
+</div>
+<p>
+        Those factors combine to produce restrictive or nonrestrictive
+        data interpretation by <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Data interpretation is restrictive if the SQL mode is
+            restrictive and neither the <code class="literal">IGNORE</code> nor
+            the <code class="literal">LOCAL</code> modifier is specified. Errors
+            terminate the load operation.
+          </p></li><li class="listitem"><p>
+            Data interpretation is nonrestrictive if the SQL mode is
+            nonrestrictive or the <code class="literal">IGNORE</code> or
+            <code class="literal">LOCAL</code> modifier is specified. (In
+            particular, either modifier if specified
+            <span class="emphasis"><em>overrides</em></span> a restrictive SQL mode.)
+            Errors become warnings and the load operation continues.
+</p></li></ul>
+</div>
+<p>
+        Restrictive data interpretation uses these rules:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Too many or too few fields results an error.
+          </p></li><li class="listitem"><p>
+            Assigning <code class="literal">NULL</code> (that is,
+            <code class="literal">\N</code>) to a non-<code class="literal">NULL</code>
+            column results in an error.
+          </p></li><li class="listitem"><p>
+            A value that is out of range for the column data type
+            results in an error.
+          </p></li><li class="listitem"><p>
+            Invalid values produce errors. For example, a value such as
+            <code class="literal">'x'</code> for a numeric column results in an
+            error, not conversion to 0.
+</p></li></ul>
+</div>
+<p>
+        By contrast, nonrestrictive data interpretation uses these
+        rules:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            If an input line has too many fields, the extra fields are
+            ignored and the number of warnings is incremented.
+          </p></li><li class="listitem"><p>
+            If an input line has too few fields, the columns for which
+            input fields are missing are assigned their default values.
+            Default value assignment is described in
+            <a class="xref" href="data-type-defaults.html" title="11.6&nbsp;Data Type Default Values">Section&nbsp;11.6, “Data Type Default Values”</a>.
+          </p></li><li class="listitem"><p>
+            Assigning <code class="literal">NULL</code> (that is,
+            <code class="literal">\N</code>) to a non-<code class="literal">NULL</code>
+            column results in assignment of the implicit default value
+            for the column data type. Implicit default values are
+            described in <a class="xref" href="data-type-defaults.html" title="11.6&nbsp;Data Type Default Values">Section&nbsp;11.6, “Data Type Default Values”</a>.
+          </p></li><li class="listitem"><p>
+            Invalid values produce warnings rather than errors, and are
+            converted to the <span class="quote">“<span class="quote">closest</span>”</span> valid value for the
+            column data type. Examples:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                A value such as <code class="literal">'x'</code> for a numeric
+                column results in conversion to 0.
+              </p></li><li class="listitem"><p>
+                An out-of-range numeric or temporal value is clipped to
+                the closest endpoint of the range for the column data
+                type.
+              </p></li><li class="listitem"><p>
+                An invalid value for a <code class="literal">DATETIME</code>,
+                <code class="literal">DATE</code>, or <code class="literal">TIME</code>
+                column is inserted as the implicit default value,
+                regardless of the SQL mode
+                <a class="link" href="sql-mode.html#sqlmode_no_zero_date"><code class="literal">NO_ZERO_DATE</code></a> setting.
+                The implicit default is the appropriate
+                <span class="quote">“<span class="quote">zero</span>”</span> value for the type
+                (<code class="literal">'0000-00-00 00:00:00'</code>,
+                <code class="literal">'0000-00-00'</code>, or
+                <code class="literal">'00:00:00'</code>). See
+                <a class="xref" href="date-and-time-types.html" title="11.2&nbsp;Date and Time Data Types">Section&nbsp;11.2, “Date and Time Data Types”</a>.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+            <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> interprets an empty
+            field value differently from a missing field:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                For string types, the column is set to the empty string.
+              </p></li><li class="listitem"><p>
+                For numeric types, the column is set to
+                <code class="literal">0</code>.
+              </p></li><li class="listitem"><p>
+                For date and time types, the column is set to the
+                appropriate <span class="quote">“<span class="quote">zero</span>”</span> value for the type. See
+                <a class="xref" href="date-and-time-types.html" title="11.2&nbsp;Date and Time Data Types">Section&nbsp;11.2, “Date and Time Data Types”</a>.
+</p></li></ul>
+</div>
+<p>
+            These are the same values that result if you assign an empty
+            string explicitly to a string, numeric, or date or time type
+            explicitly in an <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> or
+            <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statement.
+</p></li></ul>
+</div>
+<p>
+        <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">TIMESTAMP</code></a> columns are set to the
+        current date and time only if there is a <code class="literal">NULL</code>
+        value for the column (that is, <code class="literal">\N</code>) and the
+        column is not declared to permit <code class="literal">NULL</code> values,
+        or if the <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">TIMESTAMP</code></a> column
+        default value is the current timestamp and it is omitted from
+        the field list when a field list is specified.
+      </p><p>
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> regards all input as
+        strings, so you cannot use numeric values for
+        <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> or
+        <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> columns the way you can with
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> statements. All
+        <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> and
+        <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> values must be specified as
+        strings.
+      </p><p>
+        <a class="link" href="bit-type.html" title="11.1.5&nbsp;Bit-Value Type - BIT"><code class="literal">BIT</code></a> values cannot be loaded
+        directly using binary notation (for example,
+        <code class="literal">b'011010'</code>). To work around this, use the
+        <code class="literal">SET</code> clause to strip off the leading
+        <code class="literal">b'</code> and trailing <code class="literal">'</code> and
+        perform a base-2 to base-10 conversion so that MySQL loads the
+        values into the <a class="link" href="bit-type.html" title="11.1.5&nbsp;Bit-Value Type - BIT"><code class="literal">BIT</code></a> column
+        properly:
+      </p><pre class="programlisting copytoclipboard language-terminal"><code class="language-terminal">$&gt; cat /tmp/bit_test.txt
+b'10'
+b'1111111'
+$&gt; mysql test
+mysql&gt; LOAD DATA INFILE '/tmp/bit_test.txt'
+       INTO TABLE bit_test (@var1)
+       SET b = CAST(CONV(MID(@var1, 3, LENGTH(@var1)-3), 2, 10) AS UNSIGNED);
+Query OK, 2 rows affected (0.00 sec)
+Records: 2  Deleted: 0  Skipped: 0  Warnings: 0
+
+mysql&gt; SELECT BIN(b+0) FROM bit_test;
++----------+
+| BIN(b+0) |
++----------+
+| 10       |
+| 1111111  |
++----------+
+2 rows in set (0.00 sec)</code></pre><p>
+        For <a class="link" href="bit-type.html" title="11.1.5&nbsp;Bit-Value Type - BIT"><code class="literal">BIT</code></a> values in
+        <code class="literal">0b</code> binary notation (for example,
+        <code class="literal">0b011010</code>), use this <code class="literal">SET</code>
+        clause instead to strip off the leading <code class="literal">0b</code>:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET b = CAST(CONV(MID(@var1, 3, LENGTH(@var1)-2), 2, 10) AS UNSIGNED)</code></pre>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-partitioning-support"></a>Partitioned Table Support</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> supports explicit
+        partition selection using the <code class="literal">PARTITION</code>
+        clause with a list of one or more comma-separated names of
+        partitions, subpartitions, or both. When this clause is used, if
+        any rows from the file cannot be inserted into any of the
+        partitions or subpartitions named in the list, the statement
+        fails with the error <span class="errortext">Found a row not matching the
+        given partition set</span>. For more information and
+        examples, see <a class="xref" href="partitioning-selection.html" title="22.5&nbsp;Partition Selection">Section&nbsp;22.5, “Partition Selection”</a>.
+      </p><p>
+        For partitioned tables using storage engines that employ table
+        locks, such as <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a>,
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> cannot prune any
+        partition locks. This does not apply to tables using storage
+        engines that employ row-level locking, such as
+        <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a>. For more information, see
+        <a class="xref" href="partitioning-limitations-locking.html" title="22.6.4&nbsp;Partitioning and Locking">Section&nbsp;22.6.4, “Partitioning and Locking”</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-concurrency"></a>Concurrency Considerations</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        With the <code class="literal">LOW_PRIORITY</code> modifier, execution of
+        the <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> statement is
+        delayed until no other clients are reading from the table. This
+        affects only storage engines that use only table-level locking
+        (such as <code class="literal">MyISAM</code>, <code class="literal">MEMORY</code>,
+        and <code class="literal">MERGE</code>).
+      </p><p>
+        With the <code class="literal">CONCURRENT</code> modifier and a
+        <code class="literal">MyISAM</code> table that satisfies the condition for
+        concurrent inserts (that is, it contains no free blocks in the
+        middle), other threads can retrieve data from the table while
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> is executing. This
+        modifier affects the performance of <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+        DATA</code></a> a bit, even if no other thread is using the table
+        at the same time.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-statement-result-information"></a>Statement Result Information</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        When the <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> statement
+        finishes, it returns an information string in the following
+        format:
+      </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">Records: 1  Deleted: 0  Skipped: 0  Warnings: 0</code></pre><p>
+        Warnings occur under the same circumstances as when values are
+        inserted using the <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>
+        statement (see <a class="xref" href="insert.html" title="13.2.5&nbsp;INSERT Statement">Section&nbsp;13.2.5, “INSERT Statement”</a>), except that
+        <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> also generates warnings
+        when there are too few or too many fields in the input row.
+      </p><p>
+        You can use <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW WARNINGS</code></a> to get
+        a list of the first
+        <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a> warnings as
+        information about what went wrong. See
+        <a class="xref" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement">Section&nbsp;13.7.5.40, “SHOW WARNINGS Statement”</a>.
+      </p><a class="indexterm" name="idm45852579082192"></a><p>
+        If you are using the C API, you can get information about the
+        statement by calling the
+        <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-info.html" target="_top"><code class="literal">mysql_info()</code></a> function. See
+        <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-info.html" target="_top">mysql_info()</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-replication"></a>Replication Considerations</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        For information about <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>
+        in relation to replication, see
+        <a class="xref" href="replication-features-load-data.html" title="16.4.1.18&nbsp;Replication and LOAD DATA">Section&nbsp;16.4.1.18, “Replication and LOAD DATA”</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="load-data-miscellaneous"></a>Miscellaneous Topics</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        On Unix, if you need <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> to
+        read from a pipe, you can use the following technique (the
+        example loads a listing of the <code class="filename">/</code> directory
+        into the table <code class="literal">db1.t1</code>):
+      </p><pre class="programlisting copytoclipboard language-terminal"><code class="language-terminal">mkfifo /mysql/data/db1/ls.dat
+chmod 666 /mysql/data/db1/ls.dat
+find / -ls &gt; /mysql/data/db1/ls.dat &amp;
+mysql -e "LOAD DATA INFILE 'ls.dat' INTO TABLE t1" db1</code></pre><p>
+        Here you must run the command that generates the data to be
+        loaded and the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> commands either on
+        separate terminals, or run the data generation process in the
+        background (as shown in the preceding example). If you do not do
+        this, the pipe blocks until data is read by the
+        <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> process.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>OPTIMIZE TABLE StatementOPTIMIZE TABLE OutputInnoDB DetailsMyISAM DetailsOther Considerations</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="optimize-table"></a>13.7.2.4&nbsp;OPTIMIZE TABLE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572349152"></a><a class="indexterm" name="idm45852572348096"></a><a class="indexterm" name="idm45852572346608"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">OPTIMIZE [NO_WRITE_TO_BINLOG | LOCAL]
+    TABLE <em class="replaceable">tbl_name</em> [, <em class="replaceable">tbl_name</em>] ...</code></pre><p>
+        <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> reorganizes the
+        physical storage of table data and associated index data, to
+        reduce storage space and improve I/O efficiency when accessing
+        the table. The exact changes made to each table depend on the
+        <a class="link" href="glossary.html#glos_storage_engine" title="storage engine">storage engine</a> used
+        by that table.
+      </p><p>
+        Use <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> in these
+        cases, depending on the type of table:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            After doing substantial insert, update, or delete operations
+            on an <code class="literal">InnoDB</code> table that has its own
+            <a class="link" href="glossary.html#glos_ibd_file" title=".ibd file">.ibd file</a> because it
+            was created with the
+            <a class="link" href="innodb-parameters.html#sysvar_innodb_file_per_table"><code class="literal">innodb_file_per_table</code></a>
+            option enabled. The table and indexes are reorganized, and
+            disk space can be reclaimed for use by the operating system.
+          </p></li><li class="listitem"><p>
+            After doing substantial insert, update, or delete operations
+            on columns that are part of a <code class="literal">FULLTEXT</code>
+            index in an <code class="literal">InnoDB</code> table. Set the
+            configuration option
+            <a class="link" href="innodb-parameters.html#sysvar_innodb_optimize_fulltext_only"><code class="literal">innodb_optimize_fulltext_only=1</code></a>
+            first. To keep the index maintenance period to a reasonable
+            time, set the
+            <a class="link" href="innodb-parameters.html#sysvar_innodb_ft_num_word_optimize"><code class="literal">innodb_ft_num_word_optimize</code></a>
+            option to specify how many words to update in the search
+            index, and run a sequence of <code class="literal">OPTIMIZE
+            TABLE</code> statements until the search index is fully
+            updated.
+          </p></li><li class="listitem"><p>
+            After deleting a large part of a <code class="literal">MyISAM</code>
+            or <code class="literal">ARCHIVE</code> table, or making many changes
+            to a <code class="literal">MyISAM</code> or <code class="literal">ARCHIVE
+            </code>table with variable-length rows (tables that have
+            <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>,
+            <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a>,
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>, or
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns). Deleted rows
+            are maintained in a linked list and subsequent
+            <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> operations reuse old
+            row positions. You can use <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE
+            TABLE</code></a> to reclaim the unused space and to
+            defragment the data file. After extensive changes to a
+            table, this statement may also improve performance of
+            statements that use the table, sometimes significantly.
+</p></li></ul>
+</div>
+<p>
+        This statement requires <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a>
+        and <a class="link" href="privileges-provided.html#priv_insert"><code class="literal">INSERT</code></a> privileges for the
+        table.
+      </p><p>
+        <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> works for
+        <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a>,
+        <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a>, and
+        <a class="link" href="archive-storage-engine.html" title="15.5&nbsp;The ARCHIVE Storage Engine"><code class="literal">ARCHIVE</code></a> tables.
+        <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> is also supported
+        for dynamic columns of in-memory
+        <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables. It does not work for
+        fixed-width columns of in-memory tables, nor does it work for
+        Disk Data tables. The performance of <code class="literal">OPTIMIZE</code>
+        on NDB Cluster tables can be tuned using
+        <a class="link" href="mysql-cluster-options-variables.html#option_mysqld_ndb-optimization-delay"><code class="option">--ndb-optimization-delay</code></a>, which
+        controls the length of time to wait between processing batches
+        of rows by <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a>. For
+        more information, see
+        <a class="ulink" href="https://dev.mysql.com/doc/refman/8.0/en/mysql-cluster-limitations-resolved.html" target="_top">Previous NDB Cluster Issues Resolved in NDB Cluster 8.0</a>.
+      </p><p>
+        For NDB Cluster tables, <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE
+        TABLE</code></a> can be interrupted by (for example) killing the
+        SQL thread performing the <code class="literal">OPTIMIZE</code> operation.
+      </p><p>
+        By default, <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> does
+        <span class="emphasis"><em>not</em></span> work for tables created using any other
+        storage engine and returns a result indicating this lack of
+        support. You can make <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE
+        TABLE</code></a> work for other storage engines by starting
+        <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> with the
+        <a class="link" href="server-options.html#option_mysqld_skip-new"><code class="option">--skip-new</code></a> option. In this case,
+        <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> is just mapped to
+        <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>.
+      </p><p>
+        This statement does not work with views.
+      </p><p>
+        <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> is supported for
+        partitioned tables. For information about using this statement
+        with partitioned tables and table partitions, see
+        <a class="xref" href="partitioning-maintenance.html" title="22.3.4&nbsp;Maintenance of Partitions">Section&nbsp;22.3.4, “Maintenance of Partitions”</a>.
+      </p><p>
+        By default, the server writes <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE
+        TABLE</code></a> statements to the binary log so that they
+        replicate to replicas. To suppress logging, specify the optional
+        <code class="literal">NO_WRITE_TO_BINLOG</code> keyword or its alias
+        <code class="literal">LOCAL</code>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="optimize-table.html#optimize-table-output" title="OPTIMIZE TABLE Output">OPTIMIZE TABLE Output</a></p></li><li class="listitem"><p><a class="xref" href="optimize-table.html#optimize-table-innodb-details" title="InnoDB Details">InnoDB Details</a></p></li><li class="listitem"><p><a class="xref" href="optimize-table.html#optimize-table-myisam-details" title="MyISAM Details">MyISAM Details</a></p></li><li class="listitem"><p><a class="xref" href="optimize-table.html#optimize-table-other-considerations" title="Other Considerations">Other Considerations</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="optimize-table-output"></a>OPTIMIZE TABLE Output</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> returns a result
+          set with the columns shown in the following table.
+</p>
+<div class="informaltable">
+<table summary="Columns of the OPTIMIZE TABLE result set."><colgroup><col style="width: 15%"><col style="width: 60%"></colgroup><thead><tr>
+              <th>Column</th>
+              <th>Value</th>
+            </tr></thead><tbody><tr>
+              <td><code class="literal">Table</code></td>
+              <td>The table name</td>
+            </tr><tr>
+              <td><code class="literal">Op</code></td>
+              <td>Always <code class="literal">optimize</code></td>
+            </tr><tr>
+              <td><code class="literal">Msg_type</code></td>
+              <td><code class="literal">status</code>, <code class="literal">error</code>,
+                <code class="literal">info</code>, <code class="literal">note</code>, or
+                <code class="literal">warning</code></td>
+            </tr><tr>
+              <td><code class="literal">Msg_text</code></td>
+              <td>An informational message</td>
+</tr></tbody></table>
+</div>
+<p>
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> table catches
+          and throws any errors that occur while copying table
+          statistics from the old file to the newly created file. For
+          example. if the user ID of the owner of the
+          <code class="filename">.frm</code>, <code class="filename">.MYD</code>, or
+          <code class="filename">.MYI</code> file is different from the user ID
+          of the <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> process,
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> generates a
+          "cannot change ownership of the file" error unless
+          <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> is started by the
+          <code class="literal">root</code> user.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="optimize-table-innodb-details"></a>InnoDB Details</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          For <code class="literal">InnoDB</code> tables,
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> is mapped to
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE ...
+          FORCE</code></a>, which rebuilds the table to update index
+          statistics and free unused space in the clustered index. This
+          is displayed in the output of <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE
+          TABLE</code></a> when you run it on an
+          <code class="literal">InnoDB</code> table, as shown here:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; OPTIMIZE TABLE foo;
++----------+----------+----------+-------------------------------------------------------------------+
+| Table    | Op       | Msg_type | Msg_text                                                          |
++----------+----------+----------+-------------------------------------------------------------------+
+| test.foo | optimize | note     | Table does not support optimize, doing recreate + analyze instead |
+| test.foo | optimize | status   | OK                                                                |
++----------+----------+----------+-------------------------------------------------------------------+</code></pre><p>
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> uses
+          <a class="link" href="innodb-online-ddl.html" title="14.13&nbsp;InnoDB and Online DDL">online DDL</a> for
+          regular and partitioned <code class="literal">InnoDB</code> tables,
+          which reduces downtime for concurrent DML operations. The
+          table rebuild triggered by <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE
+          TABLE</code></a> is completed in place. An exclusive table lock
+          is only taken briefly during the prepare phase and the commit
+          phase of the operation. During the prepare phase, metadata is
+          updated and an intermediate table is created. During the
+          commit phase, table metadata changes are committed.
+        </p><p>
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> rebuilds the
+          table using the table copy method under the following
+          conditions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              When the <a class="link" href="server-system-variables.html#sysvar_old_alter_table"><code class="literal">old_alter_table</code></a>
+              system variable is enabled.
+            </p></li><li class="listitem"><p>
+              When the server is started with the
+              <a class="link" href="server-options.html#option_mysqld_skip-new"><code class="option">--skip-new</code></a> option.
+</p></li></ul>
+</div>
+<p>
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> using
+          <a class="link" href="innodb-online-ddl.html" title="14.13&nbsp;InnoDB and Online DDL">online DDL</a> is not
+          supported for <code class="literal">InnoDB</code> tables that contain
+          <code class="literal">FULLTEXT</code> indexes. The table copy method is
+          used instead.
+        </p><p>
+          <code class="literal">InnoDB</code> stores data using a page-allocation
+          method and does not suffer from fragmentation in the same way
+          that legacy storage engines (such as
+          <code class="literal">MyISAM</code>) do. When considering whether or not
+          to run <code class="literal">OPTIMIZE TABLE</code>, consider the
+          workload of transactions that your server is expected to
+          process:
+
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+                Some level of fragmentation is expected.
+                <code class="literal">InnoDB</code> fills
+                <a class="link" href="glossary.html#glos_page" title="page">pages</a> only 93% full, to
+                leave room for updates without having to split pages.
+              </p></li><li class="listitem"><p>
+                Delete operations might leave gaps that leave pages less
+                filled than desired, which could make it worthwhile to
+                optimize the table.
+              </p></li><li class="listitem"><p>
+                Updates to rows usually rewrite the data within the same
+                page, depending on the data type and row format, when
+                sufficient space is available. See
+                <a class="xref" href="innodb-compression-internals.html" title="14.9.1.5&nbsp;How Compression Works for InnoDB Tables">Section&nbsp;14.9.1.5, “How Compression Works for InnoDB Tables”</a> and
+                <a class="xref" href="innodb-row-format.html" title="14.11&nbsp;InnoDB Row Formats">Section&nbsp;14.11, “InnoDB Row Formats”</a>.
+              </p></li><li class="listitem"><p>
+                High-concurrency workloads might leave gaps in indexes
+                over time, as <code class="literal">InnoDB</code> retains multiple
+                versions of the same data due through its
+                <a class="link" href="glossary.html#glos_mvcc" title="MVCC">MVCC</a> mechanism. See
+                <a class="xref" href="innodb-multi-versioning.html" title="14.3&nbsp;InnoDB Multi-Versioning">Section&nbsp;14.3, “InnoDB Multi-Versioning”</a>.
+</p></li></ul>
+</div>
+<p>
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="optimize-table-myisam-details"></a>MyISAM Details</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          For <code class="literal">MyISAM</code> tables,
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> works as
+          follows:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+              If the table has deleted or split rows, repair the table.
+            </p></li><li class="listitem"><p>
+              If the index pages are not sorted, sort them.
+            </p></li><li class="listitem"><p>
+              If the table's statistics are not up to date (and the
+              repair could not be accomplished by sorting the index),
+              update them.
+</p></li></ol>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="optimize-table-other-considerations"></a>Other Considerations</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> is performed
+          online for regular and partitioned <code class="literal">InnoDB</code>
+          tables. Otherwise, MySQL <a class="link" href="glossary.html#glos_table_lock" title="table lock">locks
+          the table</a> during the time <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE
+          TABLE</code></a> is running.
+        </p><p>
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> does not sort
+          R-tree indexes, such as spatial indexes on
+          <code class="literal">POINT</code> columns. (Bug #23578)
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

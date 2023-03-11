@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Rewriting Subqueries as Joins</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="rewriting-subqueries"></a>13.2.10.11&nbsp;Rewriting Subqueries as Joins</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577538272"></a><p>
+        Sometimes there are other ways to test membership in a set of
+        values than by using a subquery. Also, on some occasions, it is
+        not only possible to rewrite a query without a subquery, but it
+        can be more efficient to make use of some of these techniques
+        rather than to use subqueries. One of these is the
+        <code class="literal">IN()</code> construct:
+      </p><p>
+        For example, this query:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 WHERE id IN (SELECT id FROM t2);</code></pre><p>
+        Can be rewritten as:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT DISTINCT t1.* FROM t1, t2 WHERE t1.id=t2.id;</code></pre><p>
+        The queries:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1 WHERE id NOT IN (SELECT id FROM t2);
+SELECT * FROM t1 WHERE NOT EXISTS (SELECT id FROM t2 WHERE t1.id=t2.id);</code></pre><p>
+        Can be rewritten as:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT table1.*
+  FROM table1 LEFT JOIN table2 ON table1.id=table2.id
+  WHERE table2.id IS NULL;</code></pre><p>
+        A <code class="literal">LEFT [OUTER] JOIN</code> can be faster than an
+        equivalent subquery because the server might be able to optimize
+        it better—a fact that is not specific to MySQL Server
+        alone. Prior to SQL-92, outer joins did not exist, so subqueries
+        were the only way to do certain things. Today, MySQL Server and
+        many other modern database systems offer a wide range of outer
+        join types.
+      </p><p>
+        MySQL Server supports multiple-table
+        <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> statements that can be
+        used to efficiently delete rows based on information from one
+        table or even from many tables at the same time. Multiple-table
+        <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statements are also
+        supported. See <a class="xref" href="delete.html" title="13.2.2&nbsp;DELETE Statement">Section&nbsp;13.2.2, “DELETE Statement”</a>, and
+        <a class="xref" href="update.html" title="13.2.11&nbsp;UPDATE Statement">Section&nbsp;13.2.11, “UPDATE Statement”</a>.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

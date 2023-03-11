@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>RENAME TABLE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="rename-table"></a>13.1.33&nbsp;RENAME TABLE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580491376"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">RENAME TABLE
+    <em class="replaceable">tbl_name</em> TO <em class="replaceable">new_tbl_name</em>
+    [, <em class="replaceable">tbl_name2</em> TO <em class="replaceable">new_tbl_name2</em>] ...</code></pre><p>
+      <a class="link" href="rename-table.html" title="13.1.33&nbsp;RENAME TABLE Statement"><code class="literal">RENAME TABLE</code></a> renames one or more
+      tables. You must have <a class="link" href="privileges-provided.html#priv_alter"><code class="literal">ALTER</code></a> and
+      <a class="link" href="privileges-provided.html#priv_drop"><code class="literal">DROP</code></a> privileges for the original
+      table, and <a class="link" href="privileges-provided.html#priv_create"><code class="literal">CREATE</code></a> and
+      <a class="link" href="privileges-provided.html#priv_insert"><code class="literal">INSERT</code></a> privileges for the new
+      table.
+    </p><p>
+      For example, to rename a table named <code class="literal">old_table</code>
+      to <code class="literal">new_table</code>, use this statement:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">RENAME TABLE old_table TO new_table;</code></pre><p>
+      That statement is equivalent to the following
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE old_table RENAME new_table;</code></pre><p>
+      <code class="literal">RENAME TABLE</code>, unlike <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+      TABLE</code></a>, can rename multiple tables within a single
+      statement:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">RENAME TABLE old_table1 TO new_table1,
+             old_table2 TO new_table2,
+             old_table3 TO new_table3;</code></pre><p>
+      Renaming operations are performed left to right. Thus, to swap two
+      table names, do this (assuming that a table with the intermediary
+      name <code class="literal">tmp_table</code> does not already exist):
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">RENAME TABLE old_table TO tmp_table,
+             new_table TO old_table,
+             tmp_table TO new_table;</code></pre><p>
+      Metadata locks on tables are acquired in name order, which in some
+      cases can make a difference in operation outcome when multiple
+      transactions execute concurrently. See
+      <a class="xref" href="metadata-locking.html" title="8.11.4&nbsp;Metadata Locking">Section&nbsp;8.11.4, “Metadata Locking”</a>.
+    </p><p>
+      To execute <code class="literal">RENAME TABLE</code>, there must be no
+      active transactions or tables locked with <code class="literal">LOCK
+      TABLES</code>. With the transaction table locking conditions
+      satisfied, the rename operation is done atomically; no other
+      session can access any of the tables while the rename is in
+      progress.
+    </p><p>
+      If any errors occur during a <code class="literal">RENAME TABLE</code>, the
+      statement fails and no changes are made.
+    </p><p>
+      You can use <code class="literal">RENAME TABLE</code> to move a table from
+      one database to another:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">RENAME TABLE <em class="replaceable">current_db.tbl_name</em> TO <em class="replaceable">other_db.tbl_name;</em></code></pre><a class="indexterm" name="idm45852580459616"></a><a class="indexterm" name="idm45852580458128"></a><p>
+      Using this method to move all tables from one database to a
+      different one in effect renames the database (an operation for
+      which MySQL has no single statement), except that the original
+      database continues to exist, albeit with no tables.
+    </p><p>
+      Like <code class="literal">RENAME TABLE</code>, <code class="literal">ALTER TABLE ...
+      RENAME</code> can also be used to move a table to a different
+      database. Regardless of the statement used, if the rename
+      operation would move the table to a database located on a
+      different file system, the success of the outcome is platform
+      specific and depends on the underlying operating system calls used
+      to move table files.
+    </p><p>
+      If a table has triggers, attempts to rename the table into a
+      different database fail with a <span class="errortext">Trigger in wrong
+      schema</span>
+      (<a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_trg_in_wrong_schema" target="_top"><code class="literal">ER_TRG_IN_WRONG_SCHEMA</code></a>) error.
+    </p><a class="indexterm" name="idm45852580452032"></a><p>
+      To rename <code class="literal">TEMPORARY</code> tables, <code class="literal">RENAME
+      TABLE</code> does not work. Use <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+      TABLE</code></a> instead.
+    </p><p>
+      <code class="literal">RENAME TABLE</code> works for views, except that views
+      cannot be renamed into a different database.
+    </p><p>
+      Any privileges granted specifically for a renamed table or view
+      are not migrated to the new name. They must be changed manually.
+    </p><p>
+      <code class="literal">RENAME TABLE <em class="replaceable"><code>tbl_name</code></em> TO
+      <em class="replaceable"><code>new_tbl_name</code></em></code> changes
+      internally generated foreign key constraint names and user-defined
+      foreign key constraint names that begin with the string
+      <span class="quote">“<span class="quote"><em class="replaceable"><code>tbl_name</code></em>_ibfk_</span>”</span> to
+      reflect the new table name. <code class="literal">InnoDB</code> interprets
+      foreign key constraint names that begin with the string
+      <span class="quote">“<span class="quote"><em class="replaceable"><code>tbl_name</code></em>_ibfk_</span>”</span> as
+      internally generated names.
+    </p><p>
+      Foreign key constraint names that point to the renamed table are
+      automatically updated unless there is a conflict, in which case
+      the statement fails with an error. A conflict occurs if the
+      renamed constraint name already exists. In such cases, you must
+      drop and re-create the foreign keys for them to function properly.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

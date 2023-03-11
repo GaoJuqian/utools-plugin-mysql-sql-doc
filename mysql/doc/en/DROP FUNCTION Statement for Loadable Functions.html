@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP FUNCTION Statement for Loadable Functions</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="drop-function-loadable"></a>13.7.3.2&nbsp;DROP FUNCTION Statement for Loadable Functions</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571989072"></a><a class="indexterm" name="idm45852571988032"></a><a class="indexterm" name="idm45852571986544"></a><a class="indexterm" name="idm45852571985056"></a><a class="indexterm" name="idm45852571983568"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DROP FUNCTION [IF EXISTS] <em class="replaceable">function_name</em></code></pre><p>
+        This statement drops the loadable function named
+        <em class="replaceable"><code>function_name</code></em>. (<code class="literal">DROP
+        FUNCTION</code> is also used to drop stored functions; see
+        <a class="xref" href="drop-procedure.html" title="13.1.27&nbsp;DROP PROCEDURE and DROP FUNCTION Statements">Section&nbsp;13.1.27, “DROP PROCEDURE and DROP FUNCTION Statements”</a>.)
+      </p><p>
+        <a class="link" href="drop-function-loadable.html" title="13.7.3.2&nbsp;DROP FUNCTION Statement for Loadable Functions"><code class="literal">DROP
+        FUNCTION</code></a> is the complement of
+        <a class="link" href="create-function-loadable.html" title="13.7.3.1&nbsp;CREATE FUNCTION Statement for Loadable Functions"><code class="literal">CREATE
+        FUNCTION</code></a>. It requires the
+        <a class="link" href="privileges-provided.html#priv_delete"><code class="literal">DELETE</code></a> privilege for the
+        <code class="literal">mysql</code> system database because it removes the
+        row from the <code class="literal">mysql.func</code> system table that
+        registers the function.
+      </p><p>
+        During the normal startup sequence, the server loads functions
+        registered in the <code class="literal">mysql.func</code> table. Because
+        <a class="link" href="drop-function-loadable.html" title="13.7.3.2&nbsp;DROP FUNCTION Statement for Loadable Functions"><code class="literal">DROP
+        FUNCTION</code></a> removes the <code class="literal">mysql.func</code> row
+        for the dropped function, the server does not load the function
+        during subsequent restarts.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          To upgrade the shared library associated with a loadable
+          function, issue a
+          <a class="link" href="drop-function-loadable.html" title="13.7.3.2&nbsp;DROP FUNCTION Statement for Loadable Functions"><code class="literal">DROP
+          FUNCTION</code></a> statement, upgrade the shared library, and
+          then issue a
+          <a class="link" href="create-function-loadable.html" title="13.7.3.1&nbsp;CREATE FUNCTION Statement for Loadable Functions"><code class="literal">CREATE
+          FUNCTION</code></a> statement. If you upgrade the shared
+          library first and then use
+          <a class="link" href="drop-function-loadable.html" title="13.7.3.2&nbsp;DROP FUNCTION Statement for Loadable Functions"><code class="literal">DROP
+          FUNCTION</code></a>, the server may unexpectedly shut down.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

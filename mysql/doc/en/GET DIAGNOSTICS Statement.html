@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>GET DIAGNOSTICS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="get-diagnostics"></a>13.6.7.3&nbsp;GET DIAGNOSTICS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852574806624"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">GET [CURRENT | STACKED] DIAGNOSTICS {
+    <em class="replaceable">statement_information_item</em>
+    [, <em class="replaceable">statement_information_item</em>] ...
+  | CONDITION <em class="replaceable">condition_number</em>
+    <em class="replaceable">condition_information_item</em>
+    [, <em class="replaceable">condition_information_item</em>] ...
+}
+
+<em class="replaceable">statement_information_item</em>:
+    <em class="replaceable">target</em> = <em class="replaceable">statement_information_item_name</em>
+
+<em class="replaceable">condition_information_item</em>:
+    <em class="replaceable">target</em> = <em class="replaceable">condition_information_item_name</em>
+
+<em class="replaceable">statement_information_item_name</em>: {
+    NUMBER
+  | ROW_COUNT
+}
+
+<em class="replaceable">condition_information_item_name</em>: {
+    CLASS_ORIGIN
+  | SUBCLASS_ORIGIN
+  | RETURNED_SQLSTATE
+  | MESSAGE_TEXT
+  | MYSQL_ERRNO
+  | CONSTRAINT_CATALOG
+  | CONSTRAINT_SCHEMA
+  | CONSTRAINT_NAME
+  | CATALOG_NAME
+  | SCHEMA_NAME
+  | TABLE_NAME
+  | COLUMN_NAME
+  | CURSOR_NAME
+}
+
+<em class="replaceable">condition_number</em>, <em class="replaceable">target</em>:
+    (see following discussion)</code></pre><p>
+        SQL statements produce diagnostic information that populates the
+        diagnostics area. The <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+        DIAGNOSTICS</code></a> statement enables applications to inspect
+        this information. (You can also use <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW
+        WARNINGS</code></a> or <a class="link" href="show-errors.html" title="13.7.5.17&nbsp;SHOW ERRORS Statement"><code class="literal">SHOW ERRORS</code></a>
+        to see conditions or errors.)
+      </p><p>
+        No special privileges are required to execute
+        <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a>.
+      </p><p>
+        The keyword <code class="literal">CURRENT</code> means to retrieve
+        information from the current diagnostics area. The keyword
+        <code class="literal">STACKED</code> means to retrieve information from
+        the second diagnostics area, which is available only if the
+        current context is a condition handler. If neither keyword is
+        given, the default is to use the current diagnostics area.
+      </p><p>
+        The <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> statement is
+        typically used in a handler within a stored program. It is a
+        MySQL extension that
+        <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET [CURRENT]
+        DIAGNOSTICS</code></a> is permitted outside handler context to
+        check the execution of any SQL statement. For example, if you
+        invoke the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> client program, you can
+        enter these statements at the prompt:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; DROP TABLE test.no_such_table;
+ERROR 1051 (42S02): Unknown table 'test.no_such_table'
+mysql&gt; GET DIAGNOSTICS CONDITION 1
+         @p1 = RETURNED_SQLSTATE, @p2 = MESSAGE_TEXT;
+mysql&gt; SELECT @p1, @p2;
++-------+------------------------------------+
+| @p1   | @p2                                |
++-------+------------------------------------+
+| 42S02 | Unknown table 'test.no_such_table' |
++-------+------------------------------------+</code></pre><p>
+        This extension applies only to the current diagnostics area. It
+        does not apply to the second diagnostics area because
+        <code class="literal">GET STACKED DIAGNOSTICS</code> is permitted only if
+        the current context is a condition handler. If that is not the
+        case, a <code class="literal">GET STACKED DIAGNOSTICS when handler not
+        active</code> error occurs.
+      </p><p>
+        For a description of the diagnostics area, see
+        <a class="xref" href="diagnostics-area.html" title="13.6.7.7&nbsp;The MySQL Diagnostics Area">Section&nbsp;13.6.7.7, “The MySQL Diagnostics Area”</a>. Briefly, it contains two
+        kinds of information:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Statement information, such as the number of conditions that
+            occurred or the affected-rows count.
+          </p></li><li class="listitem"><p>
+            Condition information, such as the error code and message.
+            If a statement raises multiple conditions, this part of the
+            diagnostics area has a condition area for each one. If a
+            statement raises no conditions, this part of the diagnostics
+            area is empty.
+</p></li></ul>
+</div>
+<p>
+        For a statement that produces three conditions, the diagnostics
+        area contains statement and condition information like this:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">Statement information:
+  row count
+  ... other statement information items ...
+Condition area list:
+  Condition area 1:
+    error code for condition 1
+    error message for condition 1
+    ... other condition information items ...
+  Condition area 2:
+    error code for condition 2:
+    error message for condition 2
+    ... other condition information items ...
+  Condition area 3:
+    error code for condition 3
+    error message for condition 3
+    ... other condition information items ...</code></pre><p>
+        <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> can obtain either
+        statement or condition information, but not both in the same
+        statement:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            To obtain statement information, retrieve the desired
+            statement items into target variables. This instance of
+            <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> assigns the
+            number of available conditions and the rows-affected count
+            to the user variables <code class="literal">@p1</code> and
+            <code class="literal">@p2</code>:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">GET DIAGNOSTICS @p1 = NUMBER, @p2 = ROW_COUNT;</code></pre></li><li class="listitem"><p>
+            To obtain condition information, specify the condition
+            number and retrieve the desired condition items into target
+            variables. This instance of <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+            DIAGNOSTICS</code></a> assigns the SQLSTATE value and error
+            message to the user variables <code class="literal">@p3</code> and
+            <code class="literal">@p4</code>:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">GET DIAGNOSTICS CONDITION 1
+  @p3 = RETURNED_SQLSTATE, @p4 = MESSAGE_TEXT;</code></pre></li></ul>
+</div>
+<p>
+        The retrieval list specifies one or more
+        <code class="literal"><em class="replaceable"><code>target</code></em> =
+        <em class="replaceable"><code>item_name</code></em></code> assignments,
+        separated by commas. Each assignment names a target variable and
+        either a
+        <em class="replaceable"><code>statement_information_item_name</code></em> or
+        <em class="replaceable"><code>condition_information_item_name</code></em>
+        designator, depending on whether the statement retrieves
+        statement or condition information.
+      </p><p>
+        Valid <em class="replaceable"><code>target</code></em> designators for storing
+        item information can be stored procedure or function parameters,
+        stored program local variables declared with
+        <a class="link" href="declare.html" title="13.6.3&nbsp;DECLARE Statement"><code class="literal">DECLARE</code></a>, or user-defined
+        variables.
+      </p><p>
+        Valid <em class="replaceable"><code>condition_number</code></em> designators
+        can be stored procedure or function parameters, stored program
+        local variables declared with
+        <a class="link" href="declare.html" title="13.6.3&nbsp;DECLARE Statement"><code class="literal">DECLARE</code></a>, user-defined variables,
+        system variables, or literals. A character literal may include a
+        <em class="replaceable"><code>_charset</code></em> introducer. A warning occurs
+        if the condition number is not in the range from 1 to the number
+        of condition areas that have information. In this case, the
+        warning is added to the diagnostics area without clearing it.
+      </p><p>
+        When a condition occurs, MySQL does not populate all condition
+        items recognized by <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+        DIAGNOSTICS</code></a>. For example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; GET DIAGNOSTICS CONDITION 1
+         @p5 = SCHEMA_NAME, @p6 = TABLE_NAME;
+mysql&gt; SELECT @p5, @p6;
++------+------+
+| @p5  | @p6  |
++------+------+
+|      |      |
++------+------+</code></pre><p>
+        In standard SQL, if there are multiple conditions, the first
+        condition relates to the <code class="literal">SQLSTATE</code> value
+        returned for the previous SQL statement. In MySQL, this is not
+        guaranteed. To get the main error, you cannot do this:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">GET DIAGNOSTICS CONDITION 1 @errno = MYSQL_ERRNO;</code></pre><p>
+        Instead, retrieve the condition count first, then use it to
+        specify which condition number to inspect:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">GET DIAGNOSTICS @cno = NUMBER;
+GET DIAGNOSTICS CONDITION @cno @errno = MYSQL_ERRNO;</code></pre><p>
+        For information about permissible statement and condition
+        information items, and which ones are populated when a condition
+        occurs, see
+        <a class="xref" href="diagnostics-area.html#diagnostics-area-information-items" title="Diagnostics Area Information Items">Diagnostics Area Information Items</a>.
+      </p><p>
+        Here is an example that uses <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+        DIAGNOSTICS</code></a> and an exception handler in stored
+        procedure context to assess the outcome of an insert operation.
+        If the insert was successful, the procedure uses
+        <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> to get the
+        rows-affected count. This shows that you can use
+        <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> multiple times to
+        retrieve information about a statement as long as the current
+        diagnostics area has not been cleared.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE do_insert(value INT)
+BEGIN
+  -- Declare variables to hold diagnostics area information
+  DECLARE code CHAR(5) DEFAULT '00000';
+  DECLARE msg TEXT;
+  DECLARE nrows INT;
+  DECLARE result TEXT;
+  -- Declare exception handler for failed insert
+  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    BEGIN
+      GET DIAGNOSTICS CONDITION 1
+        code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+    END;
+
+  -- Perform the insert
+  INSERT INTO t1 (int_col) VALUES(value);
+  -- Check whether the insert was successful
+  IF code = '00000' THEN
+    GET DIAGNOSTICS nrows = ROW_COUNT;
+    SET result = CONCAT('insert succeeded, row count = ',nrows);
+  ELSE
+    SET result = CONCAT('insert failed, error = ',code,', message = ',msg);
+  END IF;
+  -- Say what happened
+  SELECT result;
+END;</code></pre><p>
+        Suppose that <code class="literal">t1.int_col</code> is an integer column
+        that is declared as <code class="literal">NOT NULL</code>. The procedure
+        produces these results when invoked to insert
+        non-<code class="literal">NULL</code> and <code class="literal">NULL</code> values,
+        respectively:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CALL do_insert(1);
++---------------------------------+
+| result                          |
++---------------------------------+
+| insert succeeded, row count = 1 |
++---------------------------------+
+
+mysql&gt; CALL do_insert(NULL);
++-------------------------------------------------------------------------+
+| result                                                                  |
++-------------------------------------------------------------------------+
+| insert failed, error = 23000, message = Column 'int_col' cannot be null |
++-------------------------------------------------------------------------+</code></pre><p>
+        When a condition handler activates, a push to the diagnostics
+        area stack occurs:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            The first (current) diagnostics area becomes the second
+            (stacked) diagnostics area and a new current diagnostics
+            area is created as a copy of it.
+          </p></li><li class="listitem"><p>
+            <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+            [CURRENT] DIAGNOSTICS</code></a> and
+            <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET STACKED
+            DIAGNOSTICS</code></a> can be used within the handler to
+            access the contents of the current and stacked diagnostics
+            areas.
+          </p></li><li class="listitem"><p>
+            Initially, both diagnostics areas return the same result, so
+            it is possible to get information from the current
+            diagnostics area about the condition that activated the
+            handler, <span class="emphasis"><em>as long as</em></span> you execute no
+            statements within the handler that change its current
+            diagnostics area.
+          </p></li><li class="listitem"><p>
+            However, statements executing within the handler can modify
+            the current diagnostics area, clearing and setting its
+            contents according to the normal rules (see
+            <a class="xref" href="diagnostics-area.html#diagnostics-area-populating" title="How the Diagnostics Area is Cleared and Populated">How the Diagnostics Area is Cleared and Populated</a>).
+          </p><p>
+            A more reliable way to obtain information about the
+            handler-activating condition is to use the stacked
+            diagnostics area, which cannot be modified by statements
+            executing within the handler except
+            <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a>. For information
+            about when the current diagnostics area is set and cleared,
+            see <a class="xref" href="diagnostics-area.html" title="13.6.7.7&nbsp;The MySQL Diagnostics Area">Section&nbsp;13.6.7.7, “The MySQL Diagnostics Area”</a>.
+</p></li></ul>
+</div>
+<p>
+        The next example shows how <code class="literal">GET STACKED
+        DIAGNOSTICS</code> can be used within a handler to obtain
+        information about the handled exception, even after the current
+        diagnostics area has been modified by handler statements.
+      </p><p>
+        Within a stored procedure <code class="literal">p()</code>, we attempt to
+        insert two values into a table that contains a <code class="literal">TEXT NOT
+        NULL</code> column. The first value is a
+        non-<code class="literal">NULL</code> string and the second is
+        <code class="literal">NULL</code>. The column prohibits
+        <code class="literal">NULL</code> values, so the first insert succeeds but
+        the second causes an exception. The procedure includes an
+        exception handler that maps attempts to insert
+        <code class="literal">NULL</code> into inserts of the empty string:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DROP TABLE IF EXISTS t1;
+CREATE TABLE t1 (c1 TEXT NOT NULL);
+DROP PROCEDURE IF EXISTS p;
+delimiter //
+CREATE PROCEDURE p ()
+BEGIN
+  -- Declare variables to hold diagnostics area information
+  DECLARE errcount INT;
+  DECLARE errno INT;
+  DECLARE msg TEXT;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    -- Here the current DA is nonempty because no prior statements
+    -- executing within the handler have cleared it
+    GET CURRENT DIAGNOSTICS CONDITION 1
+      errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
+    SELECT 'current DA before mapped insert' AS op, errno, msg;
+    GET STACKED DIAGNOSTICS CONDITION 1
+      errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
+    SELECT 'stacked DA before mapped insert' AS op, errno, msg;
+
+    -- Map attempted NULL insert to empty string insert
+    INSERT INTO t1 (c1) VALUES('');
+
+    -- Here the current DA should be empty (if the INSERT succeeded),
+    -- so check whether there are conditions before attempting to
+    -- obtain condition information
+    GET CURRENT DIAGNOSTICS errcount = NUMBER;
+    IF errcount = 0
+    THEN
+      SELECT 'mapped insert succeeded, current DA is empty' AS op;
+    ELSE
+      GET CURRENT DIAGNOSTICS CONDITION 1
+        errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
+      SELECT 'current DA after mapped insert' AS op, errno, msg;
+    END IF ;
+    GET STACKED DIAGNOSTICS CONDITION 1
+      errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
+    SELECT 'stacked DA after mapped insert' AS op, errno, msg;
+  END;
+  INSERT INTO t1 (c1) VALUES('string 1');
+  INSERT INTO t1 (c1) VALUES(NULL);
+END;
+//
+delimiter ;
+CALL p();
+SELECT * FROM t1;</code></pre><p>
+        When the handler activates, a copy of the current diagnostics
+        area is pushed to the diagnostics area stack. The handler first
+        displays the contents of the current and stacked diagnostics
+        areas, which are both the same initially:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">+---------------------------------+-------+----------------------------+
+| op                              | errno | msg                        |
++---------------------------------+-------+----------------------------+
+| current DA before mapped insert |  1048 | Column 'c1' cannot be null |
++---------------------------------+-------+----------------------------+
+
++---------------------------------+-------+----------------------------+
+| op                              | errno | msg                        |
++---------------------------------+-------+----------------------------+
+| stacked DA before mapped insert |  1048 | Column 'c1' cannot be null |
++---------------------------------+-------+----------------------------+</code></pre><p>
+        Statements executing after the <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+        DIAGNOSTICS</code></a> statements may reset the current
+        diagnostics area. statements may reset the current diagnostics
+        area. For example, the handler maps the <code class="literal">NULL</code>
+        insert to an empty-string insert and displays the result. The
+        new insert succeeds and clears the current diagnostics area, but
+        the stacked diagnostics area remains unchanged and still
+        contains information about the condition that activated the
+        handler:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">+----------------------------------------------+
+| op                                           |
++----------------------------------------------+
+| mapped insert succeeded, current DA is empty |
++----------------------------------------------+
+
++--------------------------------+-------+----------------------------+
+| op                             | errno | msg                        |
++--------------------------------+-------+----------------------------+
+| stacked DA after mapped insert |  1048 | Column 'c1' cannot be null |
++--------------------------------+-------+----------------------------+</code></pre><p>
+        When the condition handler ends, its current diagnostics area is
+        popped from the stack and the stacked diagnostics area becomes
+        the current diagnostics area in the stored procedure.
+      </p><p>
+        After the procedure returns, the table contains two rows. The
+        empty row results from the attempt to insert
+        <code class="literal">NULL</code> that was mapped to an empty-string
+        insert:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">+----------+
+| c1       |
++----------+
+| string 1 |
+|          |
++----------+</code></pre><p>
+        In the preceding example, the first two <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+        DIAGNOSTICS</code></a> statements within the condition handler
+        that retrieve information from the current and stacked
+        diagnostics areas return the same values. This is not the case
+        if statements that reset the current diagnostics area executed
+        earlier within the handler. Suppose that <code class="literal">p()</code>
+        is rewritten to place the <a class="link" href="declare.html" title="13.6.3&nbsp;DECLARE Statement"><code class="literal">DECLARE</code></a>
+        statements within the handler definition rather than preceding
+        it:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p ()
+BEGIN
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    -- Declare variables to hold diagnostics area information
+    DECLARE errcount INT;
+    DECLARE errno INT;
+    DECLARE msg TEXT;
+    GET CURRENT DIAGNOSTICS CONDITION 1
+      errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
+    SELECT 'current DA before mapped insert' AS op, errno, msg;
+    GET STACKED DIAGNOSTICS CONDITION 1
+      errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
+    SELECT 'stacked DA before mapped insert' AS op, errno, msg;
+...</code></pre><p>
+        In this case, the result is version dependent:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Before MySQL 5.7.2, <a class="link" href="declare.html" title="13.6.3&nbsp;DECLARE Statement"><code class="literal">DECLARE</code></a>
+            does not change the current diagnostics area, so the first
+            two <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a>
+            statements return the same result, just as in the original
+            version of <code class="literal">p()</code>.
+          </p><p>
+            In MySQL 5.7.2, work was done to ensure that all
+            nondiagnostic statements populate the diagnostics area, per
+            the SQL standard. <a class="link" href="declare.html" title="13.6.3&nbsp;DECLARE Statement"><code class="literal">DECLARE</code></a> is
+            one of them, so in 5.7.2 and higher,
+            <a class="link" href="declare.html" title="13.6.3&nbsp;DECLARE Statement"><code class="literal">DECLARE</code></a> statements executing
+            at the beginning of the handler clear the current
+            diagnostics area and the <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+            DIAGNOSTICS</code></a> statements produce different results:
+          </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">+---------------------------------+-------+------+
+| op                              | errno | msg  |
++---------------------------------+-------+------+
+| current DA before mapped insert |  NULL | NULL |
++---------------------------------+-------+------+
+
++---------------------------------+-------+----------------------------+
+| op                              | errno | msg                        |
++---------------------------------+-------+----------------------------+
+| stacked DA before mapped insert |  1048 | Column 'c1' cannot be null |
++---------------------------------+-------+----------------------------+</code></pre></li></ul>
+</div>
+<p>
+        To avoid this issue within a condition handler when seeking to
+        obtain information about the condition that activated the
+        handler, be sure to access the stacked diagnostics area, not the
+        current diagnostics area.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

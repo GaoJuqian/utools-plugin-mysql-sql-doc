@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>RENAME USER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="rename-user"></a>13.7.1.5&nbsp;RENAME USER Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572921296"></a><a class="indexterm" name="idm45852572920224"></a><a class="indexterm" name="idm45852572918736"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">RENAME USER <em class="replaceable">old_user</em> TO <em class="replaceable">new_user</em>
+    [, <em class="replaceable">old_user</em> TO <em class="replaceable">new_user</em>] ...</code></pre><p>
+        The <a class="link" href="rename-user.html" title="13.7.1.5&nbsp;RENAME USER Statement"><code class="literal">RENAME USER</code></a> statement renames
+        existing MySQL accounts. An error occurs for old accounts that
+        do not exist or new accounts that already exist.
+      </p><p>
+        To use <a class="link" href="rename-user.html" title="13.7.1.5&nbsp;RENAME USER Statement"><code class="literal">RENAME USER</code></a>, you must have
+        the global <a class="link" href="privileges-provided.html#priv_create-user"><code class="literal">CREATE USER</code></a> privilege,
+        or the <a class="link" href="privileges-provided.html#priv_update"><code class="literal">UPDATE</code></a> privilege for the
+        <code class="literal">mysql</code> system database. When the
+        <a class="link" href="server-system-variables.html#sysvar_read_only"><code class="literal">read_only</code></a> system variable is
+        enabled, <a class="link" href="rename-user.html" title="13.7.1.5&nbsp;RENAME USER Statement"><code class="literal">RENAME USER</code></a> additionally
+        requires the <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege.
+      </p><p>
+        Each account name uses the format described in
+        <a class="xref" href="account-names.html" title="6.2.4&nbsp;Specifying Account Names">Section&nbsp;6.2.4, “Specifying Account Names”</a>. For example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">RENAME USER 'jeffrey'@'localhost' TO 'jeff'@'127.0.0.1';</code></pre><p>
+        The host name part of the account name, if omitted, defaults to
+        <code class="literal">'%'</code>.
+      </p><p>
+        <a class="link" href="rename-user.html" title="13.7.1.5&nbsp;RENAME USER Statement"><code class="literal">RENAME USER</code></a> causes the privileges
+        held by the old user to be those held by the new user. However,
+        <a class="link" href="rename-user.html" title="13.7.1.5&nbsp;RENAME USER Statement"><code class="literal">RENAME USER</code></a> does not
+        automatically drop or invalidate databases or objects within
+        them that the old user created. This includes stored programs or
+        views for which the <code class="literal">DEFINER</code> attribute names
+        the old user. Attempts to access such objects may produce an
+        error if they execute in definer security context. (For
+        information about security context, see
+        <a class="xref" href="stored-objects-security.html" title="23.6&nbsp;Stored Object Access Control">Section&nbsp;23.6, “Stored Object Access Control”</a>.)
+      </p><p>
+        The privilege changes take effect as indicated in
+        <a class="xref" href="privilege-changes.html" title="6.2.9&nbsp;When Privilege Changes Take Effect">Section&nbsp;6.2.9, “When Privilege Changes Take Effect”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

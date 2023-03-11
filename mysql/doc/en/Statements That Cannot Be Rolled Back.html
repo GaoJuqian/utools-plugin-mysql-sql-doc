@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Statements That Cannot Be Rolled Back</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="cannot-roll-back"></a>13.3.2&nbsp;Statements That Cannot Be Rolled Back</h3>
+
+</div>
+
+</div>
+
+</div>
+<p>
+      Some statements cannot be rolled back. In general, these include
+      data definition language (DDL) statements, such as those that
+      create or drop databases, those that create, drop, or alter tables
+      or stored routines.
+    </p><p>
+      You should design your transactions not to include such
+      statements. If you issue a statement early in a transaction that
+      cannot be rolled back, and then another statement later fails, the
+      full effect of the transaction cannot be rolled back in such cases
+      by issuing a
+      <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">ROLLBACK</code></a>
+      statement.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

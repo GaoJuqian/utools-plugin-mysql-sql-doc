@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DECLARE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="declare"></a>13.6.3&nbsp;DECLARE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575319664"></a><p>
+      The <a class="link" href="declare.html" title="13.6.3&nbsp;DECLARE Statement"><code class="literal">DECLARE</code></a> statement is used to
+      define various items local to a program:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Local variables. See
+          <a class="xref" href="stored-program-variables.html" title="13.6.4&nbsp;Variables in Stored Programs">Section&nbsp;13.6.4, “Variables in Stored Programs”</a>.
+        </p></li><li class="listitem"><p>
+          Conditions and handlers. See
+          <a class="xref" href="condition-handling.html" title="13.6.7&nbsp;Condition Handling">Section&nbsp;13.6.7, “Condition Handling”</a>.
+        </p></li><li class="listitem"><p>
+          Cursors. See <a class="xref" href="cursors.html" title="13.6.6&nbsp;Cursors">Section&nbsp;13.6.6, “Cursors”</a>.
+</p></li></ul>
+</div>
+<p>
+      <a class="link" href="declare.html" title="13.6.3&nbsp;DECLARE Statement"><code class="literal">DECLARE</code></a> is permitted only inside a
+      <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ... END</code></a>
+      compound statement and must be at its start, before any other
+      statements.
+    </p><p>
+      Declarations must follow a certain order. Cursor declarations must
+      appear before handler declarations. Variable and condition
+      declarations must appear before cursor or handler declarations.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

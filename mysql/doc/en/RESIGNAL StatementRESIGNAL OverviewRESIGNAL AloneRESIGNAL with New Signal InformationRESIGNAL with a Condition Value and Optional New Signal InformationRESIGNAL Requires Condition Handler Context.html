@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>RESIGNAL StatementRESIGNAL OverviewRESIGNAL AloneRESIGNAL with New Signal InformationRESIGNAL with a Condition Value and Optional New Signal InformationRESIGNAL Requires Condition Handler Context</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="resignal"></a>13.6.7.4&nbsp;RESIGNAL Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852574677696"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">RESIGNAL [<em class="replaceable">condition_value</em>]
+    [SET <em class="replaceable">signal_information_item</em>
+    [, <em class="replaceable">signal_information_item</em>] ...]
+
+<em class="replaceable">condition_value</em>: {
+    SQLSTATE [VALUE] <em class="replaceable">sqlstate_value</em>
+  | <em class="replaceable">condition_name</em>
+}
+
+<em class="replaceable">signal_information_item</em>:
+    <em class="replaceable">condition_information_item_name</em> = <em class="replaceable">simple_value_specification</em>
+
+<em class="replaceable">condition_information_item_name</em>: {
+    CLASS_ORIGIN
+  | SUBCLASS_ORIGIN
+  | MESSAGE_TEXT
+  | MYSQL_ERRNO
+  | CONSTRAINT_CATALOG
+  | CONSTRAINT_SCHEMA
+  | CONSTRAINT_NAME
+  | CATALOG_NAME
+  | SCHEMA_NAME
+  | TABLE_NAME
+  | COLUMN_NAME
+  | CURSOR_NAME
+}
+
+<em class="replaceable">condition_name</em>, <em class="replaceable">simple_value_specification</em>:
+    (see following discussion)</code></pre><p>
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> passes on the error
+        condition information that is available during execution of a
+        condition handler within a compound statement inside a stored
+        procedure or function, trigger, or event.
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> may change some or all
+        information before passing it on.
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> is related to
+        <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a>, but instead of
+        originating a condition as <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a>
+        does, <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> relays existing
+        condition information, possibly after modifying it.
+      </p><p>
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> makes it possible to
+        both handle an error and return the error information.
+        Otherwise, by executing an SQL statement within the handler,
+        information that caused the handler's activation is destroyed.
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> also can make some
+        procedures shorter if a given handler can handle part of a
+        situation, then pass the condition <span class="quote">“<span class="quote">up the line</span>”</span> to
+        another handler.
+      </p><p>
+        No privileges are required to execute the
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> statement.
+      </p><p>
+        All forms of <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> require
+        that the current context be a condition handler. Otherwise,
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> is illegal and a
+        <code class="literal">RESIGNAL when handler not active</code> error
+        occurs.
+      </p><p>
+        To retrieve information from the diagnostics area, use the
+        <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> statement (see
+        <a class="xref" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement">Section&nbsp;13.6.7.3, “GET DIAGNOSTICS Statement”</a>). For information about the
+        diagnostics area, see <a class="xref" href="diagnostics-area.html" title="13.6.7.7&nbsp;The MySQL Diagnostics Area">Section&nbsp;13.6.7.7, “The MySQL Diagnostics Area”</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="resignal.html#resignal-overview" title="RESIGNAL Overview">RESIGNAL Overview</a></p></li><li class="listitem"><p><a class="xref" href="resignal.html#resignal-alone" title="RESIGNAL Alone">RESIGNAL Alone</a></p></li><li class="listitem"><p><a class="xref" href="resignal.html#resignal-with-new-signal" title="RESIGNAL with New Signal Information">RESIGNAL with New Signal Information</a></p></li><li class="listitem"><p><a class="xref" href="resignal.html#resignal-with-condition" title="RESIGNAL with a Condition Value and Optional New Signal Information">RESIGNAL with a Condition Value and Optional New Signal Information</a></p></li><li class="listitem"><p><a class="xref" href="resignal.html#resignal-handler" title="RESIGNAL Requires Condition Handler Context">RESIGNAL Requires Condition Handler Context</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="resignal-overview"></a>RESIGNAL Overview</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          For <em class="replaceable"><code>condition_value</code></em> and
+          <em class="replaceable"><code>signal_information_item</code></em>, the
+          definitions and rules are the same for
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> as for
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a>. For example, the
+          <em class="replaceable"><code>condition_value</code></em> can be an
+          <code class="literal">SQLSTATE</code> value, and the value can indicate
+          errors, warnings, or <span class="quote">“<span class="quote">not found.</span>”</span> For additional
+          information, see <a class="xref" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement">Section&nbsp;13.6.7.5, “SIGNAL Statement”</a>.
+        </p><p>
+          The <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> statement takes
+          <em class="replaceable"><code>condition_value</code></em> and
+          <code class="literal">SET</code> clauses, both of which are optional.
+          This leads to several possible uses:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> alone:
+            </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">RESIGNAL;</code></pre></li><li class="listitem"><p>
+              <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> with new signal
+              information:
+            </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">RESIGNAL SET <em class="replaceable">signal_information_item</em> [, <em class="replaceable">signal_information_item</em>] ...;</code></pre></li><li class="listitem"><p>
+              <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> with a condition
+              value and possibly new signal information:
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">RESIGNAL <em class="replaceable">condition_value</em>
+    [SET <em class="replaceable">signal_information_item</em> [, <em class="replaceable">signal_information_item</em>] ...];</code></pre></li></ul>
+</div>
+<p>
+          These use cases all cause changes to the diagnostics and
+          condition areas:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              A diagnostics area contains one or more condition areas.
+            </p></li><li class="listitem"><p>
+              A condition area contains condition information items,
+              such as the <code class="literal">SQLSTATE</code> value,
+              <code class="literal">MYSQL_ERRNO</code>, or
+              <code class="literal">MESSAGE_TEXT</code>.
+</p></li></ul>
+</div>
+<p>
+          There is a stack of diagnostics areas. When a handler takes
+          control, it pushes a diagnostics area to the top of the stack,
+          so there are two diagnostics areas during handler execution:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              The first (current) diagnostics area, which starts as a
+              copy of the last diagnostics area, but is overwritten by
+              the first statement in the handler that changes the
+              current diagnostics area.
+            </p></li><li class="listitem"><p>
+              The last (stacked) diagnostics area, which has the
+              condition areas that were set up before the handler took
+              control.
+</p></li></ul>
+</div>
+<p>
+          The maximum number of condition areas in a diagnostics area is
+          determined by the value of the
+          <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a> system
+          variable. See
+          <a class="xref" href="diagnostics-area.html#diagnostics-area-system-variables" title="Diagnostics Area-Related System Variables">Diagnostics Area-Related System Variables</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="resignal-alone"></a>RESIGNAL Alone</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          A simple <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> alone means
+          <span class="quote">“<span class="quote">pass on the error with no change.</span>”</span> It restores
+          the last diagnostics area and makes it the current diagnostics
+          area. That is, it <span class="quote">“<span class="quote">pops</span>”</span> the diagnostics area
+          stack.
+        </p><p>
+          Within a condition handler that catches a condition, one use
+          for <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> alone is to
+          perform some other actions, and then pass on without change
+          the original condition information (the information that
+          existed before entry into the handler).
+        </p><p>
+          Example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DROP TABLE IF EXISTS xx;
+delimiter //
+CREATE PROCEDURE p ()
+BEGIN
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    SET @error_count = @error_count + 1;
+    IF @a = 0 THEN RESIGNAL; END IF;
+  END;
+  DROP TABLE xx;
+END//
+delimiter ;
+SET @error_count = 0;
+SET @a = 0;
+CALL p();</code></pre><p>
+          Suppose that the <code class="literal">DROP TABLE xx</code> statement
+          fails. The diagnostics area stack looks like this:
+        </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">DA 1. ERROR 1051 (42S02): Unknown table 'xx'</code></pre><p>
+          Then execution enters the <code class="literal">EXIT</code> handler. It
+          starts by pushing a diagnostics area to the top of the stack,
+          which now looks like this:
+        </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">DA 1. ERROR 1051 (42S02): Unknown table 'xx'
+DA 2. ERROR 1051 (42S02): Unknown table 'xx'</code></pre><p>
+          At this point, the contents of the first (current) and second
+          (stacked) diagnostics areas are the same. The first
+          diagnostics area may be modified by statements executing
+          subsequently within the handler.
+        </p><p>
+          Usually a procedure statement clears the first diagnostics
+          area. <code class="literal">BEGIN</code> is an exception, it does not
+          clear, it does nothing. <code class="literal">SET</code> is not an
+          exception, it clears, performs the operation, and produces a
+          result of <span class="quote">“<span class="quote">success.</span>”</span> The diagnostics area stack
+          now looks like this:
+        </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">DA 1. ERROR 0000 (00000): Successful operation
+DA 2. ERROR 1051 (42S02): Unknown table 'xx'</code></pre><p>
+          At this point, if <code class="literal">@a = 0</code>,
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> pops the diagnostics
+          area stack, which now looks like this:
+        </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">DA 1. ERROR 1051 (42S02): Unknown table 'xx'</code></pre><p>
+          And that is what the caller sees.
+        </p><p>
+          If <code class="literal">@a</code> is not 0, the handler simply ends,
+          which means that there is no more use for the current
+          diagnostics area (it has been <span class="quote">“<span class="quote">handled</span>”</span>), so it
+          can be thrown away, causing the stacked diagnostics area to
+          become the current diagnostics area again. The diagnostics
+          area stack looks like this:
+        </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">DA 1. ERROR 0000 (00000): Successful operation</code></pre><p>
+          The details make it look complex, but the end result is quite
+          useful: Handlers can execute without destroying information
+          about the condition that caused activation of the handler.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="resignal-with-new-signal"></a>RESIGNAL with New Signal Information</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> with a
+          <code class="literal">SET</code> clause provides new signal information,
+          so the statement means <span class="quote">“<span class="quote">pass on the error with
+          changes</span>”</span>:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">RESIGNAL SET <em class="replaceable">signal_information_item</em> [, <em class="replaceable">signal_information_item</em>] ...;</code></pre><p>
+          As with <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> alone, the
+          idea is to pop the diagnostics area stack so that the original
+          information goes out. Unlike
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> alone, anything
+          specified in the <code class="literal">SET</code> clause changes.
+        </p><p>
+          Example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DROP TABLE IF EXISTS xx;
+delimiter //
+CREATE PROCEDURE p ()
+BEGIN
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    SET @error_count = @error_count + 1;
+    IF @a = 0 THEN RESIGNAL SET MYSQL_ERRNO = 5; END IF;
+  END;
+  DROP TABLE xx;
+END//
+delimiter ;
+SET @error_count = 0;
+SET @a = 0;
+CALL p();</code></pre><p>
+          Remember from the previous discussion that
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> alone results in a
+          diagnostics area stack like this:
+        </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">DA 1. ERROR 1051 (42S02): Unknown table 'xx'</code></pre><p>
+          The <code class="literal">RESIGNAL SET MYSQL_ERRNO = 5</code> statement
+          results in this stack instead, which is what the caller sees:
+        </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">DA 1. ERROR 5 (42S02): Unknown table 'xx'</code></pre><p>
+          In other words, it changes the error number, and nothing else.
+        </p><p>
+          The <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> statement can
+          change any or all of the signal information items, making the
+          first condition area of the diagnostics area look quite
+          different.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="resignal-with-condition"></a>RESIGNAL with a Condition Value and Optional New Signal Information</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> with a condition value
+          means <span class="quote">“<span class="quote">push a condition into the current diagnostics
+          area.</span>”</span> If the <code class="literal">SET</code> clause is present,
+          it also changes the error information.
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">RESIGNAL <em class="replaceable">condition_value</em>
+    [SET <em class="replaceable">signal_information_item</em> [, <em class="replaceable">signal_information_item</em>] ...];</code></pre><p>
+          This form of <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> restores
+          the last diagnostics area and makes it the current diagnostics
+          area. That is, it <span class="quote">“<span class="quote">pops</span>”</span> the diagnostics area
+          stack, which is the same as what a simple
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> alone would do.
+          However, it also changes the diagnostics area depending on the
+          condition value or signal information.
+        </p><p>
+          Example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DROP TABLE IF EXISTS xx;
+delimiter //
+CREATE PROCEDURE p ()
+BEGIN
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    SET @error_count = @error_count + 1;
+    IF @a = 0 THEN RESIGNAL SQLSTATE '45000' SET MYSQL_ERRNO=5; END IF;
+  END;
+  DROP TABLE xx;
+END//
+delimiter ;
+SET @error_count = 0;
+SET @a = 0;
+SET @@max_error_count = 2;
+CALL p();
+SHOW ERRORS;</code></pre><p>
+          This is similar to the previous example, and the effects are
+          the same, except that if
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> happens, the current
+          condition area looks different at the end. (The reason the
+          condition adds to rather than replaces the existing condition
+          is the use of a condition value.)
+        </p><p>
+          The <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> statement includes
+          a condition value (<code class="literal">SQLSTATE '45000'</code>), so it
+          adds a new condition area, resulting in a diagnostics area
+          stack that looks like this:
+        </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">DA 1. (condition 2) ERROR 1051 (42S02): Unknown table 'xx'
+      (condition 1) ERROR 5 (45000) Unknown table 'xx'</code></pre><p>
+          The result of <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL
+          p()</code></a> and <a class="link" href="show-errors.html" title="13.7.5.17&nbsp;SHOW ERRORS Statement"><code class="literal">SHOW ERRORS</code></a>
+          for this example is:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CALL p();
+ERROR 5 (45000): Unknown table 'xx'
+mysql&gt; SHOW ERRORS;
++-------+------+----------------------------------+
+| Level | Code | Message                          |
++-------+------+----------------------------------+
+| Error | 1051 | Unknown table 'xx'               |
+| Error |    5 | Unknown table 'xx'               |
++-------+------+----------------------------------+</code></pre>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="resignal-handler"></a>RESIGNAL Requires Condition Handler Context</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          All forms of <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> require
+          that the current context be a condition handler. Otherwise,
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> is illegal and a
+          <code class="literal">RESIGNAL when handler not active</code> error
+          occurs. For example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE PROCEDURE p () RESIGNAL;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; CALL p();
+ERROR 1645 (0K000): RESIGNAL when handler not active</code></pre><p>
+          Here is a more difficult example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">delimiter //
+CREATE FUNCTION f () RETURNS INT
+BEGIN
+  RESIGNAL;
+  RETURN 5;
+END//
+CREATE PROCEDURE p ()
+BEGIN
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION SET @a=f();
+  SIGNAL SQLSTATE '55555';
+END//
+delimiter ;
+CALL p();</code></pre><p>
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> occurs within the
+          stored function <code class="literal">f()</code>. Although
+          <code class="literal">f()</code> itself is invoked within the context of
+          the <code class="literal">EXIT</code> handler, execution within
+          <code class="literal">f()</code> has its own context, which is not
+          handler context. Thus, <code class="literal">RESIGNAL</code> within
+          <code class="literal">f()</code> results in a <span class="quote">“<span class="quote">handler not
+          active</span>”</span> error.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

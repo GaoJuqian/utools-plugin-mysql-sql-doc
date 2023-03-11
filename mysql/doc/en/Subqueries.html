@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Subqueries</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="subqueries"></a>13.2.10&nbsp;Subqueries</h3>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="scalar-subqueries.html">13.2.10.1 The Subquery as Scalar Operand</a></span></dt><dt><span class="section"><a href="comparisons-using-subqueries.html">13.2.10.2 Comparisons Using Subqueries</a></span></dt><dt><span class="section"><a href="any-in-some-subqueries.html">13.2.10.3 Subqueries with ANY, IN, or SOME</a></span></dt><dt><span class="section"><a href="all-subqueries.html">13.2.10.4 Subqueries with ALL</a></span></dt><dt><span class="section"><a href="row-subqueries.html">13.2.10.5 Row Subqueries</a></span></dt><dt><span class="section"><a href="exists-and-not-exists-subqueries.html">13.2.10.6 Subqueries with EXISTS or NOT EXISTS</a></span></dt><dt><span class="section"><a href="correlated-subqueries.html">13.2.10.7 Correlated Subqueries</a></span></dt><dt><span class="section"><a href="derived-tables.html">13.2.10.8 Derived Tables</a></span></dt><dt><span class="section"><a href="subquery-errors.html">13.2.10.9 Subquery Errors</a></span></dt><dt><span class="section"><a href="optimizing-subqueries.html">13.2.10.10 Optimizing Subqueries</a></span></dt><dt><span class="section"><a href="rewriting-subqueries.html">13.2.10.11 Rewriting Subqueries as Joins</a></span></dt><dt><span class="section"><a href="subquery-restrictions.html">13.2.10.12 Restrictions on Subqueries</a></span></dt></dl>
+</div>
+<a class="indexterm" name="idm45852577960832"></a><a class="indexterm" name="idm45852577959760"></a><a class="indexterm" name="idm45852577958688"></a><a class="indexterm" name="idm45852577957200"></a><p>
+      A subquery is a <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement
+      within another statement.
+    </p><p>
+      All subquery forms and operations that the SQL standard requires
+      are supported, as well as a few features that are MySQL-specific.
+    </p><p>
+      Here is an example of a subquery:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 WHERE column1 = (SELECT column1 FROM t2);</code></pre><p>
+      In this example, <code class="literal">SELECT * FROM t1 ...</code> is the
+      <span class="emphasis"><em>outer query</em></span> (or <span class="emphasis"><em>outer
+      statement</em></span>), and <code class="literal">(SELECT column1 FROM
+      t2)</code> is the <span class="emphasis"><em>subquery</em></span>. We say that
+      the subquery is <span class="emphasis"><em>nested</em></span> within the outer
+      query, and in fact it is possible to nest subqueries within other
+      subqueries, to a considerable depth. A subquery must always appear
+      within parentheses.
+    </p><p>
+      The main advantages of subqueries are:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          They allow queries that are <span class="emphasis"><em>structured</em></span> so
+          that it is possible to isolate each part of a statement.
+        </p></li><li class="listitem"><p>
+          They provide alternative ways to perform operations that would
+          otherwise require complex joins and unions.
+        </p></li><li class="listitem"><p>
+          Many people find subqueries more readable than complex joins
+          or unions. Indeed, it was the innovation of subqueries that
+          gave people the original idea of calling the early SQL
+          <span class="quote">“<span class="quote">Structured Query Language.</span>”</span>
+</p><a class="indexterm" name="idm45852577944336"></a></li></ul>
+</div>
+<p>
+      Here is an example statement that shows the major points about
+      subquery syntax as specified by the SQL standard and supported in
+      MySQL:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELETE FROM t1
+WHERE s11 &gt; ANY
+ (SELECT COUNT(*) /* no hint */ FROM t2
+  WHERE NOT EXISTS
+   (SELECT * FROM t3
+    WHERE ROW(5*t2.s1,77)=
+     (SELECT 50,11*s1 FROM t4 UNION SELECT 50,77 FROM
+      (SELECT * FROM t5) AS t5)));</code></pre><p>
+      A subquery can return a scalar (a single value), a single row, a
+      single column, or a table (one or more rows of one or more
+      columns). These are called scalar, column, row, and table
+      subqueries. Subqueries that return a particular kind of result
+      often can be used only in certain contexts, as described in the
+      following sections.
+    </p><p>
+      There are few restrictions on the type of statements in which
+      subqueries can be used. A subquery can contain many of the
+      keywords or clauses that an ordinary
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> can contain:
+      <code class="literal">DISTINCT</code>, <code class="literal">GROUP BY</code>,
+      <code class="literal">ORDER BY</code>, <code class="literal">LIMIT</code>, joins,
+      index hints, <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> constructs,
+      comments, functions, and so on.
+    </p><p>
+      A subquery's outer statement can be any one of:
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>,
+      <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>,
+      <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>,
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>,
+      <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>, or
+      <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a>.
+    </p><p>
+      In MySQL, you cannot modify a table and select from the same table
+      in a subquery. This applies to statements such as
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>,
+      <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>,
+      <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a>,
+      <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>, and (because subqueries can
+      be used in the <code class="literal">SET</code> clause)
+      <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>.
+    </p><p>
+      For information about how the optimizer handles subqueries, see
+      <a class="xref" href="subquery-optimization.html" title="8.2.2&nbsp;Optimizing Subqueries, Derived Tables, and View References">Section&nbsp;8.2.2, “Optimizing Subqueries, Derived Tables, and View References”</a>. For a discussion of
+      restrictions on subquery use, including performance issues for
+      certain forms of subquery syntax, see
+      <a class="xref" href="subquery-restrictions.html" title="13.2.10.12&nbsp;Restrictions on Subqueries">Section&nbsp;13.2.10.12, “Restrictions on Subqueries”</a>.
+</p>
+</div><br>
+        
+</body>
+</html>

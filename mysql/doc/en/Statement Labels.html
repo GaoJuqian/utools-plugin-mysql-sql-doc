@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Statement Labels</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="statement-labels"></a>13.6.2&nbsp;Statement Labels</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575357232"></a><a class="indexterm" name="idm45852575355744"></a><a class="indexterm" name="idm45852575354256"></a><a class="indexterm" name="idm45852575352768"></a><a class="indexterm" name="idm45852575351280"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">[<em class="replaceable">begin_label</em>:] BEGIN
+    [<em class="replaceable">statement_list</em>]
+END [<em class="replaceable">end_label</em>]
+
+[<em class="replaceable">begin_label</em>:] LOOP
+    <em class="replaceable">statement_list</em>
+END LOOP [<em class="replaceable">end_label</em>]
+
+[<em class="replaceable">begin_label</em>:] REPEAT
+    <em class="replaceable">statement_list</em>
+UNTIL <em class="replaceable">search_condition</em>
+END REPEAT [<em class="replaceable">end_label</em>]
+
+[<em class="replaceable">begin_label</em>:] WHILE <em class="replaceable">search_condition</em> DO
+    <em class="replaceable">statement_list</em>
+END WHILE [<em class="replaceable">end_label</em>]</code></pre><p>
+      Labels are permitted for
+      <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ... END</code></a>
+      blocks and for the <a class="link" href="loop.html" title="13.6.5.5&nbsp;LOOP Statement"><code class="literal">LOOP</code></a>,
+      <a class="link" href="repeat.html" title="13.6.5.6&nbsp;REPEAT Statement"><code class="literal">REPEAT</code></a>, and
+      <a class="link" href="while.html" title="13.6.5.8&nbsp;WHILE Statement"><code class="literal">WHILE</code></a> statements. Label use for
+      those statements follows these rules:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <em class="replaceable"><code>begin_label</code></em> must be followed by a
+          colon.
+        </p></li><li class="listitem"><p>
+          <em class="replaceable"><code>begin_label</code></em> can be given without
+          <em class="replaceable"><code>end_label</code></em>. If
+          <em class="replaceable"><code>end_label</code></em> is present, it must be
+          the same as <em class="replaceable"><code>begin_label</code></em>.
+        </p></li><li class="listitem"><p>
+          <em class="replaceable"><code>end_label</code></em> cannot be given without
+          <em class="replaceable"><code>begin_label</code></em>.
+        </p></li><li class="listitem"><p>
+          Labels at the same nesting level must be distinct.
+        </p></li><li class="listitem"><p>
+          Labels can be up to 16 characters long.
+</p></li></ul>
+</div>
+<p>
+      To refer to a label within the labeled construct, use an
+      <a class="link" href="iterate.html" title="13.6.5.3&nbsp;ITERATE Statement"><code class="literal">ITERATE</code></a> or
+      <a class="link" href="leave.html" title="13.6.5.4&nbsp;LEAVE Statement"><code class="literal">LEAVE</code></a> statement. The following
+      example uses those statements to continue iterating or terminate
+      the loop:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE doiterate(p1 INT)
+BEGIN
+  label1: LOOP
+    SET p1 = p1 + 1;
+    IF p1 &lt; 10 THEN ITERATE label1; END IF;
+    LEAVE label1;
+  END LOOP label1;
+END;</code></pre><p>
+      The scope of a block label does not include the code for handlers
+      declared within the block. For details, see
+      <a class="xref" href="declare-handler.html" title="13.6.7.2&nbsp;DECLARE ... HANDLER Statement">Section&nbsp;13.6.7.2, “DECLARE ... HANDLER Statement”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

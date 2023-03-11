@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE TABLE ... LIKE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="create-table-like"></a>13.1.18.3&nbsp;CREATE TABLE ... LIKE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852582146736"></a><a class="indexterm" name="idm45852582145696"></a><p>
+        Use <code class="literal">CREATE TABLE ... LIKE</code> to create an empty
+        table based on the definition of another table, including any
+        column attributes and indexes defined in the original table:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE <em class="replaceable">new_tbl</em> LIKE <em class="replaceable">orig_tbl</em>;</code></pre><p>
+        The copy is created using the same version of the table storage
+        format as the original table. The
+        <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege is required on
+        the original table.
+      </p><p>
+        <code class="literal">LIKE</code> works only for base tables, not for
+        views.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+          You cannot execute <code class="literal">CREATE TABLE</code> or
+          <code class="literal">CREATE TABLE ... LIKE</code> while a
+          <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> statement is in
+          effect.
+        </p><p>
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE ...
+          LIKE</code></a> makes the same checks as
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> and does not just
+          copy the <code class="filename">.frm</code> file. This means that, if
+          the current SQL mode is different from the mode in effect when
+          the original table was created, the table definition might be
+          considered invalid for the new mode, and the statement fails.
+</p>
+</div>
+<p>
+        For <code class="literal">CREATE TABLE ... LIKE</code>, the destination
+        table preserves generated column information from the original
+        table.
+      </p><p>
+        <code class="literal">CREATE TABLE ... LIKE</code> does not preserve any
+        <code class="literal">DATA DIRECTORY</code> or <code class="literal">INDEX
+        DIRECTORY</code> table options that were specified for the
+        original table, or any foreign key definitions.
+      </p><p>
+        If the original table is a <code class="literal">TEMPORARY</code> table,
+        <code class="literal">CREATE TABLE ... LIKE</code> does not preserve
+        <code class="literal">TEMPORARY</code>. To create a
+        <code class="literal">TEMPORARY</code> destination table, use
+        <code class="literal">CREATE TEMPORARY TABLE ... LIKE</code>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

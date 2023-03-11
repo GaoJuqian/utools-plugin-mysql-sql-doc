@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Cursor FETCH Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="fetch"></a>13.6.6.3&nbsp;Cursor FETCH Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575010352"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">FETCH [[NEXT] FROM] <em class="replaceable">cursor_name</em> INTO <em class="replaceable">var_name</em> [, <em class="replaceable">var_name</em>] ...</code></pre><p>
+        This statement fetches the next row for the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement associated with
+        the specified cursor (which must be open), and advances the
+        cursor pointer. If a row exists, the fetched columns are stored
+        in the named variables. The number of columns retrieved by the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement must match the
+        number of output variables specified in the
+        <a class="link" href="fetch.html" title="13.6.6.3&nbsp;Cursor FETCH Statement"><code class="literal">FETCH</code></a> statement.
+      </p><p>
+        If no more rows are available, a No Data condition occurs with
+        SQLSTATE value <code class="literal">'02000'</code>. To detect this
+        condition, you can set up a handler for it (or for a
+        <code class="literal">NOT FOUND</code> condition). For an example, see
+        <a class="xref" href="cursors.html" title="13.6.6&nbsp;Cursors">Section&nbsp;13.6.6, “Cursors”</a>.
+      </p><p>
+        Be aware that another operation, such as a
+        <code class="literal">SELECT</code> or another <code class="literal">FETCH</code>,
+        may also cause the handler to execute by raising the same
+        condition. If it is necessary to distinguish which operation
+        raised the condition, place the operation within its own
+        <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+        END</code></a> block so that it can be associated with its own
+        handler.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

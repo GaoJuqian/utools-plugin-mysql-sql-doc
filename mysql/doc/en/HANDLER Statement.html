@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>HANDLER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="handler"></a>13.2.4&nbsp;HANDLER Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580103920"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">HANDLER <em class="replaceable">tbl_name</em> OPEN [ [AS] <em class="replaceable">alias</em>]
+
+HANDLER <em class="replaceable">tbl_name</em> READ <em class="replaceable">index_name</em> { = | &lt;= | &gt;= | &lt; | &gt; } (<em class="replaceable">value1</em>,<em class="replaceable">value2</em>,...)
+    [ WHERE <em class="replaceable">where_condition</em> ] [LIMIT ... ]
+HANDLER <em class="replaceable">tbl_name</em> READ <em class="replaceable">index_name</em> { FIRST | NEXT | PREV | LAST }
+    [ WHERE <em class="replaceable">where_condition</em> ] [LIMIT ... ]
+HANDLER <em class="replaceable">tbl_name</em> READ { FIRST | NEXT }
+    [ WHERE <em class="replaceable">where_condition</em> ] [LIMIT ... ]
+
+HANDLER <em class="replaceable">tbl_name</em> CLOSE</code></pre><p>
+      The <code class="literal">HANDLER</code> statement provides direct access to
+      table storage engine interfaces. It is available for
+      <code class="literal">InnoDB</code> and <code class="literal">MyISAM</code> tables.
+    </p><p>
+      The <code class="literal">HANDLER ... OPEN</code> statement opens a table,
+      making it accessible using subsequent <code class="literal">HANDLER ...
+      READ</code> statements. This table object is not shared by
+      other sessions and is not closed until the session calls
+      <code class="literal">HANDLER ... CLOSE</code> or the session terminates.
+    </p><p>
+      If you open the table using an alias, further references to the
+      open table with other <code class="literal">HANDLER</code> statements must
+      use the alias rather than the table name. If you do not use an
+      alias, but open the table using a table name qualified by the
+      database name, further references must use the unqualified table
+      name. For example, for a table opened using
+      <code class="literal">mydb.mytable</code>, further references must use
+      <code class="literal">mytable</code>.
+    </p><p>
+      The first <code class="literal">HANDLER ... READ</code> syntax fetches a row
+      where the index specified satisfies the given values and the
+      <code class="literal">WHERE</code> condition is met. If you have a
+      multiple-column index, specify the index column values as a
+      comma-separated list. Either specify values for all the columns in
+      the index, or specify values for a leftmost prefix of the index
+      columns. Suppose that an index <code class="literal">my_idx</code> includes
+      three columns named <code class="literal">col_a</code>,
+      <code class="literal">col_b</code>, and <code class="literal">col_c</code>, in that
+      order. The <code class="literal">HANDLER</code> statement can specify values
+      for all three columns in the index, or for the columns in a
+      leftmost prefix. For example:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">HANDLER ... READ my_idx = (col_a_val,col_b_val,col_c_val) ...
+HANDLER ... READ my_idx = (col_a_val,col_b_val) ...
+HANDLER ... READ my_idx = (col_a_val) ...</code></pre><p>
+      To employ the <code class="literal">HANDLER</code> interface to refer to a
+      table's <code class="literal">PRIMARY KEY</code>, use the quoted identifier
+      <code class="literal">`PRIMARY`</code>:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">HANDLER <em class="replaceable">tbl_name</em> READ `PRIMARY` ...</code></pre><p>
+      The second <code class="literal">HANDLER ... READ</code> syntax fetches a
+      row from the table in index order that matches the
+      <code class="literal">WHERE</code> condition.
+    </p><p>
+      The third <code class="literal">HANDLER ... READ</code> syntax fetches a row
+      from the table in natural row order that matches the
+      <code class="literal">WHERE</code> condition. It is faster than
+      <code class="literal">HANDLER <em class="replaceable"><code>tbl_name</code></em> READ
+      <em class="replaceable"><code>index_name</code></em></code> when a full table
+      scan is desired. Natural row order is the order in which rows are
+      stored in a <code class="literal">MyISAM</code> table data file. This
+      statement works for <code class="literal">InnoDB</code> tables as well, but
+      there is no such concept because there is no separate data file.
+    </p><p>
+      Without a <code class="literal">LIMIT</code> clause, all forms of
+      <code class="literal">HANDLER ... READ</code> fetch a single row if one is
+      available. To return a specific number of rows, include a
+      <code class="literal">LIMIT</code> clause. It has the same syntax as for the
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement. See
+      <a class="xref" href="select.html" title="13.2.9&nbsp;SELECT Statement">Section&nbsp;13.2.9, “SELECT Statement”</a>.
+    </p><p>
+      <code class="literal">HANDLER ... CLOSE</code> closes a table that was
+      opened with <code class="literal">HANDLER ... OPEN</code>.
+    </p><p>
+      There are several reasons to use the <code class="literal">HANDLER</code>
+      interface instead of normal <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+      statements:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">HANDLER</code> is faster than
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              A designated storage engine handler object is allocated
+              for the <code class="literal">HANDLER ... OPEN</code>. The object is
+              reused for subsequent <code class="literal">HANDLER</code>
+              statements for that table; it need not be reinitialized
+              for each one.
+            </p></li><li class="listitem"><p>
+              There is less parsing involved.
+            </p></li><li class="listitem"><p>
+              There is no optimizer or query-checking overhead.
+            </p></li><li class="listitem"><p>
+              The handler interface does not have to provide a
+              consistent look of the data (for example,
+              <a class="link" href="glossary.html#glos_dirty_read" title="dirty read">dirty reads</a> are
+              permitted), so the storage engine can use optimizations
+              that <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> does not
+              normally permit.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal">HANDLER</code> makes it easier to port to MySQL
+          applications that use a low-level <code class="literal">ISAM</code>-like
+          interface. (See <a class="xref" href="innodb-memcached.html" title="14.21&nbsp;InnoDB memcached Plugin">Section&nbsp;14.21, “InnoDB memcached Plugin”</a> for an
+          alternative way to adapt applications that use the key-value
+          store paradigm.)
+        </p></li><li class="listitem"><p>
+          <code class="literal">HANDLER</code> enables you to traverse a database
+          in a manner that is difficult (or even impossible) to
+          accomplish with <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>. The
+          <code class="literal">HANDLER</code> interface is a more natural way to
+          look at data when working with applications that provide an
+          interactive user interface to the database.
+</p></li></ul>
+</div>
+<p>
+      <code class="literal">HANDLER</code> is a somewhat low-level statement. For
+      example, it does not provide consistency. That is,
+      <code class="literal">HANDLER ... OPEN</code> does <span class="emphasis"><em>not</em></span>
+      take a snapshot of the table, and does <span class="emphasis"><em>not</em></span>
+      lock the table. This means that after a <code class="literal">HANDLER ...
+      OPEN</code> statement is issued, table data can be modified (by
+      the current session or other sessions) and these modifications
+      might be only partially visible to <code class="literal">HANDLER ...
+      NEXT</code> or <code class="literal">HANDLER ... PREV</code> scans.
+    </p><p>
+      An open handler can be closed and marked for reopen, in which case
+      the handler loses its position in the table. This occurs when both
+      of the following circumstances are true:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Any session executes <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH
+          TABLES</code></a> or DDL statements on the handler's table.
+        </p></li><li class="listitem"><p>
+          The session in which the handler is open executes
+          non-<code class="literal">HANDLER</code> statements that use tables.
+</p></li></ul>
+</div>
+<p>
+      <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> for a table closes
+      all handlers for the table that were opened with
+      <a class="link" href="handler.html" title="13.2.4&nbsp;HANDLER Statement"><code class="literal">HANDLER OPEN</code></a>.
+    </p><p>
+      If a table is flushed with
+      <a class="link" href="flush.html#flush-tables-with-read-lock-with-list"><code class="literal">FLUSH
+      TABLES <em class="replaceable"><code>tbl_name</code></em> WITH READ
+      LOCK</code></a> was opened with <code class="literal">HANDLER</code>, the
+      handler is implicitly flushed and loses its position.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Transactional and Locking Statements</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h2 class="title"><a name="sql-transactional-statements"></a>13.3&nbsp;Transactional and Locking Statements</h2>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="commit.html">13.3.1 START TRANSACTION, COMMIT, and ROLLBACK Statements</a></span></dt><dt><span class="section"><a href="cannot-roll-back.html">13.3.2 Statements That Cannot Be Rolled Back</a></span></dt><dt><span class="section"><a href="implicit-commit.html">13.3.3 Statements That Cause an Implicit Commit</a></span></dt><dt><span class="section"><a href="savepoint.html">13.3.4 SAVEPOINT, ROLLBACK TO SAVEPOINT, and RELEASE SAVEPOINT Statements</a></span></dt><dt><span class="section"><a href="lock-tables.html">13.3.5 LOCK TABLES and UNLOCK TABLES Statements</a></span></dt><dt><span class="section"><a href="set-transaction.html">13.3.6 SET TRANSACTION Statement</a></span></dt><dt><span class="section"><a href="xa.html">13.3.7 XA Transactions</a></span></dt></dl>
+</div>
+<p>
+    MySQL supports local transactions (within a given client session)
+    through statements such as
+    <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">SET autocommit</code></a>,
+    <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START TRANSACTION</code></a>,
+    <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">COMMIT</code></a>, and
+    <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">ROLLBACK</code></a>. See
+    <a class="xref" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements">Section&nbsp;13.3.1, “START TRANSACTION, COMMIT, and ROLLBACK Statements”</a>. XA transaction support enables MySQL to
+    participate in distributed transactions as well. See
+    <a class="xref" href="xa.html" title="13.3.7&nbsp;XA Transactions">Section&nbsp;13.3.7, “XA Transactions”</a>.
+</p>
+</div><br>
+        
+</body>
+</html>

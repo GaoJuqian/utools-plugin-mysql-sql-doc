@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE TABLESPACE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="create-tablespace"></a>13.1.19&nbsp;CREATE TABLESPACE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852581368368"></a><a class="indexterm" name="idm45852581367328"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLESPACE <em class="replaceable">tablespace_name</em>
+
+  <em>InnoDB and NDB:</em>
+    ADD DATAFILE '<em class="replaceable">file_name</em>'
+
+  <em>InnoDB only:</em>
+    [FILE_BLOCK_SIZE = value]
+
+  <em>NDB only:</em>
+    USE LOGFILE GROUP <em class="replaceable">logfile_group</em>
+    [EXTENT_SIZE [=] <em class="replaceable">extent_size</em>]
+    [INITIAL_SIZE [=] <em class="replaceable">initial_size</em>]
+    [AUTOEXTEND_SIZE [=] <em class="replaceable">autoextend_size</em>]
+    [MAX_SIZE [=] <em class="replaceable">max_size</em>]
+    [NODEGROUP [=] <em class="replaceable">nodegroup_id</em>]
+    [WAIT]
+    [COMMENT [=] '<em class="replaceable">string</em>']
+
+  <em>InnoDB and NDB:</em>
+    [ENGINE [=] <em class="replaceable">engine_name</em>]</code></pre><p>
+      This statement is used to create a tablespace. The precise syntax
+      and semantics depend on the storage engine used. In standard MySQL
+      5.7 releases, this is always an
+      <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tablespace. MySQL NDB Cluster
+      7.5 also supports tablespaces using the
+      <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage engine in addition to
+      those using <code class="literal">InnoDB</code>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="create-tablespace.html#create-tablespace-innodb" title="Considerations for InnoDB">Considerations for InnoDB</a></p></li><li class="listitem"><p><a class="xref" href="create-tablespace.html#create-tablespace-ndb" title="Considerations for NDB Cluster">Considerations for NDB Cluster</a></p></li><li class="listitem"><p><a class="xref" href="create-tablespace.html#create-tablespace-options" title="Options">Options</a></p></li><li class="listitem"><p><a class="xref" href="create-tablespace.html#create-tablespace-notes" title="Notes">Notes</a></p></li><li class="listitem"><p><a class="xref" href="create-tablespace.html#create-tablespace-innodb-examples" title="InnoDB Examples">InnoDB Examples</a></p></li><li class="listitem"><p><a class="xref" href="create-tablespace.html#create-tablespace-ndb-examples" title="NDB Example">NDB Example</a></p></li></ul>
+</div>
+<h4><a name="create-tablespace-innodb"></a>Considerations for InnoDB</h4>
+<p>
+      <a class="link" href="create-tablespace.html" title="13.1.19&nbsp;CREATE TABLESPACE Statement"><code class="literal">CREATE TABLESPACE</code></a> syntax is used to
+      create general tablespaces. A general tablespace is a shared
+      tablespace. It can hold multiple tables, and supports all table
+      row formats. General tablespaces can be created in a location
+      relative to or independent of the data directory.
+    </p><p>
+      After creating an <code class="literal">InnoDB</code> general tablespace,
+      you can use <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+      TABLE <em class="replaceable"><code>tbl_name</code></em> ... TABLESPACE [=]
+      <em class="replaceable"><code>tablespace_name</code></em></code></a> or
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE
+      <em class="replaceable"><code>tbl_name</code></em> TABLESPACE [=]
+      <em class="replaceable"><code>tablespace_name</code></em></code></a> to add tables
+      to the tablespace. For more information, see
+      <a class="xref" href="general-tablespaces.html" title="14.6.3.3&nbsp;General Tablespaces">Section&nbsp;14.6.3.3, “General Tablespaces”</a>.
+</p>
+<h4><a name="create-tablespace-ndb"></a>Considerations for NDB Cluster</h4>
+<p>
+      This statement is used to create a tablespace, which can contain
+      one or more data files, providing storage space for NDB Cluster
+      Disk Data tables (see <a class="xref" href="mysql-cluster-disk-data.html" title="21.6.11&nbsp;NDB Cluster Disk Data Tables">Section&nbsp;21.6.11, “NDB Cluster Disk Data Tables”</a>).
+      One data file is created and added to the tablespace using this
+      statement. Additional data files may be added to the tablespace by
+      using the <a class="link" href="alter-tablespace.html" title="13.1.9&nbsp;ALTER TABLESPACE Statement"><code class="literal">ALTER TABLESPACE</code></a>
+      statement (see <a class="xref" href="alter-tablespace.html" title="13.1.9&nbsp;ALTER TABLESPACE Statement">Section&nbsp;13.1.9, “ALTER TABLESPACE Statement”</a>).
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        All NDB Cluster Disk Data objects share the same namespace. This
+        means that <span class="emphasis"><em>each Disk Data object</em></span> must be
+        uniquely named (and not merely each Disk Data object of a given
+        type). For example, you cannot have a tablespace and a log file
+        group with the same name, or a tablespace and a data file with
+        the same name.
+</p>
+</div>
+<p>
+      A log file group of one or more <code class="literal">UNDO</code> log files
+      must be assigned to the tablespace to be created with the
+      <code class="literal">USE LOGFILE GROUP</code> clause.
+      <em class="replaceable"><code>logfile_group</code></em> must be an existing log
+      file group created with <a class="link" href="create-logfile-group.html" title="13.1.15&nbsp;CREATE LOGFILE GROUP Statement"><code class="literal">CREATE LOGFILE
+      GROUP</code></a> (see <a class="xref" href="create-logfile-group.html" title="13.1.15&nbsp;CREATE LOGFILE GROUP Statement">Section&nbsp;13.1.15, “CREATE LOGFILE GROUP Statement”</a>).
+      Multiple tablespaces may use the same log file group for
+      <code class="literal">UNDO</code> logging.
+    </p><p>
+      When setting <code class="literal">EXTENT_SIZE</code> or
+      <code class="literal">INITIAL_SIZE</code>, you may optionally follow the
+      number with a one-letter abbreviation for an order of magnitude,
+      similar to those used in <code class="filename">my.cnf</code>. Generally,
+      this is one of the letters <code class="literal">M</code> (for megabytes) or
+      <code class="literal">G</code> (for gigabytes).
+    </p><p>
+      <code class="literal">INITIAL_SIZE</code> and <code class="literal">EXTENT_SIZE</code>
+      are subject to rounding as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">EXTENT_SIZE</code> is rounded up to the nearest
+          whole multiple of 32K.
+        </p></li><li class="listitem"><p>
+          <code class="literal">INITIAL_SIZE</code> is rounded
+          <span class="emphasis"><em>down</em></span> to the nearest whole multiple of
+          32K; this result is rounded up to the nearest whole multiple
+          of <code class="literal">EXTENT_SIZE</code> (after any rounding).
+</p></li></ul>
+</div>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Note
+</div>
+<p>
+        <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> reserves 4% of a tablespace for
+        data node restart operations. This reserved space cannot be used
+        for data storage. This restriction applies beginning with NDB
+        7.6.
+</p>
+</div>
+<p>
+      The rounding just described is done explicitly, and a warning is
+      issued by the MySQL Server when any such rounding is performed.
+      The rounded values are also used by the NDB kernel for calculating
+      Information Schema <a class="link" href="information-schema-files-table.html" title="24.3.9&nbsp;The INFORMATION_SCHEMA FILES Table"><code class="literal">FILES</code></a> column
+      values and other purposes. However, to avoid an unexpected result,
+      we suggest that you always use whole multiples of 32K in
+      specifying these options.
+    </p><p>
+      When <a class="link" href="create-tablespace.html" title="13.1.19&nbsp;CREATE TABLESPACE Statement"><code class="literal">CREATE TABLESPACE</code></a> is used with
+      <code class="literal">ENGINE [=] NDB</code>, a tablespace and associated
+      data file are created on each Cluster data node. You can verify
+      that the data files were created and obtain information about them
+      by querying the Information Schema
+      <a class="link" href="information-schema-files-table.html" title="24.3.9&nbsp;The INFORMATION_SCHEMA FILES Table"><code class="literal">FILES</code></a> table. (See the example later
+      in this section.)
+    </p><p>
+      (See <a class="xref" href="information-schema-files-table.html" title="24.3.9&nbsp;The INFORMATION_SCHEMA FILES Table">Section&nbsp;24.3.9, “The INFORMATION_SCHEMA FILES Table”</a>.)
+</p>
+<h4><a name="create-tablespace-options"></a>Options</h4>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">ADD DATAFILE</code>: Defines the name of a
+          tablespace data file; this option is always required. The
+          <code class="literal"><em class="replaceable"><code>file_name</code></em></code>,
+          including any specified path, must be quoted with single or
+          double quotation marks. File names (not counting the file
+          extension) and directory names must be at least one byte in
+          length. Zero length file names and directory names are not
+          supported.
+        </p><p>
+          Because there are considerable differences in how
+          <code class="literal">InnoDB</code> and <code class="literal">NDB</code> treat
+          data files, the two storage engines are covered separately in
+          the discussion that follows.
+        </p><p><b>InnoDB data files.&nbsp;</b>
+            An <code class="literal">InnoDB</code> tablespace supports only a
+            single data file, whose name must include a
+            <code class="literal">.ibd</code> extension.
+          </p><p>
+          For an <code class="literal">InnoDB</code> tablespace, the data file is
+          created by default in the MySQL data directory
+          (<a class="link" href="server-system-variables.html#sysvar_datadir"><code class="literal">datadir</code></a>). To place the data
+          file in a location other than the default, include an absolute
+          directory path or a path relative to the default location.
+        </p><p>
+          When an <code class="literal">InnoDB</code> tablespace is created
+          outside of the data directory, an
+          <a class="link" href="glossary.html#glos_isl_file" title=".isl file">isl</a> file is created in
+          the data directory. To avoid conflicts with implicitly created
+          file-per-table tablespaces, creating an
+          <code class="literal">InnoDB</code> general tablespace in a subdirectory
+          under the data directory is not supported. When creating an
+          <code class="literal">InnoDB</code> general tablespace outside of the
+          data directory, the directory must exist prior to creating the
+          tablespace.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            In MySQL 5.7, <code class="literal">ALTER
+            TABLESPACE</code> is not supported by
+            <code class="literal">InnoDB</code>.
+</p>
+</div>
+<p><b>NDB data files.&nbsp;</b>
+            An <code class="literal">NDB</code> tablespace supports multiple data
+            files which can have any legal file names; more data files
+            can be added to an NDB Cluster tablespace following its
+            creation by using an <a class="link" href="alter-tablespace.html" title="13.1.9&nbsp;ALTER TABLESPACE Statement"><code class="literal">ALTER
+            TABLESPACE</code></a> statement.
+          </p><p>
+          An <code class="literal">NDB</code> tablespace data file is created by
+          default in the data node file system directory—that is,
+          the directory named
+          <code class="filename">ndb_<em class="replaceable"><code>nodeid</code></em>_fs/TS</code>
+          under the data node's data directory
+          (<a class="link" href="mysql-cluster-ndbd-definition.html#ndbparam-ndbd-datadir"><code class="literal">DataDir</code></a>), where
+          <em class="replaceable"><code>nodeid</code></em> is the data node's
+          <a class="link" href="mysql-cluster-ndbd-definition.html#ndbparam-ndbd-nodeid"><code class="literal">NodeId</code></a>. To place the
+          data file in a location other than the default, include an
+          absolute directory path or a path relative to the default
+          location. If the directory specified does not exist,
+          <code class="literal">NDB</code> attempts to create it; the system user
+          account under which the data node process is running must have
+          the appropriate permissions to do so.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            When determining the path used for a data file,
+            <code class="literal">NDB</code> does not expand the
+            <code class="literal">~</code> (tilde) character.
+</p>
+</div>
+<p>
+          When multiple data nodes are run on the same physical host,
+          the following considerations apply:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              You cannot specify an absolute path when creating a data
+              file.
+            </p></li><li class="listitem"><p>
+              It is not possible to create tablespace data files outside
+              the data node file system directory, unless each data node
+              has a separate data directory.
+            </p></li><li class="listitem"><p>
+              If each data node has its own data directory, data files
+              can be created anywhere within this directory.
+            </p></li><li class="listitem"><p>
+              If each data node has its own data directory, it may also
+              be possible to create a data file outside the node's
+              data directory using a relative path, as long as this path
+              resolves to a unique location on the host file system for
+              each data node running on that host.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal">FILE_BLOCK_SIZE</code>: This option—which is
+          specific to <code class="literal">InnoDB</code>, and is ignored by
+          <code class="literal">NDB</code>—defines the block size for the
+          tablespace data file. Values can be specified in bytes or
+          kilobytes. For example, an 8 kilobyte file block size can be
+          specified as 8192 or 8K. If you do not specify this option,
+          <code class="literal">FILE_BLOCK_SIZE</code> defaults to the
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_page_size"><code class="literal">innodb_page_size</code></a> value.
+          <code class="literal">FILE_BLOCK_SIZE</code> is required when you intend
+          to use the tablespace for storing compressed
+          <code class="literal">InnoDB</code> tables
+          (<code class="literal">ROW_FORMAT=COMPRESSED</code>). In this case, you
+          must define the tablespace <code class="literal">FILE_BLOCK_SIZE</code>
+          when creating the tablespace.
+        </p><p>
+          If <code class="literal">FILE_BLOCK_SIZE</code> is equal the
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_page_size"><code class="literal">innodb_page_size</code></a> value, the
+          tablespace can contain only tables having an uncompressed row
+          format (<code class="literal">COMPACT</code>,
+          <code class="literal">REDUNDANT</code>, and <code class="literal">DYNAMIC</code>).
+          Tables with a <code class="literal">COMPRESSED</code> row format have a
+          different physical page size than uncompressed tables.
+          Therefore, compressed tables cannot coexist in the same
+          tablespace as uncompressed tables.
+        </p><p>
+          For a general tablespace to contain compressed tables,
+          <code class="literal">FILE_BLOCK_SIZE</code> must be specified, and the
+          <code class="literal">FILE_BLOCK_SIZE</code> value must be a valid
+          compressed page size in relation to the
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_page_size"><code class="literal">innodb_page_size</code></a> value. Also,
+          the physical page size of the compressed table
+          (<code class="literal">KEY_BLOCK_SIZE</code>) must be equal to
+          <code class="literal">FILE_BLOCK_SIZE/1024</code>. For example, if
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_page_size"><code class="literal">innodb_page_size=16K</code></a>, and
+          <code class="literal">FILE_BLOCK_SIZE=8K</code>, the
+          <code class="literal">KEY_BLOCK_SIZE</code> of the table must be 8. For
+          more information, see <a class="xref" href="general-tablespaces.html" title="14.6.3.3&nbsp;General Tablespaces">Section&nbsp;14.6.3.3, “General Tablespaces”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">USE LOGFILE GROUP</code>: Required for
+          <code class="literal">NDB</code>, this is the name of a log file group
+          previously created using <a class="link" href="create-logfile-group.html" title="13.1.15&nbsp;CREATE LOGFILE GROUP Statement"><code class="literal">CREATE LOGFILE
+          GROUP</code></a>. Not supported for <code class="literal">InnoDB</code>,
+          where it fails with an error.
+        </p></li><li class="listitem"><p>
+          <code class="literal">EXTENT_SIZE</code>: This option is specific to
+          NDB, and is not supported by InnoDB, where it fails with an
+          error. <code class="literal">EXTENT_SIZE</code> sets the size, in bytes,
+          of the extents used by any files belonging to the tablespace.
+          The default value is 1M. The minimum size is 32K, and
+          theoretical maximum is 2G, although the practical maximum size
+          depends on a number of factors. In most cases, changing the
+          extent size does not have any measurable effect on
+          performance, and the default value is recommended for all but
+          the most unusual situations.
+        </p><p>
+          An <span class="firstterm">extent</span> is a unit of
+          disk space allocation. One extent is filled with as much data
+          as that extent can contain before another extent is used. In
+          theory, up to 65,535 (64K) extents may used per data file;
+          however, the recommended maximum is 32,768 (32K). The
+          recommended maximum size for a single data file is
+          32G—that is, 32K extents × 1 MB per extent. In
+          addition, once an extent is allocated to a given partition, it
+          cannot be used to store data from a different partition; an
+          extent cannot store data from more than one partition. This
+          means, for example that a tablespace having a single datafile
+          whose <code class="literal">INITIAL_SIZE</code> (described in the
+          following item) is 256 MB and whose
+          <code class="literal">EXTENT_SIZE</code> is 128M has just two extents,
+          and so can be used to store data from at most two different
+          disk data table partitions.
+        </p><p>
+          You can see how many extents remain free in a given data file
+          by querying the Information Schema
+          <a class="link" href="information-schema-files-table.html" title="24.3.9&nbsp;The INFORMATION_SCHEMA FILES Table"><code class="literal">FILES</code></a> table, and so derive an
+          estimate for how much space remains free in the file. For
+          further discussion and examples, see
+          <a class="xref" href="information-schema-files-table.html" title="24.3.9&nbsp;The INFORMATION_SCHEMA FILES Table">Section&nbsp;24.3.9, “The INFORMATION_SCHEMA FILES Table”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">INITIAL_SIZE</code>: This option is specific to
+          <code class="literal">NDB</code>, and is not supported by
+          <code class="literal">InnoDB</code>, where it fails with an error.
+        </p><p>
+          The <code class="literal">INITIAL_SIZE</code> parameter sets the total
+          size in bytes of the data file that was specific using
+          <code class="literal">ADD DATATFILE</code>. Once this file has been
+          created, its size cannot be changed; however, you can add more
+          data files to the tablespace using
+          <a class="link" href="alter-tablespace.html" title="13.1.9&nbsp;ALTER TABLESPACE Statement"><code class="literal">ALTER
+          TABLESPACE ... ADD DATAFILE</code></a>.
+        </p><p>
+          <code class="literal">INITIAL_SIZE</code> is optional; its default value
+          is 134217728 (128 MB).
+        </p><p>
+          On 32-bit systems, the maximum supported value for
+          <code class="literal">INITIAL_SIZE</code> is 4294967296 (4 GB).
+        </p></li><li class="listitem"><p>
+          <code class="literal">AUTOEXTEND_SIZE</code>: Currently ignored by
+          MySQL; reserved for possible future use. Has no effect in any
+          release of MySQL 5.7 or MySQL NDB Cluster 7.5, regardless of
+          the storage engine used.
+        </p></li><li class="listitem"><p>
+          <code class="literal">MAX_SIZE</code>: Currently ignored by MySQL;
+          reserved for possible future use. Has no effect in any release
+          of MySQL 5.7 or MySQL NDB Cluster 7.5, regardless of the
+          storage engine used.
+        </p></li><li class="listitem"><p>
+          <code class="literal">NODEGROUP</code>: Currently ignored by MySQL;
+          reserved for possible future use. Has no effect in any release
+          of MySQL 5.7 or MySQL NDB Cluster 7.5, regardless of the
+          storage engine used.
+        </p></li><li class="listitem"><p>
+          <code class="literal">WAIT</code>: Currently ignored by MySQL; reserved
+          for possible future use. Has no effect in any release of MySQL
+          5.7 or MySQL NDB Cluster 7.5, regardless of the storage engine
+          used.
+        </p></li><li class="listitem"><p>
+          <code class="literal">COMMENT</code>: Currently ignored by MySQL;
+          reserved for possible future use. Has no effect in any release
+          of MySQL 5.7 or MySQL NDB Cluster 7.5, regardless of the
+          storage engine used.
+        </p></li><li class="listitem"><p>
+          <code class="literal">ENGINE</code>: Defines the storage engine which
+          uses the tablespace, where
+          <em class="replaceable"><code>engine_name</code></em> is the name of the
+          storage engine. Currently, only the <code class="literal">InnoDB</code>
+          storage engine is supported by standard MySQL 5.7
+          releases. MySQL NDB Cluster 7.5 supports both
+          <code class="literal">NDB</code> and <code class="literal">InnoDB</code>
+          tablespaces. The value of the
+          <a class="link" href="server-system-variables.html#sysvar_default_storage_engine"><code class="literal">default_storage_engine</code></a> system
+          variable is used for <code class="literal">ENGINE</code> if the option
+          is not specified.
+</p></li></ul>
+</div>
+<h4><a name="create-tablespace-notes"></a>Notes</h4>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          For the rules covering the naming of MySQL tablespaces, see
+          <a class="xref" href="identifiers.html" title="9.2&nbsp;Schema Object Names">Section&nbsp;9.2, “Schema Object Names”</a>. In addition to these rules, the
+          slash character (<span class="quote">“<span class="quote">/</span>”</span>) is not permitted, nor can
+          you use names beginning with <code class="literal">innodb_</code>, as
+          this prefix is reserved for system use.
+        </p></li><li class="listitem"><p>
+          Tablespaces do not support temporary tables.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_file_per_table"><code class="literal">innodb_file_per_table</code></a>,
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_file_format"><code class="literal">innodb_file_format</code></a>, and
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_file_format_max"><code class="literal">innodb_file_format_max</code></a>
+          settings have no influence on <code class="literal">CREATE
+          TABLESPACE</code> operations.
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_file_per_table"><code class="literal">innodb_file_per_table</code></a> does
+          not need to be enabled. General tablespaces support all table
+          row formats regardless of file format settings. Likewise,
+          general tablespaces support the addition of tables of any row
+          format using
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE ...
+          TABLESPACE</code></a>, regardless of file format settings.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a> is not
+          applicable to general tablespaces. Tablespace management rules
+          are strictly enforced independently of
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a>. If
+          <code class="literal">CREATE TABLESPACE</code> parameters are incorrect
+          or incompatible, the operation fails regardless of the
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a> setting.
+          When a table is added to a general tablespace using
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE ...
+          TABLESPACE</code></a> or
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE ...
+          TABLESPACE</code></a>,
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a> is ignored
+          but the statement is evaluated as if
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a> is
+          enabled.
+        </p></li><li class="listitem"><p>
+          Use <code class="literal">DROP TABLESPACE</code> to remove a tablespace.
+          All tables must be dropped from a tablespace using
+          <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> prior to dropping
+          the tablespace. Before dropping an NDB Cluster tablespace you
+          must also remove all its data files using one or more
+          <a class="link" href="alter-tablespace.html" title="13.1.9&nbsp;ALTER TABLESPACE Statement"><code class="literal">ALTER
+          TABLESPACE ... DROP DATATFILE</code></a> statements. See
+          <a class="xref" href="mysql-cluster-disk-data-objects.html" title="21.6.11.1&nbsp;NDB Cluster Disk Data Objects">Section&nbsp;21.6.11.1, “NDB Cluster Disk Data Objects”</a>.
+        </p></li><li class="listitem"><p>
+          All parts of an <code class="literal">InnoDB</code> table added to an
+          <code class="literal">InnoDB</code> general tablespace reside in the
+          general tablespace, including indexes and
+          <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> pages.
+        </p><p>
+          For an <code class="literal">NDB</code> table assigned to a tablespace,
+          only those columns which are not indexed are stored on disk,
+          and actually use the tablespace data files. Indexes and
+          indexed columns for all <code class="literal">NDB</code> tables are
+          always kept in memory.
+        </p></li><li class="listitem"><p>
+          Similar to the system tablespace, truncating or dropping
+          tables stored in a general tablespace creates free space
+          internally in the general tablespace
+          <a class="link" href="glossary.html#glos_ibd_file" title=".ibd file">.ibd data file</a> which can
+          only be used for new <code class="literal">InnoDB</code> data. Space is
+          not released back to the operating system as it is for
+          file-per-table tablespaces.
+        </p></li><li class="listitem"><p>
+          A general tablespace is not associated with any database or
+          schema.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE ...
+          DISCARD TABLESPACE</code></a> and
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE
+          ...IMPORT TABLESPACE</code></a> are not supported for tables
+          that belong to a general tablespace.
+        </p></li><li class="listitem"><p>
+          The server uses tablespace-level metadata locking for DDL that
+          references general tablespaces. By comparison, the server uses
+          table-level metadata locking for DDL that references
+          file-per-table tablespaces.
+        </p></li><li class="listitem"><p>
+          A generated or existing tablespace cannot be changed to a
+          general tablespace.
+        </p></li><li class="listitem"><p>
+          Tables stored in a general tablespace can only be opened in
+          MySQL 5.7.6 or later due to the addition of new table flags.
+        </p></li><li class="listitem"><p>
+          There is no conflict between general tablespace names and
+          file-per-table tablespace names. The <span class="quote">“<span class="quote">/</span>”</span>
+          character, which is present in file-per-table tablespace
+          names, is not permitted in general tablespace names.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="mysqldump.html" title="4.5.4&nbsp;mysqldump — A Database Backup Program"><span class="command"><strong>mysqldump</strong></span></a> and <a class="link" href="mysqlpump.html" title="4.5.6&nbsp;mysqlpump — A Database Backup Program"><span class="command"><strong>mysqlpump</strong></span></a>
+          do not dump <code class="literal">InnoDB</code>
+          <a class="link" href="create-tablespace.html" title="13.1.19&nbsp;CREATE TABLESPACE Statement"><code class="literal">CREATE TABLESPACE</code></a> statements.
+</p></li></ul>
+</div>
+<h4><a name="create-tablespace-innodb-examples"></a>InnoDB Examples</h4>
+<p>
+      This example demonstrates creating a general tablespace and adding
+      three uncompressed tables of different row formats.
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLESPACE `ts1` ADD DATAFILE 'ts1.ibd' ENGINE=INNODB;
+
+mysql&gt; CREATE TABLE t1 (c1 INT PRIMARY KEY) TABLESPACE ts1 ROW_FORMAT=REDUNDANT;
+
+mysql&gt; CREATE TABLE t2 (c1 INT PRIMARY KEY) TABLESPACE ts1 ROW_FORMAT=COMPACT;
+
+mysql&gt; CREATE TABLE t3 (c1 INT PRIMARY KEY) TABLESPACE ts1 ROW_FORMAT=DYNAMIC;</code></pre><p>
+      This example demonstrates creating a general tablespace and adding
+      a compressed table. The example assumes a default
+      <a class="link" href="innodb-parameters.html#sysvar_innodb_page_size"><code class="literal">innodb_page_size</code></a> value of 16K.
+      The <code class="literal">FILE_BLOCK_SIZE</code> of 8192 requires that the
+      compressed table have a <code class="literal">KEY_BLOCK_SIZE</code> of 8.
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLESPACE `ts2` ADD DATAFILE 'ts2.ibd' FILE_BLOCK_SIZE = 8192 Engine=InnoDB;
+
+mysql&gt; CREATE TABLE t4 (c1 INT PRIMARY KEY) TABLESPACE ts2 ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;</code></pre>
+<h4><a name="create-tablespace-ndb-examples"></a>NDB Example</h4>
+<p>
+      Suppose that you wish to create an NDB Cluster Disk Data
+      tablespace named <code class="literal">myts</code> using a datafile named
+      <code class="filename">mydata-1.dat</code>. An <code class="filename">NDB</code>
+      tablespace always requires the use of a log file group consisting
+      of one or more undo log files. For this example, we first create a
+      log file group named <code class="literal">mylg</code> that contains one
+      undo long file named <code class="filename">myundo-1.dat</code>, using the
+      <a class="link" href="create-logfile-group.html" title="13.1.15&nbsp;CREATE LOGFILE GROUP Statement"><code class="literal">CREATE LOGFILE GROUP</code></a> statement
+      shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE LOGFILE GROUP myg1
+    -&gt;     ADD UNDOFILE 'myundo-1.dat'
+    -&gt;     ENGINE=NDB;
+Query OK, 0 rows affected (3.29 sec)</code></pre><p>
+      Now you can create the tablespace previously described using the
+      following statement:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLESPACE myts
+    -&gt;     ADD DATAFILE 'mydata-1.dat'
+    -&gt;     USE LOGFILE GROUP mylg
+    -&gt;     ENGINE=NDB;
+Query OK, 0 rows affected (2.98 sec)</code></pre><p>
+      You can now create a Disk Data table using a
+      <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement with the
+      <code class="literal">TABLESPACE</code> and <code class="literal">STORAGE DISK</code>
+      options, similar to what is shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLE mytable (
+    -&gt;     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    -&gt;     lname VARCHAR(50) NOT NULL,
+    -&gt;     fname VARCHAR(50) NOT NULL,
+    -&gt;     dob DATE NOT NULL,
+    -&gt;     joined DATE NOT NULL,
+    -&gt;     INDEX(last_name, first_name)
+    -&gt; )
+    -&gt;     TABLESPACE myts STORAGE DISK
+    -&gt;     ENGINE=NDB;
+Query OK, 0 rows affected (1.41 sec)</code></pre><p>
+      It is important to note that only the <code class="literal">dob</code> and
+      <code class="literal">joined</code> columns from <code class="literal">mytable</code>
+      are actually stored on disk, due to the fact that the
+      <code class="literal">id</code>, <code class="literal">lname</code>, and
+      <code class="literal">fname</code> columns are all indexed.
+    </p><p>
+      As mentioned previously, when <code class="literal">CREATE TABLESPACE</code>
+      is used with <code class="literal">ENGINE [=] NDB</code>, a tablespace and
+      associated data file are created on each NDB Cluster data node.
+      You can verify that the data files were created and obtain
+      information about them by querying the Information Schema
+      <a class="link" href="information-schema-files-table.html" title="24.3.9&nbsp;The INFORMATION_SCHEMA FILES Table"><code class="literal">FILES</code></a> table, as shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT FILE_NAME, FILE_TYPE, LOGFILE_GROUP_NAME, STATUS, EXTRA
+    -&gt;     FROM INFORMATION_SCHEMA.FILES
+    -&gt;     WHERE TABLESPACE_NAME = 'myts';
+
++--------------+------------+--------------------+--------+----------------+
+| file_name    | file_type  | logfile_group_name | status | extra          |
++--------------+------------+--------------------+--------+----------------+
+| mydata-1.dat | DATAFILE   | mylg               | NORMAL | CLUSTER_NODE=5 |
+| mydata-1.dat | DATAFILE   | mylg               | NORMAL | CLUSTER_NODE=6 |
+| NULL         | TABLESPACE | mylg               | NORMAL | NULL           |
++--------------+------------+--------------------+--------+----------------+
+3 rows in set (0.01 sec)</code></pre><p>
+      For additional information and examples, see
+      <a class="xref" href="mysql-cluster-disk-data-objects.html" title="21.6.11.1&nbsp;NDB Cluster Disk Data Objects">Section&nbsp;21.6.11.1, “NDB Cluster Disk Data Objects”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

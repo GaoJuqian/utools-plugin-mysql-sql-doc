@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>REPAIR TABLE StatementREPAIR TABLE Storage Engine and Partitioning SupportREPAIR TABLE OptionsREPAIR TABLE OutputTable Repair Considerations</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="repair-table"></a>13.7.2.5&nbsp;REPAIR TABLE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572193856"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">REPAIR [NO_WRITE_TO_BINLOG | LOCAL]
+    TABLE <em class="replaceable">tbl_name</em> [, <em class="replaceable">tbl_name</em>] ...
+    [QUICK] [EXTENDED] [USE_FRM]</code></pre><p>
+        <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> repairs a possibly
+        corrupted table, for certain storage engines only.
+      </p><p>
+        This statement requires <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a>
+        and <a class="link" href="privileges-provided.html#priv_insert"><code class="literal">INSERT</code></a> privileges for the
+        table.
+      </p><p>
+        Although normally you should never have to run
+        <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a>, if disaster
+        strikes, this statement is very likely to get back all your data
+        from a <code class="literal">MyISAM</code> table. If your tables become
+        corrupted often, try to find the reason for it, to eliminate the
+        need to use <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a>. See
+        <a class="xref" href="crashing.html" title="B.3.3.3&nbsp;What to Do If MySQL Keeps Crashing">Section&nbsp;B.3.3.3, “What to Do If MySQL Keeps Crashing”</a>, and
+        <a class="xref" href="myisam-table-problems.html" title="15.2.4&nbsp;MyISAM Table Problems">Section&nbsp;15.2.4, “MyISAM Table Problems”</a>.
+      </p><p>
+        <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> checks the table to
+        see whether an upgrade is required. If so, it performs the
+        upgrade, following the same rules as
+        <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE ... FOR
+        UPGRADE</code></a>. See <a class="xref" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement">Section&nbsp;13.7.2.2, “CHECK TABLE Statement”</a>, for more
+        information.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Make a backup of a table before performing a table repair
+              operation; under some circumstances the operation might
+              cause data loss. Possible causes include but are not
+              limited to file system errors. See
+              <a class="xref" href="backup-and-recovery.html" title="Chapter&nbsp;7&nbsp;Backup and Recovery">Chapter&nbsp;7, <i>Backup and Recovery</i></a>.
+            </p></li><li class="listitem"><p>
+              If the server exits during a <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR
+              TABLE</code></a> operation, it is essential after
+              restarting it that you immediately execute another
+              <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> statement for
+              the table before performing any other operations on it. In
+              the worst case, you might have a new clean index file
+              without information about the data file, and then the next
+              operation you perform could overwrite the data file. This
+              is an unlikely but possible scenario that underscores the
+              value of making a backup first.
+            </p></li><li class="listitem"><p>
+              In the event that a table on the source becomes corrupted
+              and you run <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> on
+              it, any resulting changes to the original table are
+              <span class="emphasis"><em>not</em></span> propagated to replicas.
+</p></li></ul>
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572165904"></a><a class="indexterm" name="idm45852572164400"></a>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="repair-table.html#repair-table-support" title="REPAIR TABLE Storage Engine and Partitioning Support">REPAIR TABLE Storage Engine and Partitioning Support</a></p></li><li class="listitem"><p><a class="xref" href="repair-table.html#repair-table-options" title="REPAIR TABLE Options">REPAIR TABLE Options</a></p></li><li class="listitem"><p><a class="xref" href="repair-table.html#repair-table-output" title="REPAIR TABLE Output">REPAIR TABLE Output</a></p></li><li class="listitem"><p><a class="xref" href="repair-table.html#repair-table-table-repair-considerations" title="Table Repair Considerations">Table Repair Considerations</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="repair-table-support"></a>REPAIR TABLE Storage Engine and Partitioning Support</h5>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572156672"></a><a class="indexterm" name="idm45852572155216"></a><p>
+          <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> works for
+          <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a>,
+          <a class="link" href="archive-storage-engine.html" title="15.5&nbsp;The ARCHIVE Storage Engine"><code class="literal">ARCHIVE</code></a>, and
+          <a class="link" href="csv-storage-engine.html" title="15.4&nbsp;The CSV Storage Engine"><code class="literal">CSV</code></a> tables. For
+          <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> tables, it has the same
+          effect as <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk --recover
+          <em class="replaceable"><code>tbl_name</code></em></strong></span></a> by default. This
+          statement does not work with views.
+        </p><p>
+          <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> is supported for
+          partitioned tables. However, the <code class="literal">USE_FRM</code>
+          option cannot be used with this statement on a partitioned
+          table.
+        </p><p>
+          You can use <code class="literal">ALTER TABLE ... REPAIR
+          PARTITION</code> to repair one or more partitions; for more
+          information, see <a class="xref" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement">Section&nbsp;13.1.8, “ALTER TABLE Statement”</a>, and
+          <a class="xref" href="partitioning-maintenance.html" title="22.3.4&nbsp;Maintenance of Partitions">Section&nbsp;22.3.4, “Maintenance of Partitions”</a>.
+</p>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="repair-table-options"></a>REPAIR TABLE Options</h5>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572139248"></a>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              <code class="literal">NO_WRITE_TO_BINLOG</code> or
+              <code class="literal">LOCAL</code>
+            </p><p>
+              By default, the server writes <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR
+              TABLE</code></a> statements to the binary log so that they
+              replicate to replicas. To suppress logging, specify the
+              optional <code class="literal">NO_WRITE_TO_BINLOG</code> keyword or
+              its alias <code class="literal">LOCAL</code>.
+            </p></li><li class="listitem"><p>
+              <code class="literal">QUICK</code>
+            </p><p>
+              If you use the <code class="literal">QUICK</code> option,
+              <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> tries to
+              repair only the index file, and not the data file. This
+              type of repair is like that done by <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk
+              --recover --quick</strong></span></a>.
+            </p></li><li class="listitem"><p>
+              <code class="literal">EXTENDED</code>
+            </p><p>
+              If you use the <code class="literal">EXTENDED</code> option, MySQL
+              creates the index row by row instead of creating one index
+              at a time with sorting. This type of repair is like that
+              done by <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk --safe-recover</strong></span></a>.
+            </p></li><li class="listitem"><p>
+              <code class="literal">USE_FRM</code>
+            </p><p>
+              The <code class="literal">USE_FRM</code> option is available for use
+              if the <code class="filename">.MYI</code> index file is missing or
+              if its header is corrupted. This option tells MySQL not to
+              trust the information in the <code class="filename">.MYI</code>
+              file header and to re-create it using information from the
+              <code class="filename">.frm</code> file. This kind of repair cannot
+              be done with <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk</strong></span></a>.
+</p>
+<div class="caution" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Caution
+</div>
+<p>
+                Use the <code class="literal">USE_FRM</code> option
+                <span class="emphasis"><em>only</em></span> if you cannot use regular
+                <code class="literal">REPAIR</code> modes. Telling the server to
+                ignore the <code class="filename">.MYI</code> file makes
+                important table metadata stored in the
+                <code class="filename">.MYI</code> unavailable to the repair
+                process, which can have deleterious consequences:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                    The current <code class="literal">AUTO_INCREMENT</code> value
+                    is lost.
+                  </p></li><li class="listitem"><p>
+                    The link to deleted records in the table is lost,
+                    which means that free space for deleted records
+                    remain unoccupied thereafter.
+                  </p></li><li class="listitem"><p>
+                    The <code class="filename">.MYI</code> header indicates
+                    whether the table is compressed. If the server
+                    ignores this information, it cannot tell that a
+                    table is compressed and repair can cause change or
+                    loss of table contents. This means that
+                    <code class="literal">USE_FRM</code> should not be used with
+                    compressed tables. That should not be necessary,
+                    anyway: Compressed tables are read only, so they
+                    should not become corrupt.
+</p></li></ul>
+</div>
+<p>
+                If you use <code class="literal">USE_FRM</code> for a table that
+                was created by a different version of the MySQL server
+                than the one you are currently running,
+                <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> does not
+                attempt to repair the table. In this case, the result
+                set returned by <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR
+                TABLE</code></a> contains a line with a
+                <code class="literal">Msg_type</code> value of
+                <code class="literal">error</code> and a
+                <code class="literal">Msg_text</code> value of <code class="literal">Failed
+                repairing incompatible .FRM file</code>.
+              </p><p>
+                If <code class="literal">USE_FRM</code> is used,
+                <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> does not
+                check the table to see whether an upgrade is required.
+</p>
+</div>
+</li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="repair-table-output"></a>REPAIR TABLE Output</h5>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572095840"></a><p>
+          <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> returns a result
+          set with the columns shown in the following table.
+</p>
+<div class="informaltable">
+<table summary="Columns of the REPAIR TABLE result set."><colgroup><col style="width: 15%"><col style="width: 60%"></colgroup><thead><tr>
+              <th>Column</th>
+              <th>Value</th>
+            </tr></thead><tbody><tr>
+              <td><code class="literal">Table</code></td>
+              <td>The table name</td>
+            </tr><tr>
+              <td><code class="literal">Op</code></td>
+              <td>Always <code class="literal">repair</code></td>
+            </tr><tr>
+              <td><code class="literal">Msg_type</code></td>
+              <td><code class="literal">status</code>, <code class="literal">error</code>,
+                <code class="literal">info</code>, <code class="literal">note</code>, or
+                <code class="literal">warning</code></td>
+            </tr><tr>
+              <td><code class="literal">Msg_text</code></td>
+              <td>An informational message</td>
+</tr></tbody></table>
+</div>
+<p>
+          The <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> statement
+          might produce many rows of information for each repaired
+          table. The last row has a <code class="literal">Msg_type</code> value of
+          <code class="literal">status</code> and <code class="literal">Msg_test</code>
+          normally should be <code class="literal">OK</code>. For a
+          <code class="literal">MyISAM</code> table, if you do not get
+          <code class="literal">OK</code>, you should try repairing it with
+          <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk --safe-recover</strong></span></a>.
+          (<a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> does not
+          implement all the options of <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk</strong></span></a>.
+          With <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk --safe-recover</strong></span></a>, you can also
+          use options that <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a>
+          does not support, such as
+          <a class="link" href="myisamchk-repair-options.html#option_myisamchk_max-record-length"><code class="option">--max-record-length</code></a>.)
+        </p><p>
+          <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> table catches and
+          throws any errors that occur while copying table statistics
+          from the old corrupted file to the newly created file. For
+          example. if the user ID of the owner of the
+          <code class="filename">.frm</code>, <code class="filename">.MYD</code>, or
+          <code class="filename">.MYI</code> file is different from the user ID
+          of the <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> process,
+          <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> generates a
+          "cannot change ownership of the file" error unless
+          <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> is started by the
+          <code class="literal">root</code> user.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="repair-table-table-repair-considerations"></a>Table Repair Considerations</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> upgrades a table
+          if it contains old temporal columns in pre-5.6.4 format
+          (<a class="link" href="time.html" title="11.2.3&nbsp;The TIME Type"><code class="literal">TIME</code></a>,
+          <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">DATETIME</code></a>, and
+          <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">TIMESTAMP</code></a> columns without
+          support for fractional seconds precision) and the
+          <a class="link" href="server-system-variables.html#sysvar_avoid_temporal_upgrade"><code class="literal">avoid_temporal_upgrade</code></a> system
+          variable is disabled. If
+          <a class="link" href="server-system-variables.html#sysvar_avoid_temporal_upgrade"><code class="literal">avoid_temporal_upgrade</code></a> is
+          enabled, <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> ignores
+          the old temporal columns present in the table and does not
+          upgrade them.
+        </p><p>
+          To upgrade tables that contain such temporal columns, disable
+          <a class="link" href="server-system-variables.html#sysvar_avoid_temporal_upgrade"><code class="literal">avoid_temporal_upgrade</code></a> before
+          executing <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a>.
+        </p><p>
+          You may be able to increase <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR
+          TABLE</code></a> performance by setting certain system
+          variables. See <a class="xref" href="repair-table-optimization.html" title="8.6.3&nbsp;Optimizing REPAIR TABLE Statements">Section&nbsp;8.6.3, “Optimizing REPAIR TABLE Statements”</a>.
+</p>
+</div>
+
+</div>
+
+<br>
+        
+</body>
+</html>

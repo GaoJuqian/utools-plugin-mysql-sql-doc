@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE TEMPORARY TABLE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="create-temporary-table"></a>13.1.18.2&nbsp;CREATE TEMPORARY TABLE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852582176928"></a><a class="indexterm" name="idm45852582175888"></a><p>
+        You can use the <code class="literal">TEMPORARY</code> keyword when
+        creating a table. A <code class="literal">TEMPORARY</code> table is
+        visible only within the current session, and is dropped
+        automatically when the session is closed. This means that two
+        different sessions can use the same temporary table name without
+        conflicting with each other or with an existing
+        non-<code class="literal">TEMPORARY</code> table of the same name. (The
+        existing table is hidden until the temporary table is dropped.)
+      </p><p>
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> causes an implicit
+        commit, except when used with the <code class="literal">TEMPORARY</code>
+        keyword. See <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+      </p><p>
+        <code class="literal">TEMPORARY</code> tables have a very loose
+        relationship with databases (schemas). Dropping a database does
+        not automatically drop any <code class="literal">TEMPORARY</code> tables
+        created within that database. Also, you can create a
+        <code class="literal">TEMPORARY</code> table in a nonexistent database if
+        you qualify the table name with the database name in the
+        <code class="literal">CREATE TABLE</code> statement. In this case, all
+        subsequent references to the table must be qualified with the
+        database name.
+      </p><a class="indexterm" name="idm45852582164704"></a><a class="indexterm" name="idm45852582163216"></a><p>
+        To create a temporary table, you must have the
+        <a class="link" href="privileges-provided.html#priv_create-temporary-tables"><code class="literal">CREATE TEMPORARY TABLES</code></a>
+        privilege. After a session has created a temporary table, the
+        server performs no further privilege checks on the table. The
+        creating session can perform any operation on the table, such as
+        <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a>,
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>,
+        <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>, or
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>.
+      </p><p>
+        One implication of this behavior is that a session can
+        manipulate its temporary tables even if the current user has no
+        privilege to create them. Suppose that the current user does not
+        have the <a class="link" href="privileges-provided.html#priv_create-temporary-tables"><code class="literal">CREATE TEMPORARY TABLES</code></a>
+        privilege but is able to execute a definer-context stored
+        procedure that executes with the privileges of a user who does
+        have <a class="link" href="privileges-provided.html#priv_create-temporary-tables"><code class="literal">CREATE TEMPORARY TABLES</code></a> and
+        that creates a temporary table. While the procedure executes,
+        the session uses the privileges of the defining user. After the
+        procedure returns, the effective privileges revert to those of
+        the current user, which can still see the temporary table and
+        perform any operation on it.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          Support for <code class="literal">TABLESPACE =
+          innodb_file_per_table</code> and <code class="literal">TABLESPACE =
+          innodb_temporary</code> clauses with
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TEMPORARY
+          TABLE</code></a> is deprecated as of MySQL 5.7.24; expect it to
+          be removed in a future version of MySQL.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

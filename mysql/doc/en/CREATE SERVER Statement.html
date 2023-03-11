@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE SERVER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="create-server"></a>13.1.17&nbsp;CREATE SERVER Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852583445072"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE SERVER <em class="replaceable">server_name</em>
+    FOREIGN DATA WRAPPER <em class="replaceable">wrapper_name</em>
+    OPTIONS (<em class="replaceable">option</em> [, <em class="replaceable">option</em>] ...)
+
+<em class="replaceable">option</em>: {
+    HOST <em class="replaceable">character-literal</em>
+  | DATABASE <em class="replaceable">character-literal</em>
+  | USER <em class="replaceable">character-literal</em>
+  | PASSWORD <em class="replaceable">character-literal</em>
+  | SOCKET <em class="replaceable">character-literal</em>
+  | OWNER <em class="replaceable">character-literal</em>
+  | PORT <em class="replaceable">numeric-literal</em>
+}</code></pre><p>
+      This statement creates the definition of a server for use with the
+      <code class="literal">FEDERATED</code> storage engine. The <code class="literal">CREATE
+      SERVER</code> statement creates a new row in the
+      <code class="literal">servers</code> table in the <code class="literal">mysql</code>
+      database. This statement requires the
+      <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege.
+    </p><p>
+      The <code class="literal"><em class="replaceable"><code>server_name</code></em></code>
+      should be a unique reference to the server. Server definitions are
+      global within the scope of the server, it is not possible to
+      qualify the server definition to a specific database.
+      <code class="literal"><em class="replaceable"><code>server_name</code></em></code> has a
+      maximum length of 64 characters (names longer than 64 characters
+      are silently truncated), and is case-insensitive. You may specify
+      the name as a quoted string.
+    </p><p>
+      The <code class="literal"><em class="replaceable"><code>wrapper_name</code></em></code> is
+      an identifier and may be quoted with single quotation marks.
+    </p><p>
+      For each <code class="literal"><em class="replaceable"><code>option</code></em></code> you
+      must specify either a character literal or numeric literal.
+      Character literals are UTF-8, support a maximum length of 64
+      characters and default to a blank (empty) string. String literals
+      are silently truncated to 64 characters. Numeric literals must be
+      a number between 0 and 9999, default value is 0.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        The <code class="literal">OWNER</code> option is currently not applied,
+        and has no effect on the ownership or operation of the server
+        connection that is created.
+</p>
+</div>
+<p>
+      The <code class="literal">CREATE SERVER</code> statement creates an entry in
+      the <code class="literal">mysql.servers</code> table that can later be used
+      with the <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement
+      when creating a <code class="literal">FEDERATED</code> table. The options
+      that you specify are used to populate the columns in the
+      <code class="literal">mysql.servers</code> table. The table columns are
+      <code class="literal">Server_name</code>, <code class="literal">Host</code>,
+      <code class="literal">Db</code>, <code class="literal">Username</code>,
+      <code class="literal">Password</code>, <code class="literal">Port</code> and
+      <code class="literal">Socket</code>.
+    </p><p>
+      For example:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE SERVER s
+FOREIGN DATA WRAPPER mysql
+OPTIONS (USER 'Remote', HOST '198.51.100.106', DATABASE 'test');</code></pre><p>
+      Be sure to specify all options necessary to establish a connection
+      to the server. The user name, host name, and database name are
+      mandatory. Other options might be required as well, such as
+      password.
+    </p><p>
+      The data stored in the table can be used when creating a
+      connection to a <code class="literal">FEDERATED</code> table:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE t (s1 INT) ENGINE=FEDERATED CONNECTION='s';</code></pre><p>
+      For more information, see
+      <a class="xref" href="federated-storage-engine.html" title="15.8&nbsp;The FEDERATED Storage Engine">Section&nbsp;15.8, “The FEDERATED Storage Engine”</a>.
+    </p><p>
+      <code class="literal">CREATE SERVER</code> causes an implicit commit. See
+      <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+    </p><p>
+      <code class="literal">CREATE SERVER</code> is not written to the binary log,
+      regardless of the logging format that is in use.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

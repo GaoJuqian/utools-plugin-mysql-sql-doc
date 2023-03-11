@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Prepared Statements</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h2 class="title"><a name="sql-prepared-statements"></a>13.5&nbsp;Prepared Statements</h2>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="prepare.html">13.5.1 PREPARE Statement</a></span></dt><dt><span class="section"><a href="execute.html">13.5.2 EXECUTE Statement</a></span></dt><dt><span class="section"><a href="deallocate-prepare.html">13.5.3 DEALLOCATE PREPARE Statement</a></span></dt></dl>
+</div>
+<a class="indexterm" name="idm45852575573152"></a><a class="indexterm" name="idm45852575572080"></a><a class="indexterm" name="idm45852575571008"></a><a class="indexterm" name="idm45852575569936"></a><p>
+    MySQL 5.7 provides support for server-side prepared
+    statements. This support takes advantage of the efficient
+    client/server binary protocol. Using prepared statements with
+    placeholders for parameter values has the following benefits:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+        Less overhead for parsing the statement each time it is
+        executed. Typically, database applications process large volumes
+        of almost-identical statements, with only changes to literal or
+        variable values in clauses such as <code class="literal">WHERE</code> for
+        queries and deletes, <code class="literal">SET</code> for updates, and
+        <code class="literal">VALUES</code> for inserts.
+      </p></li><li class="listitem"><p>
+        Protection against SQL injection attacks. The parameter values
+        can contain unescaped SQL quote and delimiter characters.
+</p><a class="indexterm" name="idm45852575563952"></a><a class="indexterm" name="idm45852575562880"></a></li></ul>
+</div>
+<p>
+    The following sections provide an overview of the characteristics of
+    prepared statements:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="sql-prepared-statements.html#prepared-statements-in-applications" title="Prepared Statements in Application Programs">Prepared Statements in Application Programs</a></p></li><li class="listitem"><p><a class="xref" href="sql-prepared-statements.html#prepared-statements-in-scripts" title="Prepared Statements in SQL Scripts">Prepared Statements in SQL Scripts</a></p></li><li class="listitem"><p><a class="xref" href="sql-prepared-statements.html#prepared-statement-types" title="PREPARE, EXECUTE, and DEALLOCATE PREPARE Statements">PREPARE, EXECUTE, and DEALLOCATE PREPARE Statements</a></p></li><li class="listitem"><p><a class="xref" href="sql-prepared-statements.html#prepared-statements-permitted" title="SQL Syntax Permitted in Prepared Statements">SQL Syntax Permitted in Prepared Statements</a></p></li></ul>
+</div>
+<h3><a name="prepared-statements-in-applications"></a>Prepared Statements in Application Programs</h3>
+<p>
+    You can use server-side prepared statements through client
+    programming interfaces, including the <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/" target="_top">MySQL C
+    API client library</a> for C programs,
+    <a class="ulink" href="https://dev.mysql.com/doc/connector-j/8.0/en/" target="_top">MySQL Connector/J</a> for Java
+    programs, and <a class="ulink" href="https://dev.mysql.com/doc/connector-net/en/" target="_top">MySQL Connector/NET</a> for
+    programs using .NET technologies. For example, the C API provides a
+    set of function calls that make up its prepared statement API. See
+    <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/c-api-prepared-statement-interface.html" target="_top">C API Prepared Statement Interface</a>. Other language
+    interfaces can provide support for prepared statements that use the
+    binary protocol by linking in the C client library, one example
+    being the
+    <a class="ulink" href="http://php.net/mysqli" target="_top"><code class="literal">mysqli</code>
+    extension</a>, available in PHP 5.0 and higher.
+</p>
+<h3><a name="prepared-statements-in-scripts"></a>Prepared Statements in SQL Scripts</h3>
+<p>
+    An alternative SQL interface to prepared statements is available.
+    This interface is not as efficient as using the binary protocol
+    through a prepared statement API, but requires no programming
+    because it is available directly at the SQL level:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+        You can use it when no programming interface is available to
+        you.
+      </p></li><li class="listitem"><p>
+        You can use it from any program that can send SQL statements to
+        the server to be executed, such as the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a>
+        client program.
+      </p></li><li class="listitem"><p>
+        You can use it even if the client is using an old version of the
+        client library.
+</p></li></ul>
+</div>
+<p>
+    SQL syntax for prepared statements is intended to be used for
+    situations such as these:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+        To test how prepared statements work in your application before
+        coding it.
+      </p></li><li class="listitem"><p>
+        To use prepared statements when you do not have access to a
+        programming API that supports them.
+      </p></li><li class="listitem"><p>
+        To interactively troubleshoot application issues with prepared
+        statements.
+      </p></li><li class="listitem"><p>
+        To create a test case that reproduces a problem with prepared
+        statements, so that you can file a bug report.
+</p></li></ul>
+</div>
+<h3><a name="prepared-statement-types"></a>PREPARE, EXECUTE, and DEALLOCATE PREPARE Statements</h3>
+<p>
+    SQL syntax for prepared statements is based on three SQL statements:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+        <a class="link" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement"><code class="literal">PREPARE</code></a> prepares a statement for
+        execution (see <a class="xref" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement">Section&nbsp;13.5.1, “PREPARE Statement”</a>).
+      </p></li><li class="listitem"><p>
+        <a class="link" href="execute.html" title="13.5.2&nbsp;EXECUTE Statement"><code class="literal">EXECUTE</code></a> executes a prepared
+        statement (see <a class="xref" href="execute.html" title="13.5.2&nbsp;EXECUTE Statement">Section&nbsp;13.5.2, “EXECUTE Statement”</a>).
+      </p></li><li class="listitem"><p>
+        <a class="link" href="deallocate-prepare.html" title="13.5.3&nbsp;DEALLOCATE PREPARE Statement"><code class="literal">DEALLOCATE PREPARE</code></a> releases a
+        prepared statement (see <a class="xref" href="deallocate-prepare.html" title="13.5.3&nbsp;DEALLOCATE PREPARE Statement">Section&nbsp;13.5.3, “DEALLOCATE PREPARE Statement”</a>).
+</p></li></ul>
+</div>
+<p>
+    The following examples show two equivalent ways of preparing a
+    statement that computes the hypotenuse of a triangle given the
+    lengths of the two sides.
+  </p><p>
+    The first example shows how to create a prepared statement by using
+    a string literal to supply the text of the statement:
+  </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; PREPARE stmt1 FROM 'SELECT SQRT(POW(?,2) + POW(?,2)) AS hypotenuse';
+mysql&gt; SET @a = 3;
+mysql&gt; SET @b = 4;
+mysql&gt; EXECUTE stmt1 USING @a, @b;
++------------+
+| hypotenuse |
++------------+
+|          5 |
++------------+
+mysql&gt; DEALLOCATE PREPARE stmt1;</code></pre><p>
+    The second example is similar, but supplies the text of the
+    statement as a user variable:
+  </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SET @s = 'SELECT SQRT(POW(?,2) + POW(?,2)) AS hypotenuse';
+mysql&gt; PREPARE stmt2 FROM @s;
+mysql&gt; SET @a = 6;
+mysql&gt; SET @b = 8;
+mysql&gt; EXECUTE stmt2 USING @a, @b;
++------------+
+| hypotenuse |
++------------+
+|         10 |
++------------+
+mysql&gt; DEALLOCATE PREPARE stmt2;</code></pre><p>
+    Here is an additional example that demonstrates how to choose the
+    table on which to perform a query at runtime, by storing the name of
+    the table as a user variable:
+  </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; USE test;
+mysql&gt; CREATE TABLE t1 (a INT NOT NULL);
+mysql&gt; INSERT INTO t1 VALUES (4), (8), (11), (32), (80);
+
+mysql&gt; SET @table = 't1';
+mysql&gt; SET @s = CONCAT('SELECT * FROM ', @table);
+
+mysql&gt; PREPARE stmt3 FROM @s;
+mysql&gt; EXECUTE stmt3;
++----+
+| a  |
++----+
+|  4 |
+|  8 |
+| 11 |
+| 32 |
+| 80 |
++----+
+
+mysql&gt; DEALLOCATE PREPARE stmt3;</code></pre><p>
+    A prepared statement is specific to the session in which it was
+    created. If you terminate a session without deallocating a
+    previously prepared statement, the server deallocates it
+    automatically.
+  </p><p>
+    A prepared statement is also global to the session. If you create a
+    prepared statement within a stored routine, it is not deallocated
+    when the stored routine ends.
+  </p><p>
+    To guard against too many prepared statements being created
+    simultaneously, set the
+    <a class="link" href="server-system-variables.html#sysvar_max_prepared_stmt_count"><code class="literal">max_prepared_stmt_count</code></a> system
+    variable. To prevent the use of prepared statements, set the value
+    to 0.
+</p>
+<h3><a name="prepared-statements-permitted"></a>SQL Syntax Permitted in Prepared Statements</h3>
+<p>
+    The following SQL statements can be used as prepared statements:
+  </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER TABLE
+ALTER USER
+ANALYZE TABLE
+CACHE INDEX
+CALL
+CHANGE MASTER
+CHECKSUM {TABLE | TABLES}
+COMMIT
+{CREATE | DROP} INDEX
+{CREATE | RENAME | DROP} DATABASE
+{CREATE | DROP} TABLE
+{CREATE | RENAME | DROP} USER
+{CREATE | DROP} VIEW
+DELETE
+DO
+FLUSH {TABLE | TABLES | TABLES WITH READ LOCK | HOSTS | PRIVILEGES
+  | LOGS | STATUS | MASTER | SLAVE | DES_KEY_FILE | USER_RESOURCES}
+GRANT
+INSERT
+INSTALL PLUGIN
+KILL
+LOAD INDEX INTO CACHE
+OPTIMIZE TABLE
+RENAME TABLE
+REPAIR TABLE
+REPLACE
+RESET {MASTER | SLAVE | QUERY CACHE}
+REVOKE
+SELECT
+SET
+SHOW BINLOG EVENTS
+SHOW CREATE {PROCEDURE | FUNCTION | EVENT | TABLE | VIEW}
+SHOW {MASTER | BINARY} LOGS
+SHOW {MASTER | SLAVE} STATUS
+SLAVE {START | STOP}
+TRUNCATE TABLE
+UNINSTALL PLUGIN
+UPDATE</code></pre><p>
+    Other statements are not supported.
+  </p><p>
+    For compliance with the SQL standard, which states that diagnostics
+    statements are not preparable, MySQL does not support the following
+    as prepared statements:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+        <code class="literal">SHOW WARNINGS</code>, <code class="literal">SHOW COUNT(*)
+        WARNINGS</code>
+      </p></li><li class="listitem"><p>
+        <code class="literal">SHOW ERRORS</code>, <code class="literal">SHOW COUNT(*)
+        ERRORS</code>
+      </p></li><li class="listitem"><p>
+        Statements containing any reference to the
+        <a class="link" href="server-system-variables.html#sysvar_warning_count"><code class="literal">warning_count</code></a> or
+        <a class="link" href="server-system-variables.html#sysvar_error_count"><code class="literal">error_count</code></a> system variable.
+</p></li></ul>
+</div>
+<p>
+    Generally, statements not permitted in SQL prepared statements are
+    also not permitted in stored programs. Exceptions are noted in
+    <a class="xref" href="stored-program-restrictions.html" title="23.8&nbsp;Restrictions on Stored Programs">Section&nbsp;23.8, “Restrictions on Stored Programs”</a>.
+  </p><p>
+    Metadata changes to tables or views referred to by prepared
+    statements are detected and cause automatic repreparation of the
+    statement when it is next executed. For more information, see
+    <a class="xref" href="statement-caching.html" title="8.10.4&nbsp;Caching of Prepared Statements and Stored Programs">Section&nbsp;8.10.4, “Caching of Prepared Statements and Stored Programs”</a>.
+  </p><p>
+    Placeholders can be used for the arguments of the
+    <code class="literal">LIMIT</code> clause when using prepared statements. See
+    <a class="xref" href="select.html" title="13.2.9&nbsp;SELECT Statement">Section&nbsp;13.2.9, “SELECT Statement”</a>.
+  </p><p>
+    In prepared <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> statements used with
+    <a class="link" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement"><code class="literal">PREPARE</code></a> and
+    <a class="link" href="execute.html" title="13.5.2&nbsp;EXECUTE Statement"><code class="literal">EXECUTE</code></a>, placeholder support for
+    <code class="literal">OUT</code> and <code class="literal">INOUT</code> parameters is
+    available beginning with MySQL 5.7. See
+    <a class="xref" href="call.html" title="13.2.1&nbsp;CALL Statement">Section&nbsp;13.2.1, “CALL Statement”</a>, for an example and a workaround for earlier
+    versions. Placeholders can be used for <code class="literal">IN</code>
+    parameters regardless of version.
+  </p><p>
+    SQL syntax for prepared statements cannot be used in nested fashion.
+    That is, a statement passed to
+    <a class="link" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement"><code class="literal">PREPARE</code></a> cannot itself be a
+    <a class="link" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement"><code class="literal">PREPARE</code></a>,
+    <a class="link" href="execute.html" title="13.5.2&nbsp;EXECUTE Statement"><code class="literal">EXECUTE</code></a>, or
+    <a class="link" href="deallocate-prepare.html" title="13.5.3&nbsp;DEALLOCATE PREPARE Statement"><code class="literal">DEALLOCATE PREPARE</code></a> statement.
+  </p><p>
+    SQL syntax for prepared statements is distinct from using prepared
+    statement API calls. For example, you cannot use the
+    <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-stmt-prepare.html" target="_top"><code class="literal">mysql_stmt_prepare()</code></a> C API function
+    to prepare a <a class="link" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement"><code class="literal">PREPARE</code></a>,
+    <a class="link" href="execute.html" title="13.5.2&nbsp;EXECUTE Statement"><code class="literal">EXECUTE</code></a>, or
+    <a class="link" href="deallocate-prepare.html" title="13.5.3&nbsp;DEALLOCATE PREPARE Statement"><code class="literal">DEALLOCATE PREPARE</code></a> statement.
+  </p><p>
+    SQL syntax for prepared statements can be used within stored
+    procedures, but not in stored functions or triggers. However, a
+    cursor cannot be used for a dynamic statement that is prepared and
+    executed with <a class="link" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement"><code class="literal">PREPARE</code></a> and
+    <a class="link" href="execute.html" title="13.5.2&nbsp;EXECUTE Statement"><code class="literal">EXECUTE</code></a>. The statement for a cursor
+    is checked at cursor creation time, so the statement cannot be
+    dynamic.
+  </p><p>
+    SQL syntax for prepared statements does not support multi-statements
+    (that is, multiple statements within a single string separated by
+    <code class="literal">;</code> characters).
+  </p><p>
+    Prepared statements use the query cache under the conditions
+    described in <a class="xref" href="query-cache-operation.html" title="8.10.3.1&nbsp;How the Query Cache Operates">Section&nbsp;8.10.3.1, “How the Query Cache Operates”</a>.
+  </p><p>
+    To write C programs that use the <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a>
+    SQL statement to execute stored procedures that contain prepared
+    statements, the <code class="literal">CLIENT_MULTI_RESULTS</code> flag must be
+    enabled. This is because each <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a>
+    returns a result to indicate the call status, in addition to any
+    result sets that might be returned by statements executed within the
+    procedure.
+  </p><p>
+    <code class="literal">CLIENT_MULTI_RESULTS</code> can be enabled when you call
+    <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-real-connect.html" target="_top"><code class="literal">mysql_real_connect()</code></a>, either
+    explicitly by passing the <code class="literal">CLIENT_MULTI_RESULTS</code>
+    flag itself, or implicitly by passing
+    <code class="literal">CLIENT_MULTI_STATEMENTS</code> (which also enables
+    <code class="literal">CLIENT_MULTI_RESULTS</code>). For additional
+    information, see <a class="xref" href="call.html" title="13.2.1&nbsp;CALL Statement">Section&nbsp;13.2.1, “CALL Statement”</a>.
+</p>
+</div><br>
+        
+</body>
+</html>

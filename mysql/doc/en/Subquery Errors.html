@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Subquery Errors</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="subquery-errors"></a>13.2.10.9&nbsp;Subquery Errors</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577627984"></a><a class="indexterm" name="idm45852577626496"></a><p>
+        There are some errors that apply only to subqueries. This
+        section describes them.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Unsupported subquery syntax:
+          </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">ERROR 1235 (ER_NOT_SUPPORTED_YET)
+SQLSTATE = 42000
+Message = "This version of MySQL doesn't yet support
+'LIMIT &amp; IN/ALL/ANY/SOME subquery'"</code></pre><p>
+            This means that MySQL does not support statements of the
+            following form:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 WHERE s1 IN (SELECT s2 FROM t2 ORDER BY s1 LIMIT 1)</code></pre></li><li class="listitem"><p>
+            Incorrect number of columns from subquery:
+          </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">ERROR 1241 (ER_OPERAND_COL)
+SQLSTATE = 21000
+Message = "Operand should contain 1 column(s)"</code></pre><p>
+            This error occurs in cases like this:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT (SELECT column1, column2 FROM t2) FROM t1;</code></pre><p>
+            You may use a subquery that returns multiple columns, if the
+            purpose is row comparison. In other contexts, the subquery
+            must be a scalar operand. See
+            <a class="xref" href="row-subqueries.html" title="13.2.10.5&nbsp;Row Subqueries">Section&nbsp;13.2.10.5, “Row Subqueries”</a>.
+          </p></li><li class="listitem"><p>
+            Incorrect number of rows from subquery:
+          </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">ERROR 1242 (ER_SUBSELECT_NO_1_ROW)
+SQLSTATE = 21000
+Message = "Subquery returns more than 1 row"</code></pre><p>
+            This error occurs for statements where the subquery must
+            return at most one row but returns multiple rows. Consider
+            the following example:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 WHERE column1 = (SELECT column1 FROM t2);</code></pre><p>
+            If <code class="literal">SELECT column1 FROM t2</code> returns just
+            one row, the previous query works. If the subquery returns
+            more than one row, error 1242 occurs. In that case, the
+            query should be rewritten as:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 WHERE column1 = ANY (SELECT column1 FROM t2);</code></pre></li><li class="listitem"><p>
+            Incorrectly used table in subquery:
+          </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">Error 1093 (ER_UPDATE_TABLE_USED)
+SQLSTATE = HY000
+Message = "You can't specify target table 'x'
+for update in FROM clause"</code></pre><p>
+            This error occurs in cases such as the following, which
+            attempts to modify a table and select from the same table in
+            the subquery:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">UPDATE t1 SET column2 = (SELECT MAX(column1) FROM t1);</code></pre><p>
+            You can use a subquery for assignment within an
+            <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statement because
+            subqueries are legal in
+            <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> and
+            <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> statements as well as
+            in <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements.
+            However, you cannot use the same table (in this case, table
+            <code class="literal">t1</code>) for both the subquery
+            <code class="literal">FROM</code> clause and the update target.
+</p></li></ul>
+</div>
+<p>
+        For transactional storage engines, the failure of a subquery
+        causes the entire statement to fail. For nontransactional
+        storage engines, data modifications made before the error was
+        encountered are preserved.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

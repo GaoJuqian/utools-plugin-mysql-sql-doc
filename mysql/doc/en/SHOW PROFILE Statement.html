@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW PROFILE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-profile"></a>13.7.5.30&nbsp;SHOW PROFILE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570327856"></a><a class="indexterm" name="idm45852570326784"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW PROFILE [<em class="replaceable">type</em> [, <em class="replaceable">type</em>] ... ]
+    [FOR QUERY <em class="replaceable">n</em>]
+    [LIMIT <em class="replaceable">row_count</em> [OFFSET <em class="replaceable">offset</em>]]
+
+<em class="replaceable">type</em>: {
+    ALL
+  | BLOCK IO
+  | CONTEXT SWITCHES
+  | CPU
+  | IPC
+  | MEMORY
+  | PAGE FAULTS
+  | SOURCE
+  | SWAPS
+}</code></pre><p>
+        The <a class="link" href="show-profile.html" title="13.7.5.30&nbsp;SHOW PROFILE Statement"><code class="literal">SHOW PROFILE</code></a> and
+        <a class="link" href="show-profiles.html" title="13.7.5.31&nbsp;SHOW PROFILES Statement"><code class="literal">SHOW PROFILES</code></a> statements display
+        profiling information that indicates resource usage for
+        statements executed during the course of the current session.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          The <a class="link" href="show-profile.html" title="13.7.5.30&nbsp;SHOW PROFILE Statement"><code class="literal">SHOW PROFILE</code></a> and
+          <a class="link" href="show-profiles.html" title="13.7.5.31&nbsp;SHOW PROFILES Statement"><code class="literal">SHOW PROFILES</code></a> statements are
+          deprecated; expect them to be removed in a future MySQL
+          release. Use the
+          <a class="link" href="performance-schema.html" title="Chapter&nbsp;25&nbsp;MySQL Performance Schema">Performance Schema</a>
+          instead; see
+          <a class="xref" href="performance-schema-query-profiling.html" title="25.19.1&nbsp;Query Profiling Using Performance Schema">Section&nbsp;25.19.1, “Query Profiling Using Performance Schema”</a>.
+</p>
+</div>
+<p>
+        To control profiling, use the
+        <a class="link" href="server-system-variables.html#sysvar_profiling"><code class="literal">profiling</code></a> session variable,
+        which has a default value of 0 (<code class="literal">OFF</code>). Enable
+        profiling by setting <a class="link" href="server-system-variables.html#sysvar_profiling"><code class="literal">profiling</code></a>
+        to 1 or <code class="literal">ON</code>:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">mysql&gt; SET profiling = 1;</code></pre><p>
+        <a class="link" href="show-profiles.html" title="13.7.5.31&nbsp;SHOW PROFILES Statement"><code class="literal">SHOW PROFILES</code></a> displays a list of
+        the most recent statements sent to the server. The size of the
+        list is controlled by the
+        <a class="link" href="server-system-variables.html#sysvar_profiling_history_size"><code class="literal">profiling_history_size</code></a> session
+        variable, which has a default value of 15. The maximum value is
+        100. Setting the value to 0 has the practical effect of
+        disabling profiling.
+      </p><p>
+        All statements are profiled except <a class="link" href="show-profile.html" title="13.7.5.30&nbsp;SHOW PROFILE Statement"><code class="literal">SHOW
+        PROFILE</code></a> and <a class="link" href="show-profiles.html" title="13.7.5.31&nbsp;SHOW PROFILES Statement"><code class="literal">SHOW
+        PROFILES</code></a>, so neither of those statements appears in
+        the profile list. Malformed statements are profiled. For
+        example, <code class="literal">SHOW PROFILING</code> is an illegal
+        statement, and a syntax error occurs if you try to execute it,
+        but it shows up in the profiling list.
+      </p><p>
+        <a class="link" href="show-profile.html" title="13.7.5.30&nbsp;SHOW PROFILE Statement"><code class="literal">SHOW PROFILE</code></a> displays detailed
+        information about a single statement. Without the <code class="literal">FOR
+        QUERY <em class="replaceable"><code>n</code></em></code> clause, the output
+        pertains to the most recently executed statement. If
+        <code class="literal">FOR QUERY <em class="replaceable"><code>n</code></em></code> is
+        included, <a class="link" href="show-profile.html" title="13.7.5.30&nbsp;SHOW PROFILE Statement"><code class="literal">SHOW PROFILE</code></a> displays
+        information for statement <em class="replaceable"><code>n</code></em>. The
+        values of <em class="replaceable"><code>n</code></em> correspond to the
+        <code class="literal">Query_ID</code> values displayed by
+        <a class="link" href="show-profiles.html" title="13.7.5.31&nbsp;SHOW PROFILES Statement"><code class="literal">SHOW PROFILES</code></a>.
+      </p><p>
+        The <code class="literal">LIMIT
+        <em class="replaceable"><code>row_count</code></em></code> clause may be
+        given to limit the output to
+        <em class="replaceable"><code>row_count</code></em> rows. If
+        <code class="literal">LIMIT</code> is given, <code class="literal">OFFSET
+        <em class="replaceable"><code>offset</code></em></code> may be added to
+        begin the output <em class="replaceable"><code>offset</code></em> rows into the
+        full set of rows.
+      </p><p>
+        By default, <a class="link" href="show-profile.html" title="13.7.5.30&nbsp;SHOW PROFILE Statement"><code class="literal">SHOW PROFILE</code></a> displays
+        <code class="literal">Status</code> and <code class="literal">Duration</code>
+        columns. The <code class="literal">Status</code> values are like the
+        <code class="literal">State</code> values displayed by
+        <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW PROCESSLIST</code></a>, although there
+        might be some minor differences in interpretion for the two
+        statements for some status values (see
+        <a class="xref" href="thread-information.html" title="8.14&nbsp;Examining Server Thread (Process) Information">Section&nbsp;8.14, “Examining Server Thread (Process) Information”</a>).
+      </p><p>
+        Optional <em class="replaceable"><code>type</code></em> values may be specified
+        to display specific additional types of information:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">ALL</code> displays all information
+          </p></li><li class="listitem"><p>
+            <code class="literal">BLOCK IO</code> displays counts for block input
+            and output operations
+          </p></li><li class="listitem"><p>
+            <code class="literal">CONTEXT SWITCHES</code> displays counts for
+            voluntary and involuntary context switches
+          </p></li><li class="listitem"><p>
+            <code class="literal">CPU</code> displays user and system CPU usage
+            times
+          </p></li><li class="listitem"><p>
+            <code class="literal">IPC</code> displays counts for messages sent and
+            received
+          </p></li><li class="listitem"><p>
+            <code class="literal">MEMORY</code> is not currently implemented
+          </p></li><li class="listitem"><p>
+            <code class="literal">PAGE FAULTS</code> displays counts for major and
+            minor page faults
+          </p></li><li class="listitem"><p>
+            <code class="literal">SOURCE</code> displays the names of functions
+            from the source code, together with the name and line number
+            of the file in which the function occurs
+          </p></li><li class="listitem"><p>
+            <code class="literal">SWAPS</code> displays swap counts
+</p></li></ul>
+</div>
+<p>
+        Profiling is enabled per session. When a session ends, its
+        profiling information is lost.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT @@profiling;
++-------------+
+| @@profiling |
++-------------+
+|           0 |
++-------------+
+1 row in set (0.00 sec)
+
+mysql&gt; SET profiling = 1;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; DROP TABLE IF EXISTS t1;
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql&gt; CREATE TABLE T1 (id INT);
+Query OK, 0 rows affected (0.01 sec)
+
+mysql&gt; SHOW PROFILES;
++----------+----------+--------------------------+
+| Query_ID | Duration | Query                    |
++----------+----------+--------------------------+
+|        0 | 0.000088 | SET PROFILING = 1        |
+|        1 | 0.000136 | DROP TABLE IF EXISTS t1  |
+|        2 | 0.011947 | CREATE TABLE t1 (id INT) |
++----------+----------+--------------------------+
+3 rows in set (0.00 sec)
+
+mysql&gt; SHOW PROFILE;
++----------------------+----------+
+| Status               | Duration |
++----------------------+----------+
+| checking permissions | 0.000040 |
+| creating table       | 0.000056 |
+| After create         | 0.011363 |
+| query end            | 0.000375 |
+| freeing items        | 0.000089 |
+| logging slow query   | 0.000019 |
+| cleaning up          | 0.000005 |
++----------------------+----------+
+7 rows in set (0.00 sec)
+
+mysql&gt; SHOW PROFILE FOR QUERY 1;
++--------------------+----------+
+| Status             | Duration |
++--------------------+----------+
+| query end          | 0.000107 |
+| freeing items      | 0.000008 |
+| logging slow query | 0.000015 |
+| cleaning up        | 0.000006 |
++--------------------+----------+
+4 rows in set (0.00 sec)
+
+mysql&gt; SHOW PROFILE CPU FOR QUERY 2;
++----------------------+----------+----------+------------+
+| Status               | Duration | CPU_user | CPU_system |
++----------------------+----------+----------+------------+
+| checking permissions | 0.000040 | 0.000038 |   0.000002 |
+| creating table       | 0.000056 | 0.000028 |   0.000028 |
+| After create         | 0.011363 | 0.000217 |   0.001571 |
+| query end            | 0.000375 | 0.000013 |   0.000028 |
+| freeing items        | 0.000089 | 0.000010 |   0.000014 |
+| logging slow query   | 0.000019 | 0.000009 |   0.000010 |
+| cleaning up          | 0.000005 | 0.000003 |   0.000002 |
++----------------------+----------+----------+------------+
+7 rows in set (0.00 sec)</code></pre>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          Profiling is only partially functional on some architectures.
+          For values that depend on the <code class="literal">getrusage()</code>
+          system call, <code class="literal">NULL</code> is returned on systems
+          such as Windows that do not support the call. In addition,
+          profiling is per process and not per thread. This means that
+          activity on threads within the server other than your own may
+          affect the timing information that you see.
+</p>
+</div>
+<p>
+        Profiling information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-profiling-table.html" title="24.3.19&nbsp;The INFORMATION_SCHEMA PROFILING Table"><code class="literal">PROFILING</code></a> table. See
+        <a class="xref" href="information-schema-profiling-table.html" title="24.3.19&nbsp;The INFORMATION_SCHEMA PROFILING Table">Section&nbsp;24.3.19, “The INFORMATION_SCHEMA PROFILING Table”</a>. For
+        example, the following queries are equivalent:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW PROFILE FOR QUERY 2;
+
+SELECT STATE, FORMAT(DURATION, 6) AS DURATION
+FROM INFORMATION_SCHEMA.PROFILING
+WHERE QUERY_ID = 2 ORDER BY SEQ;</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

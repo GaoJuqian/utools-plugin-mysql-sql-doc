@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW TABLE STATUS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-table-status"></a>13.7.5.36&nbsp;SHOW TABLE STATUS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852569824352"></a><a class="indexterm" name="idm45852569823296"></a><a class="indexterm" name="idm45852569821808"></a><a class="indexterm" name="idm45852569820320"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW TABLE STATUS
+    [{FROM | IN} <em class="replaceable">db_name</em>]
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        <a class="link" href="show-table-status.html" title="13.7.5.36&nbsp;SHOW TABLE STATUS Statement"><code class="literal">SHOW TABLE STATUS</code></a> works likes
+        <a class="link" href="show-tables.html" title="13.7.5.37&nbsp;SHOW TABLES Statement"><code class="literal">SHOW TABLES</code></a>, but provides a lot
+        of information about each non-<code class="literal">TEMPORARY</code>
+        table. You can also get this list using the <a class="link" href="mysqlshow.html" title="4.5.7&nbsp;mysqlshow — Display Database, Table, and Column Information"><span class="command"><strong>mysqlshow
+        --status <em class="replaceable"><code>db_name</code></em></strong></span></a> command.
+        The <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, if present,
+        indicates which table names to match. The
+        <code class="literal">WHERE</code> clause can be given to select rows
+        using more general conditions, as discussed in
+        <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+      </p><p>
+        This statement also displays information about views.
+      </p><p>
+        <a class="link" href="show-table-status.html" title="13.7.5.36&nbsp;SHOW TABLE STATUS Statement"><code class="literal">SHOW TABLE STATUS</code></a> output has
+        these columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Name</code>
+          </p><p>
+            The name of the table.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Engine</code>
+          </p><p>
+            The storage engine for the table. See
+            <a class="xref" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine">Chapter&nbsp;14, <i>The InnoDB Storage Engine</i></a>, and
+            <a class="xref" href="storage-engines.html" title="Chapter&nbsp;15&nbsp;Alternative Storage Engines">Chapter&nbsp;15, <i>Alternative Storage Engines</i></a>.
+          </p><p>
+            For partitioned tables, <code class="literal">Engine</code> shows the
+            name of the storage engine used by all partitions.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Version</code>
+          </p><p>
+            The version number of the table's <code class="filename">.frm</code>
+            file.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Row_format</code>
+          </p><p>
+            The row-storage format (<code class="literal">Fixed</code>,
+            <code class="literal">Dynamic</code>, <code class="literal">Compressed</code>,
+            <code class="literal">Redundant</code>, <code class="literal">Compact</code>).
+            For <code class="literal">MyISAM</code> tables,
+            <code class="literal">Dynamic</code> corresponds to what
+            <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk -dvv</strong></span></a> reports as
+            <code class="literal">Packed</code>. <code class="literal">InnoDB</code> table
+            format is either <code class="literal">Redundant</code> or
+            <code class="literal">Compact</code> when using the
+            <code class="literal">Antelope</code> file format, or
+            <code class="literal">Compressed</code> or <code class="literal">Dynamic</code>
+            when using the <code class="literal">Barracuda</code> file format.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Rows</code>
+          </p><p>
+            The number of rows. Some storage engines, such as
+            <code class="literal">MyISAM</code>, store the exact count. For other
+            storage engines, such as <code class="literal">InnoDB</code>, this
+            value is an approximation, and may vary from the actual
+            value by as much as 40% to 50%. In such cases, use
+            <code class="literal">SELECT COUNT(*)</code> to obtain an accurate
+            count.
+          </p><p>
+            The <code class="literal">Rows</code> value is <code class="literal">NULL</code>
+            for <code class="literal">INFORMATION_SCHEMA</code> tables.
+          </p><p>
+            For <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tables, the row
+            count is only a rough estimate used in SQL optimization.
+            (This is also true if the
+            <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> table is partitioned.)
+          </p></li><li class="listitem"><p>
+            <code class="literal">Avg_row_length</code>
+          </p><p>
+            The average row length.
+          </p><p>
+            Refer to the notes at the end of this section for related
+            information.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Data_length</code>
+          </p><p>
+            For <code class="literal">MyISAM</code>,
+            <code class="literal">Data_length</code> is the length of the data
+            file, in bytes.
+          </p><p>
+            For <code class="literal">InnoDB</code>,
+            <code class="literal">Data_length</code> is the approximate amount of
+            space allocated for the clustered index, in bytes.
+            Specifically, it is the clustered index size, in pages,
+            multiplied by the <code class="literal">InnoDB</code> page size.
+          </p><p>
+            Refer to the notes at the end of this section for
+            information regarding other storage engines.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Max_data_length</code>
+          </p><p>
+            For <code class="literal">MyISAM</code>,
+            <code class="literal">Max_data_length</code> is maximum length of the
+            data file. This is the total number of bytes of data that
+            can be stored in the table, given the data pointer size
+            used.
+          </p><p>
+            Unused for <code class="literal">InnoDB</code>.
+          </p><p>
+            Refer to the notes at the end of this section for
+            information regarding other storage engines.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Index_length</code>
+          </p><p>
+            For <code class="literal">MyISAM</code>,
+            <code class="literal">Index_length</code> is the length of the index
+            file, in bytes.
+          </p><p>
+            For <code class="literal">InnoDB</code>,
+            <code class="literal">Index_length</code> is the approximate amount of
+            space allocated for non-clustered indexes, in bytes.
+            Specifically, it is the sum of non-clustered index sizes, in
+            pages, multiplied by the <code class="literal">InnoDB</code> page
+            size.
+          </p><p>
+            Refer to the notes at the end of this section for
+            information regarding other storage engines.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Data_free</code>
+          </p><p>
+            The number of allocated but unused bytes.
+          </p><p>
+            <code class="literal">InnoDB</code> tables report the free space of
+            the tablespace to which the table belongs. For a table
+            located in the shared tablespace, this is the free space of
+            the shared tablespace. If you are using multiple tablespaces
+            and the table has its own tablespace, the free space is for
+            only that table. Free space means the number of bytes in
+            completely free extents minus a safety margin. Even if free
+            space displays as 0, it may be possible to insert rows as
+            long as new extents need not be allocated.
+          </p><p>
+            For NDB Cluster, <code class="literal">Data_free</code> shows the
+            space allocated on disk for, but not used by, a Disk Data
+            table or fragment on disk. (In-memory data resource usage is
+            reported by the <code class="literal">Data_length</code> column.)
+          </p><p>
+            For partitioned tables, this value is only an estimate and
+            may not be absolutely correct. A more accurate method of
+            obtaining this information in such cases is to query the
+            <code class="literal">INFORMATION_SCHEMA</code>
+            <a class="link" href="information-schema-partitions-table.html" title="24.3.16&nbsp;The INFORMATION_SCHEMA PARTITIONS Table"><code class="literal">PARTITIONS</code></a> table, as shown in
+            this example:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT SUM(DATA_FREE)
+    FROM  INFORMATION_SCHEMA.PARTITIONS
+    WHERE TABLE_SCHEMA = 'mydb'
+    AND   TABLE_NAME   = 'mytable';</code></pre><p>
+            For more information, see
+            <a class="xref" href="information-schema-partitions-table.html" title="24.3.16&nbsp;The INFORMATION_SCHEMA PARTITIONS Table">Section&nbsp;24.3.16, “The INFORMATION_SCHEMA PARTITIONS Table”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Auto_increment</code>
+          </p><p>
+            The next <code class="literal">AUTO_INCREMENT</code> value.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Create_time</code>
+          </p><p>
+            When the table was created.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Update_time</code>
+          </p><p>
+            When the data file was last updated. For some storage
+            engines, this value is <code class="literal">NULL</code>. For example,
+            <code class="literal">InnoDB</code> stores multiple tables in its
+            <a class="link" href="glossary.html#glos_system_tablespace" title="system tablespace">system
+            tablespace</a> and the data file timestamp does not
+            apply. Even with
+            <a class="link" href="glossary.html#glos_file_per_table" title="file-per-table">file-per-table</a>
+            mode with each <code class="literal">InnoDB</code> table in a separate
+            <code class="literal">.ibd</code> file,
+            <a class="link" href="glossary.html#glos_change_buffering" title="change buffering">change
+            buffering</a> can delay the write to the data file, so
+            the file modification time is different from the time of the
+            last insert, update, or delete. For
+            <code class="literal">MyISAM</code>, the data file timestamp is used;
+            however, on Windows the timestamp is not updated by updates,
+            so the value is inaccurate.
+          </p><p>
+            <code class="literal">Update_time</code> displays a timestamp value
+            for the last <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>,
+            <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>, or
+            <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> performed on
+            <code class="literal">InnoDB</code> tables that are not partitioned.
+            For MVCC, the timestamp value reflects the
+            <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">COMMIT</code></a> time, which is
+            considered the last update time. Timestamps are not
+            persisted when the server is restarted or when the table is
+            evicted from the <code class="literal">InnoDB</code> data dictionary
+            cache.
+          </p><p>
+            The <code class="literal">Update_time</code> column also shows this
+            information for partitioned <code class="literal">InnoDB</code>
+            tables.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Check_time</code>
+          </p><p>
+            When the table was last checked. Not all storage engines
+            update this time, in which case, the value is always
+            <code class="literal">NULL</code>.
+          </p><p>
+            For partitioned <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tables,
+            <code class="literal">Check_time</code> is always
+            <code class="literal">NULL</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Collation</code>
+          </p><p>
+            The table default collation. The output does not explicitly
+            list the table default character set, but the collation name
+            begins with the character set name.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Checksum</code>
+          </p><p>
+            The live checksum value, if any.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Create_options</code>
+          </p><p>
+            Extra options used with <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+            TABLE</code></a>.
+          </p><p>
+            <code class="literal">Create_options</code> shows
+            <code class="literal">partitioned</code> for a partitioned table.
+          </p><p>
+            <code class="literal">Create_options</code> shows the
+            <code class="literal">ENCRYPTION</code> option specified when creating
+            or altering a file-per-table tablespace.
+          </p><p>
+            When creating a table with
+            <a class="link" href="glossary.html#glos_strict_mode" title="strict mode">strict mode</a>
+            disabled, the storage engine's default row format is
+            used if the specified row format is not supported. The
+            actual row format of the table is reported in the
+            <code class="literal">Row_format</code> column.
+            <code class="literal">Create_options</code> shows the row format that
+            was specified in the <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+            TABLE</code></a> statement.
+          </p><p>
+            When altering the storage engine of a table, table options
+            that are not applicable to the new storage engine are
+            retained in the table definition to enable reverting the
+            table with its previously defined options to the original
+            storage engine, if necessary.
+            <code class="literal">Create_options</code> may show retained options.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Comment</code>
+          </p><p>
+            The comment used when creating the table (or information as
+            to why MySQL could not access the table information).
+</p></li></ul>
+</div>
+<h5><a name="idm45852569691584"></a>Notes</h5>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            For <code class="literal">InnoDB</code> tables,
+            <a class="link" href="show-table-status.html" title="13.7.5.36&nbsp;SHOW TABLE STATUS Statement"><code class="literal">SHOW TABLE STATUS</code></a> does not
+            give accurate statistics except for the physical size
+            reserved by the table. The row count is only a rough
+            estimate used in SQL optimization.
+          </p></li><li class="listitem"><p>
+            For <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables, the output of
+            this statement shows appropriate values for the
+            <code class="literal">Avg_row_length</code> and
+            <code class="literal">Data_length</code> columns, with the exception
+            that <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> columns are not
+            taken into account.
+          </p></li><li class="listitem"><p>
+            For <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables,
+            <code class="literal">Data_length</code> includes data stored in main
+            memory only; the <code class="literal">Max_data_length</code> and
+            <code class="literal">Data_free</code> columns apply to Disk Data.
+          </p></li><li class="listitem"><p>
+            For NDB Cluster Disk Data tables,
+            <code class="literal">Max_data_length</code> shows the space allocated
+            for the disk part of a Disk Data table or fragment.
+            (In-memory data resource usage is reported by the
+            <code class="literal">Data_length</code> column.)
+          </p></li><li class="listitem"><p>
+            For <code class="literal">MEMORY</code> tables, the
+            <code class="literal">Data_length</code>,
+            <code class="literal">Max_data_length</code>, and
+            <code class="literal">Index_length</code> values approximate the
+            actual amount of allocated memory. The allocation algorithm
+            reserves memory in large amounts to reduce the number of
+            allocation operations.
+          </p></li><li class="listitem"><p>
+            For views, all columns displayed by
+            <a class="link" href="show-table-status.html" title="13.7.5.36&nbsp;SHOW TABLE STATUS Statement"><code class="literal">SHOW TABLE STATUS</code></a> are
+            <code class="literal">NULL</code> except that <code class="literal">Name</code>
+            indicates the view name and <code class="literal">Comment</code> says
+            <code class="literal">VIEW</code>.
+</p></li></ul>
+</div>
+<p>
+        Table information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-tables-table.html" title="24.3.25&nbsp;The INFORMATION_SCHEMA TABLES Table"><code class="literal">TABLES</code></a> table. See
+        <a class="xref" href="information-schema-tables-table.html" title="24.3.25&nbsp;The INFORMATION_SCHEMA TABLES Table">Section&nbsp;24.3.25, “The INFORMATION_SCHEMA TABLES Table”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Local Variable DECLARE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="declare-local-variable"></a>13.6.4.1&nbsp;Local Variable DECLARE Statement</h4>
+</div>
+</div>
+</div>
+<pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DECLARE <em class="replaceable">var_name</em> [, <em class="replaceable">var_name</em>] ... <em class="replaceable">type</em> [DEFAULT <em class="replaceable">value</em>]</code></pre><p>
+        This statement declares local variables within stored programs.
+        To provide a default value for a variable, include a
+        <code class="literal">DEFAULT</code> clause. The value can be specified as
+        an expression; it need not be a constant. If the
+        <code class="literal">DEFAULT</code> clause is missing, the initial value
+        is <code class="literal">NULL</code>.
+      </p><p>
+        Local variables are treated like stored routine parameters with
+        respect to data type and overflow checking. See
+        <a class="xref" href="create-procedure.html" title="13.1.16&nbsp;CREATE PROCEDURE and CREATE FUNCTION Statements">Section&nbsp;13.1.16, “CREATE PROCEDURE and CREATE FUNCTION Statements”</a>.
+      </p><p>
+        Variable declarations must appear before cursor or handler
+        declarations.
+      </p><p>
+        Local variable names are not case-sensitive. Permissible
+        characters and quoting rules are the same as for other
+        identifiers, as described in <a class="xref" href="identifiers.html" title="9.2&nbsp;Schema Object Names">Section&nbsp;9.2, “Schema Object Names”</a>.
+      </p><p>
+        The scope of a local variable is the
+        <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+        END</code></a> block within which it is declared. The variable
+        can be referred to in blocks nested within the declaring block,
+        except those blocks that declare a variable with the same name.
+      </p><p>
+        For examples of variable declarations, see
+        <a class="xref" href="local-variable-scope.html" title="13.6.4.2&nbsp;Local Variable Scope and Resolution">Section&nbsp;13.6.4.2, “Local Variable Scope and Resolution”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

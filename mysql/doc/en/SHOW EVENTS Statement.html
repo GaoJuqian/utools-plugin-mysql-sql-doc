@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW EVENTS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-events"></a>13.7.5.18&nbsp;SHOW EVENTS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570832784"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW EVENTS
+    [{FROM | IN} <em class="replaceable">schema_name</em>]
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        This statement displays information about Event Manager events,
+        which are discussed in <a class="xref" href="event-scheduler.html" title="23.4&nbsp;Using the Event Scheduler">Section&nbsp;23.4, “Using the Event Scheduler”</a>. It
+        requires the <a class="link" href="privileges-provided.html#priv_event"><code class="literal">EVENT</code></a> privilege for
+        the database from which the events are to be shown.
+      </p><p>
+        In its simplest form, <a class="link" href="show-events.html" title="13.7.5.18&nbsp;SHOW EVENTS Statement"><code class="literal">SHOW EVENTS</code></a>
+        lists all of the events in the current schema:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT CURRENT_USER(), SCHEMA();
++----------------+----------+
+| CURRENT_USER() | SCHEMA() |
++----------------+----------+
+| jon@ghidora    | myschema |
++----------------+----------+
+1 row in set (0.00 sec)
+
+mysql&gt; SHOW EVENTS\G
+*************************** 1. row ***************************
+                  Db: myschema
+                Name: e_daily
+             Definer: jon@ghidora
+           Time zone: SYSTEM
+                Type: RECURRING
+          Execute at: NULL
+      Interval value: 1
+      Interval field: DAY
+              Starts: 2018-08-08 11:06:34
+                Ends: NULL
+              Status: ENABLED
+          Originator: 1
+character_set_client: utf8
+collation_connection: utf8_general_ci
+  Database Collation: latin1_swedish_ci</code></pre><p>
+        To see events for a specific schema, use the
+        <code class="literal">FROM</code> clause. For example, to see events for
+        the <code class="literal">test</code> schema, use the following statement:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW EVENTS FROM test;</code></pre><p>
+        The <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, if present,
+        indicates which event names to match. The
+        <code class="literal">WHERE</code> clause can be given to select rows
+        using more general conditions, as discussed in
+        <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+      </p><p>
+        <a class="link" href="show-events.html" title="13.7.5.18&nbsp;SHOW EVENTS Statement"><code class="literal">SHOW EVENTS</code></a> output has these
+        columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Db</code>
+          </p><p>
+            The name of the schema (database) to which the event
+            belongs.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Name</code>
+          </p><p>
+            The name of the event.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Definer</code>
+          </p><p>
+            The account of the user who created the event, in
+            <code class="literal">'<em class="replaceable"><code>user_name</code></em>'@'<em class="replaceable"><code>host_name</code></em>'</code>
+            format.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Time zone</code>
+          </p><p>
+            The event time zone, which is the time zone used for
+            scheduling the event and that is in effect within the event
+            as it executes. The default value is
+            <code class="literal">SYSTEM</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Type</code>
+          </p><p>
+            The event repetition type, either <code class="literal">ONE
+            TIME</code> (transient) or <code class="literal">RECURRING</code>
+            (repeating).
+          </p></li><li class="listitem"><p>
+            <code class="literal">Execute At</code>
+          </p><p>
+            For a one-time event, this is the
+            <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">DATETIME</code></a> value specified in
+            the <code class="literal">AT</code> clause of the
+            <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE EVENT</code></a> statement used
+            to create the event, or of the last
+            <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> statement that
+            modified the event. The value shown in this column reflects
+            the addition or subtraction of any
+            <code class="literal">INTERVAL</code> value included in the event's
+            <code class="literal">AT</code> clause. For example, if an event is
+            created using <code class="literal">ON SCHEDULE AT CURRENT_TIMESTAMP +
+            '1:6' DAY_HOUR</code>, and the event was created at
+            2018-02-09 14:05:30, the value shown in this column would be
+            <code class="literal">'2018-02-10 20:05:30'</code>. If the event's
+            timing is determined by an <code class="literal">EVERY</code> clause
+            instead of an <code class="literal">AT</code> clause (that is, if the
+            event is recurring), the value of this column is
+            <code class="literal">NULL</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Interval Value</code>
+          </p><p>
+            For a recurring event, the number of intervals to wait
+            between event executions. For a transient event, the value
+            of this column is always <code class="literal">NULL</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Interval Field</code>
+          </p><p>
+            The time units used for the interval which a recurring event
+            waits before repeating. For a transient event, the value of
+            this column is always <code class="literal">NULL</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Starts</code>
+          </p><p>
+            The start date and time for a recurring event. This is
+            displayed as a <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">DATETIME</code></a>
+            value, and is <code class="literal">NULL</code> if no start date and
+            time are defined for the event. For a transient event, this
+            column is always <code class="literal">NULL</code>. For a recurring
+            event whose definition includes a <code class="literal">STARTS</code>
+            clause, this column contains the corresponding
+            <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">DATETIME</code></a> value. As with the
+            <code class="literal">Execute At</code> column, this value resolves
+            any expressions used. If there is no
+            <code class="literal">STARTS</code> clause affecting the timing of the
+            event, this column is <code class="literal">NULL</code>
+          </p></li><li class="listitem"><p>
+            <code class="literal">Ends</code>
+          </p><p>
+            For a recurring event whose definition includes a
+            <code class="literal">ENDS</code> clause, this column contains the
+            corresponding <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">DATETIME</code></a> value.
+            As with the <code class="literal">Execute At</code> column, this value
+            resolves any expressions used. If there is no
+            <code class="literal">ENDS</code> clause affecting the timing of the
+            event, this column is <code class="literal">NULL</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Status</code>
+          </p><p>
+            The event status. One of <code class="literal">ENABLED</code>,
+            <code class="literal">DISABLED</code>, or
+            <code class="literal">SLAVESIDE_DISABLED</code>.
+            <code class="literal">SLAVESIDE_DISABLED</code> indicates that the
+            creation of the event occurred on another MySQL server
+            acting as a replication source and replicated to the current
+            MySQL server which is acting as a replica, but the event is
+            not presently being executed on the replica. For more
+            information, see
+            <a class="xref" href="replication-features-invoked.html" title="16.4.1.16&nbsp;Replication of Invoked Features">Section&nbsp;16.4.1.16, “Replication of Invoked Features”</a>. information.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Originator</code>
+          </p><p>
+            The server ID of the MySQL server on which the event was
+            created; used in replication. This value may be updated by
+            <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> to the server ID
+            of the server on which that statement occurs, if executed on
+            a source server. The default value is 0.
+          </p></li><li class="listitem"><p>
+            <code class="literal">character_set_client</code>
+          </p><p>
+            The session value of the
+            <a class="link" href="server-system-variables.html#sysvar_character_set_client"><code class="literal">character_set_client</code></a> system
+            variable when the event was created.
+          </p></li><li class="listitem"><p>
+            <code class="literal">collation_connection</code>
+          </p><p>
+            The session value of the
+            <a class="link" href="server-system-variables.html#sysvar_collation_connection"><code class="literal">collation_connection</code></a> system
+            variable when the event was created.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Database Collation</code>
+          </p><p>
+            The collation of the database with which the event is
+            associated.
+</p></li></ul>
+</div>
+<p>
+        For more information about <code class="literal">SLAVESIDE_DISABLED</code>
+        and the <code class="literal">Originator</code> column, see
+        <a class="xref" href="replication-features-invoked.html" title="16.4.1.16&nbsp;Replication of Invoked Features">Section&nbsp;16.4.1.16, “Replication of Invoked Features”</a>.
+      </p><p>
+        Times displayed by <a class="link" href="show-events.html" title="13.7.5.18&nbsp;SHOW EVENTS Statement"><code class="literal">SHOW EVENTS</code></a>
+        are given in the event time zone, as discussed in
+        <a class="xref" href="events-metadata.html" title="23.4.4&nbsp;Event Metadata">Section&nbsp;23.4.4, “Event Metadata”</a>.
+      </p><p>
+        Event information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-events-table.html" title="24.3.8&nbsp;The INFORMATION_SCHEMA EVENTS Table"><code class="literal">EVENTS</code></a> table. See
+        <a class="xref" href="information-schema-events-table.html" title="24.3.8&nbsp;The INFORMATION_SCHEMA EVENTS Table">Section&nbsp;24.3.8, “The INFORMATION_SCHEMA EVENTS Table”</a>.
+      </p><p>
+        The event action statement is not shown in the output of
+        <a class="link" href="show-events.html" title="13.7.5.18&nbsp;SHOW EVENTS Statement"><code class="literal">SHOW EVENTS</code></a>. Use
+        <a class="link" href="show-create-event.html" title="13.7.5.7&nbsp;SHOW CREATE EVENT Statement"><code class="literal">SHOW CREATE EVENT</code></a> or the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-events-table.html" title="24.3.8&nbsp;The INFORMATION_SCHEMA EVENTS Table"><code class="literal">EVENTS</code></a> table.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

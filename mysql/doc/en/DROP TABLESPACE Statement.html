@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP TABLESPACE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="drop-tablespace"></a>13.1.30&nbsp;DROP TABLESPACE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580584752"></a><a class="indexterm" name="idm45852580583712"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DROP TABLESPACE <em class="replaceable">tablespace_name</em>
+    [ENGINE [=] <em class="replaceable">engine_name</em>]</code></pre><p>
+      This statement drops a tablespace that was previously created
+      using <a class="link" href="create-tablespace.html" title="13.1.19&nbsp;CREATE TABLESPACE Statement"><code class="literal">CREATE TABLESPACE</code></a>. It is
+      supported with all MySQL NDB Cluster 7.5 releases, and with
+      <code class="literal">InnoDB</code> in the standard MySQL Server as well.
+    </p><p>
+      <code class="literal">ENGINE</code> sets the storage engine that uses the
+      tablespace, where <em class="replaceable"><code>engine_name</code></em> is the
+      name of the storage engine. Currently, the values
+      <code class="literal">InnoDB</code> and <code class="literal">NDB</code> are
+      supported. If not set, the value of
+      <a class="link" href="server-system-variables.html#sysvar_default_storage_engine"><code class="literal">default_storage_engine</code></a> is used.
+      If it is not the same as the storage engine used to create the
+      tablespace, the <code class="literal">DROP TABLESPACE</code> statement
+      fails.
+    </p><p>
+      For an <code class="literal">InnoDB</code> tablespace, all tables must be
+      dropped from the tablespace prior to a <code class="literal">DROP
+      TABLESPACE</code> operation. If the tablespace is not empty,
+      <code class="literal">DROP TABLESPACE</code> returns an error.
+    </p><p>
+      As with the <code class="literal">InnoDB</code> system tablespace,
+      truncating or dropping <code class="literal">InnoDB</code> tables stored in
+      a general tablespace creates free space in the tablespace
+      <a class="link" href="glossary.html#glos_ibd_file" title=".ibd file">.ibd data file</a>, which can
+      only be used for new <code class="literal">InnoDB</code> data. Space is not
+      released back to the operating system by such operations as it is
+      for file-per-table tablespaces.
+    </p><p>
+      An <code class="literal">NDB</code> tablespace to be dropped must not
+      contain any data files; in other words, before you can drop an
+      <code class="literal">NDB</code> tablespace, you must first drop each of its
+      data files using
+      <a class="link" href="alter-tablespace.html" title="13.1.9&nbsp;ALTER TABLESPACE Statement"><code class="literal">ALTER TABLESPACE
+      ... DROP DATAFILE</code></a>.
+</p>
+<h4><a name="idm45852580560640"></a>Notes</h4>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Tablespaces are not deleted automatically. A tablespace must
+          be dropped explicitly using <code class="literal">DROP
+          TABLESPACE</code>. <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP
+          DATABASE</code></a> has no effect in this regard, even if the
+          operation drops all tables belonging to the tablespace.
+        </p></li><li class="listitem"><p>
+          A <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP DATABASE</code></a> operation can
+          drop tables that belong to a general tablespace but it cannot
+          drop the tablespace, even if the operation drops all tables
+          that belong to the tablespace. The tablespace must be dropped
+          explicitly using <code class="literal">DROP TABLESPACE
+          <em class="replaceable"><code>tablespace_name</code></em></code>.
+        </p></li><li class="listitem"><p>
+          Similar to the system tablespace, truncating or dropping
+          tables stored in a general tablespace creates free space
+          internally in the general tablespace
+          <a class="link" href="glossary.html#glos_ibd_file" title=".ibd file">.ibd data file</a> which can
+          only be used for new <code class="literal">InnoDB</code> data. Space is
+          not released back to the operating system as it is for
+          file-per-table tablespaces.
+</p></li></ul>
+</div>
+<h4><a name="idm45852580550672"></a>InnoDB Example</h4>
+<p>
+      This example demonstrates how to drop an <code class="literal">InnoDB</code>
+      general tablespace. The general tablespace <code class="literal">ts1</code>
+      is created with a single table. Before dropping the tablespace,
+      the table must be dropped.
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLESPACE `ts1` ADD DATAFILE 'ts1.ibd' Engine=InnoDB;
+
+mysql&gt; CREATE TABLE t1 (c1 INT PRIMARY KEY) TABLESPACE ts1 Engine=InnoDB;
+
+mysql&gt; DROP TABLE t1;
+
+mysql&gt; DROP TABLESPACE ts1;</code></pre>
+<h4><a name="idm45852580544128"></a>NDB Example</h4>
+<p>
+      This example shows how to drop an <code class="literal">NDB</code>
+      tablespace <code class="literal">myts</code> having a data file named
+      <code class="filename">mydata-1.dat</code> after first creating the
+      tablespace, and assumes the existence of a log file group named
+      <code class="literal">mylg</code> (see
+      <a class="xref" href="create-logfile-group.html" title="13.1.15&nbsp;CREATE LOGFILE GROUP Statement">Section&nbsp;13.1.15, “CREATE LOGFILE GROUP Statement”</a>).
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLESPACE myts
+    -&gt;     ADD DATAFILE 'mydata-1.dat'
+    -&gt;     USE LOGFILE GROUP mylg
+    -&gt;     ENGINE=NDB;</code></pre><p>
+      You must remove all data files from the tablespace using
+      <a class="link" href="alter-tablespace.html" title="13.1.9&nbsp;ALTER TABLESPACE Statement"><code class="literal">ALTER TABLESPACE</code></a>, as shown here,
+      before it can be dropped:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; ALTER TABLESPACE myts
+    -&gt;     DROP DATAFILE 'mydata-1.dat'
+    -&gt;     ENGINE=NDB;
+
+mysql&gt; DROP TABLESPACE myts;</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

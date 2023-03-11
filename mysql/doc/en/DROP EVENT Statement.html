@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP EVENT Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="drop-event"></a>13.1.23&nbsp;DROP EVENT Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580732176"></a><a class="indexterm" name="idm45852580731104"></a><a class="indexterm" name="idm45852580729616"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DROP EVENT [IF EXISTS] <em class="replaceable">event_name</em></code></pre><p>
+      This statement drops the event named
+      <em class="replaceable"><code>event_name</code></em>. The event immediately
+      ceases being active, and is deleted completely from the server.
+    </p><p>
+      If the event does not exist, the error <span class="errortext">ERROR 1517
+      (HY000): Unknown event
+      '<em class="replaceable"><code>event_name</code></em>'</span> results. You
+      can override this and cause the statement to generate a warning
+      for nonexistent events instead using <code class="literal">IF EXISTS</code>.
+    </p><p>
+      This statement requires the <a class="link" href="privileges-provided.html#priv_event"><code class="literal">EVENT</code></a>
+      privilege for the schema to which the event to be dropped belongs.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

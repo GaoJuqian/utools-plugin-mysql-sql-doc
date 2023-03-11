@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW BINLOG EVENTS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-binlog-events"></a>13.7.5.2&nbsp;SHOW BINLOG EVENTS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571558560"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW BINLOG EVENTS
+   [IN '<em class="replaceable">log_name</em>']
+   [FROM <em class="replaceable">pos</em>]
+   [LIMIT [<em class="replaceable">offset</em>,] <em class="replaceable">row_count</em>]</code></pre><p>
+        Shows the events in the binary log. If you do not specify
+        <code class="literal">'<em class="replaceable"><code>log_name</code></em>'</code>, the
+        first binary log is displayed. <a class="link" href="show-binlog-events.html" title="13.7.5.2&nbsp;SHOW BINLOG EVENTS Statement"><code class="literal">SHOW BINLOG
+        EVENTS</code></a> requires the <a class="link" href="privileges-provided.html#priv_replication-slave"><code class="literal">REPLICATION
+        SLAVE</code></a> privilege.
+      </p><p>
+        The <code class="literal">LIMIT</code> clause has the same syntax as for
+        the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement. See
+        <a class="xref" href="select.html" title="13.2.9&nbsp;SELECT Statement">Section&nbsp;13.2.9, “SELECT Statement”</a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          Issuing a <a class="link" href="show-binlog-events.html" title="13.7.5.2&nbsp;SHOW BINLOG EVENTS Statement"><code class="literal">SHOW BINLOG EVENTS</code></a>
+          with no <code class="literal">LIMIT</code> clause could start a very
+          time- and resource-consuming process because the server
+          returns to the client the complete contents of the binary log
+          (which includes all statements executed by the server that
+          modify data). As an alternative to <a class="link" href="show-binlog-events.html" title="13.7.5.2&nbsp;SHOW BINLOG EVENTS Statement"><code class="literal">SHOW
+          BINLOG EVENTS</code></a>, use the
+          <a class="link" href="mysqlbinlog.html" title="4.6.7&nbsp;mysqlbinlog — Utility for Processing Binary Log Files"><span class="command"><strong>mysqlbinlog</strong></span></a> utility to save the binary log
+          to a text file for later examination and analysis. See
+          <a class="xref" href="mysqlbinlog.html" title="4.6.7&nbsp;mysqlbinlog — Utility for Processing Binary Log Files">Section&nbsp;4.6.7, “mysqlbinlog — Utility for Processing Binary Log Files”</a>.
+</p>
+</div>
+<p>
+        <a class="link" href="show-binlog-events.html" title="13.7.5.2&nbsp;SHOW BINLOG EVENTS Statement"><code class="literal">SHOW BINLOG EVENTS</code></a> displays the
+        following fields for each event in the binary log:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Log_name</code>
+          </p><p>
+            The name of the file that is being listed.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Pos</code>
+          </p><p>
+            The position at which the event occurs.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Event_type</code>
+          </p><p>
+            An identifier that describes the event type.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Server_id</code>
+          </p><p>
+            The server ID of the server on which the event originated.
+          </p></li><li class="listitem"><p>
+            <code class="literal">End_log_pos</code>
+          </p><p>
+            The position at which the next event begins, which is equal
+            to <code class="literal">Pos</code> plus the size of the event.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Info</code>
+          </p><p>
+            More detailed information about the event type. The format
+            of this information depends on the event type.
+</p></li></ul>
+</div>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Note
+</div>
+<p>
+          Some events relating to the setting of user and system
+          variables are not included in the output from
+          <a class="link" href="show-binlog-events.html" title="13.7.5.2&nbsp;SHOW BINLOG EVENTS Statement"><code class="literal">SHOW BINLOG EVENTS</code></a>. To get
+          complete coverage of events within a binary log, use
+          <a class="link" href="mysqlbinlog.html" title="4.6.7&nbsp;mysqlbinlog — Utility for Processing Binary Log Files"><span class="command"><strong>mysqlbinlog</strong></span></a>.
+</p>
+</div>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Note
+</div>
+<p>
+          <a class="link" href="show-binlog-events.html" title="13.7.5.2&nbsp;SHOW BINLOG EVENTS Statement"><code class="literal">SHOW BINLOG EVENTS</code></a> does
+          <span class="emphasis"><em>not</em></span> work with relay log files. You can
+          use <a class="link" href="show-relaylog-events.html" title="13.7.5.32&nbsp;SHOW RELAYLOG EVENTS Statement"><code class="literal">SHOW RELAYLOG EVENTS</code></a> for
+          this purpose.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

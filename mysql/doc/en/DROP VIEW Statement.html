@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP VIEW Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="drop-view"></a>13.1.32&nbsp;DROP VIEW Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580513168"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DROP VIEW [IF EXISTS]
+    <em class="replaceable">view_name</em> [, <em class="replaceable">view_name</em>] ...
+    [RESTRICT | CASCADE]</code></pre><p>
+      <a class="link" href="drop-view.html" title="13.1.32&nbsp;DROP VIEW Statement"><code class="literal">DROP VIEW</code></a> removes one or more
+      views. You must have the <a class="link" href="privileges-provided.html#priv_drop"><code class="literal">DROP</code></a>
+      privilege for each view.
+    </p><p>
+      If any views named in the argument list do not exist, the
+      statement returns an error indicating by name which nonexisting
+      views it was unable to drop, but also drops all views in the list
+      that do exist.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        In MySQL 8.0, <a class="link" href="drop-view.html" title="13.1.32&nbsp;DROP VIEW Statement"><code class="literal">DROP VIEW</code></a>
+        fails if any views named in the argument list do not exist. Due
+        to the change in behavior, a partially completed
+        <a class="link" href="drop-view.html" title="13.1.32&nbsp;DROP VIEW Statement"><code class="literal">DROP VIEW</code></a> operation on a MySQL
+        5.7 source fails when replicated to a MySQL
+        8.0 replica. To avoid this failure scenario, use
+        <code class="literal">IF EXISTS</code> syntax in <a class="link" href="drop-view.html" title="13.1.32&nbsp;DROP VIEW Statement"><code class="literal">DROP
+        VIEW</code></a> statements to prevent an error from occurring for
+        views that do not exist. For more information, see
+        <a class="ulink" href="https://dev.mysql.com/doc/refman/8.0/en/atomic-ddl.html" target="_top">Atomic Data Definition Statement Support</a>.
+</p>
+</div>
+<p>
+      The <code class="literal">IF EXISTS</code> clause prevents an error from
+      occurring for views that don't exist. When this clause is given, a
+      <code class="literal">NOTE</code> is generated for each nonexistent view.
+      See <a class="xref" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement">Section&nbsp;13.7.5.40, “SHOW WARNINGS Statement”</a>.
+    </p><p>
+      <code class="literal">RESTRICT</code> and <code class="literal">CASCADE</code>, if
+      given, are parsed and ignored.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

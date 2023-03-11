@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Row Subqueries</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="row-subqueries"></a>13.2.10.5&nbsp;Row Subqueries</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577787920"></a><a class="indexterm" name="idm45852577786848"></a><a class="indexterm" name="idm45852577785808"></a><a class="indexterm" name="idm45852577784736"></a><p>
+        Scalar or column subqueries return a single value or a column of
+        values. A <span class="emphasis"><em>row subquery</em></span> is a subquery
+        variant that returns a single row and can thus return more than
+        one column value. Legal operators for row subquery comparisons
+        are:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">=  &gt;  &lt;  &gt;=  &lt;=  &lt;&gt;  !=  &lt;=&gt;</code></pre><p>
+        Here are two examples:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1
+  WHERE (col1,col2) = (SELECT col3, col4 FROM t2 WHERE id = 10);
+SELECT * FROM t1
+  WHERE ROW(col1,col2) = (SELECT col3, col4 FROM t2 WHERE id = 10);</code></pre><p>
+        For both queries, if the table <code class="literal">t2</code> contains a
+        single row with <code class="literal">id = 10</code>, the subquery returns
+        a single row. If this row has <code class="literal">col3</code> and
+        <code class="literal">col4</code> values equal to the
+        <code class="literal">col1</code> and <code class="literal">col2</code> values of
+        any rows in <code class="literal">t1</code>, the <code class="literal">WHERE</code>
+        expression is <code class="literal">TRUE</code> and each query returns
+        those <code class="literal">t1</code> rows. If the <code class="literal">t2</code>
+        row <code class="literal">col3</code> and <code class="literal">col4</code> values
+        are not equal the <code class="literal">col1</code> and
+        <code class="literal">col2</code> values of any <code class="literal">t1</code> row,
+        the expression is <code class="literal">FALSE</code> and the query returns
+        an empty result set. The expression is
+        <span class="emphasis"><em>unknown</em></span> (that is, <code class="literal">NULL</code>)
+        if the subquery produces no rows. An error occurs if the
+        subquery produces multiple rows because a row subquery can
+        return at most one row.
+      </p><p>
+        For information about how each operator works for row
+        comparisons, see <a class="xref" href="comparison-operators.html" title="12.4.2&nbsp;Comparison Functions and Operators">Section&nbsp;12.4.2, “Comparison Functions and Operators”</a>.
+      </p><p>
+        The expressions <code class="literal">(1,2)</code> and
+        <code class="literal">ROW(1,2)</code> are sometimes called
+        <span class="firstterm">row constructors</span>. The two
+        are equivalent. The row constructor and the row returned by the
+        subquery must contain the same number of values.
+      </p><p>
+        A row constructor is used for comparisons with subqueries that
+        return two or more columns. When a subquery returns a single
+        column, this is regarded as a scalar value and not as a row, so
+        a row constructor cannot be used with a subquery that does not
+        return at least two columns. Thus, the following query fails
+        with a syntax error:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 WHERE ROW(1) = (SELECT column1 FROM t2)</code></pre><p>
+        Row constructors are legal in other contexts. For example, the
+        following two statements are semantically equivalent (and are
+        handled in the same way by the optimizer):
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1 WHERE (column1,column2) = (1,1);
+SELECT * FROM t1 WHERE column1 = 1 AND column2 = 1;</code></pre><p>
+        The following query answers the request, <span class="quote">“<span class="quote">find all rows in
+        table <code class="literal">t1</code> that also exist in table
+        <code class="literal">t2</code></span>”</span>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT column1,column2,column3
+  FROM t1
+  WHERE (column1,column2,column3) IN
+         (SELECT column1,column2,column3 FROM t2);</code></pre><p>
+        For more information about the optimizer and row constructors,
+        see <a class="xref" href="row-constructor-optimization.html" title="8.2.1.19&nbsp;Row Constructor Expression Optimization">Section&nbsp;8.2.1.19, “Row Constructor Expression Optimization”</a>
+</p>
+</div>
+<br>
+        
+</body>
+</html>

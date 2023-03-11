@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP DATABASE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="drop-database"></a>13.1.22&nbsp;DROP DATABASE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580796976"></a><a class="indexterm" name="idm45852580795904"></a><a class="indexterm" name="idm45852580794832"></a><a class="indexterm" name="idm45852580793344"></a><a class="indexterm" name="idm45852580791856"></a><a class="indexterm" name="idm45852580790368"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DROP {DATABASE | SCHEMA} [IF EXISTS] <em class="replaceable">db_name</em></code></pre><p>
+      <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP DATABASE</code></a> drops all tables in
+      the database and deletes the database. Be
+      <span class="emphasis"><em>very</em></span> careful with this statement! To use
+      <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP DATABASE</code></a>, you need the
+      <a class="link" href="privileges-provided.html#priv_drop"><code class="literal">DROP</code></a> privilege on the database.
+      <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP
+      SCHEMA</code></a> is a synonym for <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP
+      DATABASE</code></a>.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+        When a database is dropped, privileges granted specifically for
+        the database are <span class="emphasis"><em>not</em></span> automatically dropped.
+        They must be dropped manually. See <a class="xref" href="grant.html" title="13.7.1.4&nbsp;GRANT Statement">Section&nbsp;13.7.1.4, “GRANT Statement”</a>.
+</p>
+</div>
+<p>
+      <code class="literal">IF EXISTS</code> is used to prevent an error from
+      occurring if the database does not exist.
+    </p><p>
+      If the default database is dropped, the default database is unset
+      (the <a class="link" href="information-functions.html#function_database"><code class="literal">DATABASE()</code></a> function returns
+      <code class="literal">NULL</code>).
+    </p><p>
+      If you use <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP DATABASE</code></a> on a
+      symbolically linked database, both the link and the original
+      database are deleted.
+    </p><p>
+      <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP DATABASE</code></a> returns the number of
+      tables that were removed. This corresponds to the number of
+      <code class="filename">.frm</code> files removed.
+    </p><p>
+      The <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP DATABASE</code></a> statement removes
+      from the given database directory those files and directories that
+      MySQL itself may create during normal operation:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          All files with the following extensions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              <code class="filename">.BAK</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.DAT</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.HSH</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.MRG</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.MYD</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.MYI</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.TRG</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.TRN</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.cfg</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.db</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.frm</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.ibd</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.ndb</code>
+            </p></li><li class="listitem"><p>
+              <code class="filename">.par</code>
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          The <code class="filename">db.opt</code> file, if it exists.
+</p></li></ul>
+</div>
+<p>
+      If other files or directories remain in the database directory
+      after MySQL removes those just listed, the database directory
+      cannot be removed. In this case, you must remove any remaining
+      files or directories manually and issue the
+      <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP DATABASE</code></a> statement again.
+    </p><p>
+      Dropping a database does not remove any
+      <code class="literal">TEMPORARY</code> tables that were created in that
+      database. <code class="literal">TEMPORARY</code> tables are automatically
+      removed when the session that created them ends. See
+      <a class="xref" href="create-temporary-table.html" title="13.1.18.2&nbsp;CREATE TEMPORARY TABLE Statement">Section&nbsp;13.1.18.2, “CREATE TEMPORARY TABLE Statement”</a>.
+    </p><a class="indexterm" name="idm45852580736880"></a><p>
+      You can also drop databases with <a class="link" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program"><span class="command"><strong>mysqladmin</strong></span></a>.
+      See <a class="xref" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program">Section&nbsp;4.5.2, “mysqladmin — A MySQL Server Administration Program”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

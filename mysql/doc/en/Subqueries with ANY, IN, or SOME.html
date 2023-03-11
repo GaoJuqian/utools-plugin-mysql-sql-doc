@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Subqueries with ANY, IN, or SOME</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="any-in-some-subqueries"></a>13.2.10.3&nbsp;Subqueries with ANY, IN, or SOME</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577872368"></a><a class="indexterm" name="idm45852577870912"></a><a class="indexterm" name="idm45852577869872"></a><a class="indexterm" name="idm45852577868832"></a><p>
+        Syntax:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql"><em class="replaceable">operand</em> <em class="replaceable">comparison_operator</em> ANY (<em class="replaceable">subquery</em>)
+<em class="replaceable">operand</em> IN (<em class="replaceable">subquery</em>)
+<em class="replaceable">operand</em> <em class="replaceable">comparison_operator</em> SOME (<em class="replaceable">subquery</em>)</code></pre><p>
+        Where <em class="replaceable"><code>comparison_operator</code></em> is one of
+        these operators:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">=  &gt;  &lt;  &gt;=  &lt;=  &lt;&gt;  !=</code></pre><p>
+        The <code class="literal">ANY</code> keyword, which must follow a
+        comparison operator, means <span class="quote">“<span class="quote">return <code class="literal">TRUE</code>
+        if the comparison is <code class="literal">TRUE</code> for
+        <code class="literal">ANY</code> of the values in the column that the
+        subquery returns.</span>”</span> For example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT s1 FROM t1 WHERE s1 &gt; ANY (SELECT s1 FROM t2);</code></pre><p>
+        Suppose that there is a row in table <code class="literal">t1</code>
+        containing <code class="literal">(10)</code>. The expression is
+        <code class="literal">TRUE</code> if table <code class="literal">t2</code> contains
+        <code class="literal">(21,14,7)</code> because there is a value
+        <code class="literal">7</code> in <code class="literal">t2</code> that is less than
+        <code class="literal">10</code>. The expression is
+        <code class="literal">FALSE</code> if table <code class="literal">t2</code> contains
+        <code class="literal">(20,10)</code>, or if table <code class="literal">t2</code> is
+        empty. The expression is <span class="emphasis"><em>unknown</em></span> (that is,
+        <code class="literal">NULL</code>) if table <code class="literal">t2</code> contains
+        <code class="literal">(NULL,NULL,NULL)</code>.
+      </p><p>
+        When used with a subquery, the word <code class="literal">IN</code> is an
+        alias for <code class="literal">= ANY</code>. Thus, these two statements
+        are the same:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT s1 FROM t1 WHERE s1 = ANY (SELECT s1 FROM t2);
+SELECT s1 FROM t1 WHERE s1 IN    (SELECT s1 FROM t2);</code></pre><p>
+        <code class="literal">IN</code> and <code class="literal">= ANY</code> are not
+        synonyms when used with an expression list.
+        <code class="literal">IN</code> can take an expression list, but
+        <code class="literal">= ANY</code> cannot. See
+        <a class="xref" href="comparison-operators.html" title="12.4.2&nbsp;Comparison Functions and Operators">Section&nbsp;12.4.2, “Comparison Functions and Operators”</a>.
+      </p><p>
+        <code class="literal">NOT IN</code> is not an alias for <code class="literal">&lt;&gt;
+        ANY</code>, but for <code class="literal">&lt;&gt; ALL</code>. See
+        <a class="xref" href="all-subqueries.html" title="13.2.10.4&nbsp;Subqueries with ALL">Section&nbsp;13.2.10.4, “Subqueries with ALL”</a>.
+      </p><p>
+        The word <code class="literal">SOME</code> is an alias for
+        <code class="literal">ANY</code>. Thus, these two statements are the same:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT s1 FROM t1 WHERE s1 &lt;&gt; ANY  (SELECT s1 FROM t2);
+SELECT s1 FROM t1 WHERE s1 &lt;&gt; SOME (SELECT s1 FROM t2);</code></pre><p>
+        Use of the word <code class="literal">SOME</code> is rare, but this
+        example shows why it might be useful. To most people, the
+        English phrase <span class="quote">“<span class="quote">a is not equal to any b</span>”</span> means
+        <span class="quote">“<span class="quote">there is no b which is equal to a,</span>”</span> but that is
+        not what is meant by the SQL syntax. The syntax means
+        <span class="quote">“<span class="quote">there is some b to which a is not equal.</span>”</span> Using
+        <code class="literal">&lt;&gt; SOME</code> instead helps ensure that
+        everyone understands the true meaning of the query.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

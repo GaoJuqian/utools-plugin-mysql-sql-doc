@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW MASTER STATUS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-master-status"></a>13.7.5.23&nbsp;SHOW MASTER STATUS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570584448"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW MASTER STATUS</code></pre><p>
+        This statement provides status information about the binary log
+        files of the source. It requires either the
+        <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> or
+        <a class="link" href="privileges-provided.html#priv_replication-client"><code class="literal">REPLICATION CLIENT</code></a> privilege.
+      </p><p>
+        Example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW MASTER STATUS\G
+*************************** 1. row ***************************
+             File: source-bin.000002
+         Position: 1307
+     Binlog_Do_DB: test
+ Binlog_Ignore_DB: manual, mysql
+Executed_Gtid_Set: 3E11FA47-71CA-11E1-9E33-C80AA9429562:1-5
+1 row in set (0.00 sec)</code></pre><p>
+        When global transaction IDs are in use,
+        <code class="literal">Executed_Gtid_Set</code> shows the set of GTIDs for
+        transactions that have been executed on the source. This is the
+        same as the value for the
+        <a class="link" href="replication-options-gtids.html#sysvar_gtid_executed"><code class="literal">gtid_executed</code></a> system variable
+        on this server, as well as the value for
+        <code class="literal">Executed_Gtid_Set</code> in the output of
+        <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE STATUS</code></a> on this server.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

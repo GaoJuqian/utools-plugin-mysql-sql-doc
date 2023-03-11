@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>EXPLAIN StatementObtaining Table Structure InformationObtaining Execution Plan Information</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="explain"></a>13.8.2&nbsp;EXPLAIN Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852568857280"></a><a class="indexterm" name="idm45852568856208"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">{EXPLAIN | DESCRIBE | DESC}
+    <em class="replaceable">tbl_name</em> [<em class="replaceable">col_name</em> | <em class="replaceable">wild</em>]
+
+{EXPLAIN | DESCRIBE | DESC}
+    [<em class="replaceable">explain_type</em>]
+    {<em class="replaceable">explainable_stmt</em> | FOR CONNECTION <em class="replaceable">connection_id</em>}
+
+<em class="replaceable">explain_type</em>: {
+    EXTENDED
+  | PARTITIONS
+  | FORMAT = <em class="replaceable">format_name</em>
+}
+
+<em class="replaceable">format_name</em>: {
+    TRADITIONAL
+  | JSON
+}
+
+<em class="replaceable">explainable_stmt</em>: {
+    SELECT statement
+  | DELETE statement
+  | INSERT statement
+  | REPLACE statement
+  | UPDATE statement
+}</code></pre><p>
+      The <a class="link" href="describe.html" title="13.8.1&nbsp;DESCRIBE Statement"><code class="literal">DESCRIBE</code></a> and
+      <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> statements are synonyms. In
+      practice, the <a class="link" href="describe.html" title="13.8.1&nbsp;DESCRIBE Statement"><code class="literal">DESCRIBE</code></a> keyword is
+      more often used to obtain information about table structure,
+      whereas <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> is used to obtain a
+      query execution plan (that is, an explanation of how MySQL would
+      execute a query).
+    </p><p>
+      The following discussion uses the
+      <a class="link" href="describe.html" title="13.8.1&nbsp;DESCRIBE Statement"><code class="literal">DESCRIBE</code></a> and
+      <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> keywords in accordance with
+      those uses, but the MySQL parser treats them as completely
+      synonymous.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="explain.html#explain-table-structure" title="Obtaining Table Structure Information">Obtaining Table Structure Information</a></p></li><li class="listitem"><p><a class="xref" href="explain.html#explain-execution-plan" title="Obtaining Execution Plan Information">Obtaining Execution Plan Information</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h4 class="title"><a name="explain-table-structure"></a>Obtaining Table Structure Information</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        <a class="link" href="describe.html" title="13.8.1&nbsp;DESCRIBE Statement"><code class="literal">DESCRIBE</code></a> provides information
+        about the columns in a table:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; DESCRIBE City;
++------------+----------+------+-----+---------+----------------+
+| Field      | Type     | Null | Key | Default | Extra          |
++------------+----------+------+-----+---------+----------------+
+| Id         | int(11)  | NO   | PRI | NULL    | auto_increment |
+| Name       | char(35) | NO   |     |         |                |
+| Country    | char(3)  | NO   | UNI |         |                |
+| District   | char(20) | YES  | MUL |         |                |
+| Population | int(11)  | NO   |     | 0       |                |
++------------+----------+------+-----+---------+----------------+</code></pre><p>
+        <a class="link" href="describe.html" title="13.8.1&nbsp;DESCRIBE Statement"><code class="literal">DESCRIBE</code></a> is a shortcut for
+        <a class="link" href="show-columns.html" title="13.7.5.5&nbsp;SHOW COLUMNS Statement"><code class="literal">SHOW COLUMNS</code></a>. These statements
+        also display information for views. The description for
+        <a class="link" href="show-columns.html" title="13.7.5.5&nbsp;SHOW COLUMNS Statement"><code class="literal">SHOW COLUMNS</code></a> provides more
+        information about the output columns. See
+        <a class="xref" href="show-columns.html" title="13.7.5.5&nbsp;SHOW COLUMNS Statement">Section&nbsp;13.7.5.5, “SHOW COLUMNS Statement”</a>.
+      </p><p>
+        By default, <a class="link" href="describe.html" title="13.8.1&nbsp;DESCRIBE Statement"><code class="literal">DESCRIBE</code></a> displays
+        information about all columns in the table.
+        <em class="replaceable"><code>col_name</code></em>, if given, is the name of a
+        column in the table. In this case, the statement displays
+        information only for the named column.
+        <em class="replaceable"><code>wild</code></em>, if given, is a pattern string.
+        It can contain the SQL <code class="literal">%</code> and
+        <code class="literal">_</code> wildcard characters. In this case, the
+        statement displays output only for the columns with names
+        matching the string. There is no need to enclose the string
+        within quotation marks unless it contains spaces or other
+        special characters.
+      </p><a class="indexterm" name="idm45852568818640"></a><a class="indexterm" name="idm45852568817568"></a><p>
+        The <a class="link" href="describe.html" title="13.8.1&nbsp;DESCRIBE Statement"><code class="literal">DESCRIBE</code></a> statement is
+        provided for compatibility with Oracle.
+      </p><p>
+        The <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE TABLE</code></a>,
+        <a class="link" href="show-table-status.html" title="13.7.5.36&nbsp;SHOW TABLE STATUS Statement"><code class="literal">SHOW TABLE STATUS</code></a>, and
+        <a class="link" href="show-index.html" title="13.7.5.22&nbsp;SHOW INDEX Statement"><code class="literal">SHOW INDEX</code></a> statements also
+        provide information about tables. See <a class="xref" href="show.html" title="13.7.5&nbsp;SHOW Statements">Section&nbsp;13.7.5, “SHOW Statements”</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="explain-execution-plan"></a>Obtaining Execution Plan Information</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        The <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> statement provides
+        information about how MySQL executes statements:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> works with
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>,
+            <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>,
+            <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>,
+            <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a>, and
+            <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statements.
+          </p></li><li class="listitem"><p>
+            When <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> is used with an
+            explainable statement, MySQL displays information from the
+            optimizer about the statement execution plan. That is, MySQL
+            explains how it would process the statement, including
+            information about how tables are joined and in which order.
+            For information about using
+            <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> to obtain execution
+            plan information, see <a class="xref" href="explain-output.html" title="8.8.2&nbsp;EXPLAIN Output Format">Section&nbsp;8.8.2, “EXPLAIN Output Format”</a>.
+          </p></li><li class="listitem"><p>
+            When <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> is used with
+            <code class="literal">FOR CONNECTION
+            <em class="replaceable"><code>connection_id</code></em></code> rather
+            than an explainable statement, it displays the execution
+            plan for the statement executing in the named connection.
+            See <a class="xref" href="explain-for-connection.html" title="8.8.4&nbsp;Obtaining Execution Plan Information for a Named Connection">Section&nbsp;8.8.4, “Obtaining Execution Plan Information for a Named Connection”</a>.
+          </p></li><li class="listitem"><p>
+            For <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements,
+            <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> produces additional
+            execution plan information that can be displayed using
+            <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW WARNINGS</code></a>. See
+            <a class="xref" href="explain-extended.html" title="8.8.3&nbsp;Extended EXPLAIN Output Format">Section&nbsp;8.8.3, “Extended EXPLAIN Output Format”</a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              In older MySQL releases, extended information was produced
+              using <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN
+              EXTENDED</code></a>. That syntax is still recognized for
+              backward compatibility but extended output is now enabled
+              by default, so the <code class="literal">EXTENDED</code> keyword is
+              superfluous and deprecated. Its use results in a warning,
+              and it is removed from
+              <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> syntax in MySQL
+              8.0.
+</p>
+</div>
+</li><li class="listitem"><p>
+            <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> is useful for
+            examining queries involving partitioned tables. See
+            <a class="xref" href="partitioning-info.html" title="22.3.5&nbsp;Obtaining Information About Partitions">Section&nbsp;22.3.5, “Obtaining Information About Partitions”</a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              In older MySQL releases, partition information was
+              produced using
+              <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN
+              PARTITIONS</code></a>. That syntax is still recognized for
+              backward compatibility but partition output is now enabled
+              by default, so the <code class="literal">PARTITIONS</code> keyword
+              is superfluous and deprecated. Its use results in a
+              warning, and it is removed from
+              <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> syntax in MySQL
+              8.0.
+</p>
+</div>
+</li><li class="listitem"><p>
+            The <code class="literal">FORMAT</code> option can be used to select
+            the output format. <code class="literal">TRADITIONAL</code> presents
+            the output in tabular format. This is the default if no
+            <code class="literal">FORMAT</code> option is present.
+            <code class="literal">JSON</code> format displays the information in
+            JSON format.
+</p></li></ul>
+</div>
+<p>
+        <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> requires the same
+        privileges required to execute the explained statement.
+        Additionally, <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> also
+        requires the <a class="link" href="privileges-provided.html#priv_show-view"><code class="literal">SHOW VIEW</code></a> privilege
+        for any explained view.
+      </p><a class="indexterm" name="idm45852568764176"></a><p>
+        With the help of <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a>, you can
+        see where you should add indexes to tables so that the statement
+        executes faster by using indexes to find rows. You can also use
+        <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> to check whether the
+        optimizer joins the tables in an optimal order. To give a hint
+        to the optimizer to use a join order corresponding to the order
+        in which the tables are named in a
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement, begin the
+        statement with <code class="literal">SELECT STRAIGHT_JOIN</code> rather
+        than just <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>. (See
+        <a class="xref" href="select.html" title="13.2.9&nbsp;SELECT Statement">Section&nbsp;13.2.9, “SELECT Statement”</a>.)
+      </p><p>
+        The optimizer trace may sometimes provide information
+        complementary to that of <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a>.
+        However, the optimizer trace format and content are subject to
+        change between versions. For details, see
+        <a class="ulink" href="https://dev.mysql.com/doc/internals/en/optimizer-tracing.html" target="_top">MySQL
+        Internals: Tracing the Optimizer</a>.
+      </p><p>
+        If you have a problem with indexes not being used when you
+        believe that they should be, run <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE
+        TABLE</code></a> to update table statistics, such as cardinality
+        of keys, that can affect the choices the optimizer makes. See
+        <a class="xref" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement">Section&nbsp;13.7.2.1, “ANALYZE TABLE Statement”</a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          MySQL Workbench has a Visual Explain capability that provides a
+          visual representation of
+          <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> output. See
+          <a class="ulink" href="https://dev.mysql.com/doc/workbench/en/wb-tutorial-visual-explain-dbt3.html" target="_top">Tutorial: Using Explain to Improve Query Performance</a>.
+</p>
+</div>
+
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>LOAD INDEX INTO CACHE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="load-index"></a>13.7.6.5&nbsp;LOAD INDEX INTO CACHE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD INDEX INTO CACHE
+  <em class="replaceable">tbl_index_list</em> [, <em class="replaceable">tbl_index_list</em>] ...
+
+<em class="replaceable">tbl_index_list</em>:
+  <em class="replaceable">tbl_name</em>
+    [PARTITION (<em class="replaceable">partition_list</em>)]
+    [{INDEX|KEY} (<em class="replaceable">index_name</em>[, <em class="replaceable">index_name</em>] ...)]
+    [IGNORE LEAVES]
+
+<em class="replaceable">partition_list</em>: {
+    <em class="replaceable">partition_name</em>[, <em class="replaceable">partition_name</em>] ...
+  | ALL
+}</code></pre><p>
+        The <a class="link" href="load-index.html" title="13.7.6.5&nbsp;LOAD INDEX INTO CACHE Statement"><code class="literal">LOAD INDEX INTO
+        CACHE</code></a> statement preloads a table index into the key
+        cache to which it has been assigned by an explicit
+        <a class="link" href="cache-index.html" title="13.7.6.2&nbsp;CACHE INDEX Statement"><code class="literal">CACHE INDEX</code></a> statement, or into
+        the default key cache otherwise.
+      </p><p>
+        <a class="link" href="load-index.html" title="13.7.6.5&nbsp;LOAD INDEX INTO CACHE Statement"><code class="literal">LOAD INDEX INTO
+        CACHE</code></a> applies only to <code class="literal">MyISAM</code>
+        tables, including partitioned <code class="literal">MyISAM</code> tables.
+        In addition, indexes on partitioned tables can be preloaded for
+        one, several, or all partitions.
+      </p><p>
+        The <code class="literal">IGNORE LEAVES</code> modifier causes only blocks
+        for the nonleaf nodes of the index to be preloaded.
+      </p><p>
+        <code class="literal">IGNORE LEAVES</code> is also supported for
+        partitioned <code class="literal">MyISAM</code> tables.
+      </p><p>
+        The following statement preloads nodes (index blocks) of indexes
+        for the tables <code class="literal">t1</code> and <code class="literal">t2</code>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; LOAD INDEX INTO CACHE t1, t2 IGNORE LEAVES;
++---------+--------------+----------+----------+
+| Table   | Op           | Msg_type | Msg_text |
++---------+--------------+----------+----------+
+| test.t1 | preload_keys | status   | OK       |
+| test.t2 | preload_keys | status   | OK       |
++---------+--------------+----------+----------+</code></pre><p>
+        This statement preloads all index blocks from
+        <code class="literal">t1</code>. It preloads only blocks for the nonleaf
+        nodes from <code class="literal">t2</code>.
+      </p><p>
+        The syntax of <a class="link" href="load-index.html" title="13.7.6.5&nbsp;LOAD INDEX INTO CACHE Statement"><code class="literal">LOAD
+        INDEX INTO CACHE</code></a> enables you to specify that only
+        particular indexes from a table should be preloaded. However,
+        the implementation preloads all the table's indexes into the
+        cache, so there is no reason to specify anything other than the
+        table name.
+      </p><p>
+        It is possible to preload indexes on specific partitions of
+        partitioned <code class="literal">MyISAM</code> tables. For example, of
+        the following 2 statements, the first preloads indexes for
+        partition <code class="literal">p0</code> of a partitioned table
+        <code class="literal">pt</code>, while the second preloads the indexes for
+        partitions <code class="literal">p1</code> and <code class="literal">p3</code> of
+        the same table:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD INDEX INTO CACHE pt PARTITION (p0);
+LOAD INDEX INTO CACHE pt PARTITION (p1, p3);</code></pre><p>
+        To preload the indexes for all partitions in table
+        <code class="literal">pt</code>, you can use either of the following two
+        statements:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD INDEX INTO CACHE pt PARTITION (ALL);
+
+LOAD INDEX INTO CACHE pt;</code></pre><p>
+        The two statements just shown are equivalent, and issuing either
+        one has exactly the same effect. In other words, if you wish to
+        preload indexes for all partitions of a partitioned table, the
+        <code class="literal">PARTITION (ALL)</code> clause is optional.
+      </p><p>
+        When preloading indexes for multiple partitions, the partitions
+        need not be contiguous, and you need not list their names in any
+        particular order.
+      </p><p>
+        <a class="link" href="load-index.html" title="13.7.6.5&nbsp;LOAD INDEX INTO CACHE Statement"><code class="literal">LOAD INDEX INTO
+        CACHE ... IGNORE LEAVES</code></a> fails unless all indexes in a
+        table have the same block size. To determine index block sizes
+        for a table, use <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk -dv</strong></span></a> and check the
+        <code class="literal">Blocksize</code> column.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

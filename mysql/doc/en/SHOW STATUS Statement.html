@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW STATUS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-status"></a>13.7.5.35&nbsp;SHOW STATUS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852569878224"></a><a class="indexterm" name="idm45852569877152"></a><a class="indexterm" name="idm45852569876080"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW [GLOBAL | SESSION] STATUS
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><a class="indexterm" name="idm45852569870720"></a>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          The value of the
+          <a class="link" href="server-system-variables.html#sysvar_show_compatibility_56"><code class="literal">show_compatibility_56</code></a> system
+          variable affects the information available from and privileges
+          required for the statement described here. For details, see
+          the description of that variable in
+          <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>.
+</p>
+</div>
+<p>
+        <a class="link" href="show-status.html" title="13.7.5.35&nbsp;SHOW STATUS Statement"><code class="literal">SHOW STATUS</code></a> provides server
+        status information (see
+        <a class="xref" href="server-status-variables.html" title="5.1.9&nbsp;Server Status Variables">Section&nbsp;5.1.9, “Server Status Variables”</a>). This statement does
+        not require any privilege. It requires only the ability to
+        connect to the server.
+      </p><p>
+        Status variable information is also available from these
+        sources:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Performance Schema tables. See
+            <a class="xref" href="performance-schema-status-variable-tables.html" title="25.12.14&nbsp;Performance Schema Status Variable Tables">Section&nbsp;25.12.14, “Performance Schema Status Variable Tables”</a>.
+          </p></li><li class="listitem"><p>
+            The <a class="link" href="information-schema-status-table.html" title="24.3.10&nbsp;The INFORMATION_SCHEMA GLOBAL_STATUS and SESSION_STATUS Tables"><code class="literal">GLOBAL_STATUS</code></a> and
+            <a class="link" href="information-schema-status-table.html" title="24.3.10&nbsp;The INFORMATION_SCHEMA GLOBAL_STATUS and SESSION_STATUS Tables"><code class="literal">SESSION_STATUS</code></a> tables. See
+            <a class="xref" href="information-schema-status-table.html" title="24.3.10&nbsp;The INFORMATION_SCHEMA GLOBAL_STATUS and SESSION_STATUS Tables">Section&nbsp;24.3.10, “The INFORMATION_SCHEMA GLOBAL_STATUS and SESSION_STATUS Tables”</a>.
+          </p></li><li class="listitem"><p>
+            The <a class="link" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program"><span class="command"><strong>mysqladmin extended-status</strong></span></a> command.
+            See <a class="xref" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program">Section&nbsp;4.5.2, “mysqladmin — A MySQL Server Administration Program”</a>.
+</p></li></ul>
+</div>
+<p>
+        For <a class="link" href="show-status.html" title="13.7.5.35&nbsp;SHOW STATUS Statement"><code class="literal">SHOW STATUS</code></a>, a
+        <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, if present, indicates
+        which variable names to match. A <code class="literal">WHERE</code> clause
+        can be given to select rows using more general conditions, as
+        discussed in <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+      </p><p>
+        <a class="link" href="show-status.html" title="13.7.5.35&nbsp;SHOW STATUS Statement"><code class="literal">SHOW STATUS</code></a> accepts an optional
+        <code class="literal">GLOBAL</code> or <code class="literal">SESSION</code> variable
+        scope modifier:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            With a <code class="literal">GLOBAL</code> modifier, the statement
+            displays the global status values. A global status variable
+            may represent status for some aspect of the server itself
+            (for example, <code class="literal">Aborted_connects</code>), or the
+            aggregated status over all connections to MySQL (for
+            example, <code class="literal">Bytes_received</code> and
+            <code class="literal">Bytes_sent</code>). If a variable has no global
+            value, the session value is displayed.
+          </p></li><li class="listitem"><p>
+            With a <code class="literal">SESSION</code> modifier, the statement
+            displays the status variable values for the current
+            connection. If a variable has no session value, the global
+            value is displayed. <code class="literal">LOCAL</code> is a synonym
+            for <code class="literal">SESSION</code>.
+          </p></li><li class="listitem"><p>
+            If no modifier is present, the default is
+            <code class="literal">SESSION</code>.
+</p></li></ul>
+</div>
+<p>
+        The scope for each status variable is listed at
+        <a class="xref" href="server-status-variables.html" title="5.1.9&nbsp;Server Status Variables">Section&nbsp;5.1.9, “Server Status Variables”</a>.
+      </p><p>
+        Each invocation of the <a class="link" href="show-status.html" title="13.7.5.35&nbsp;SHOW STATUS Statement"><code class="literal">SHOW
+        STATUS</code></a> statement uses an internal temporary table and
+        increments the global
+        <a class="link" href="server-status-variables.html#statvar_Created_tmp_tables"><code class="literal">Created_tmp_tables</code></a> value.
+      </p><p>
+        Partial output is shown here. The list of names and values may
+        differ for your server. The meaning of each variable is given in
+        <a class="xref" href="server-status-variables.html" title="5.1.9&nbsp;Server Status Variables">Section&nbsp;5.1.9, “Server Status Variables”</a>.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW STATUS;
++--------------------------+------------+
+| Variable_name            | Value      |
++--------------------------+------------+
+| Aborted_clients          | 0          |
+| Aborted_connects         | 0          |
+| Bytes_received           | 155372598  |
+| Bytes_sent               | 1176560426 |
+| Connections              | 30023      |
+| Created_tmp_disk_tables  | 0          |
+| Created_tmp_tables       | 8340       |
+| Created_tmp_files        | 60         |
+...
+| Open_tables              | 1          |
+| Open_files               | 2          |
+| Open_streams             | 0          |
+| Opened_tables            | 44600      |
+| Questions                | 2026873    |
+...
+| Table_locks_immediate    | 1920382    |
+| Table_locks_waited       | 0          |
+| Threads_cached           | 0          |
+| Threads_created          | 30022      |
+| Threads_connected        | 1          |
+| Threads_running          | 1          |
+| Uptime                   | 80380      |
++--------------------------+------------+</code></pre><p>
+        With a <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, the statement
+        displays only rows for those variables with names that match the
+        pattern:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW STATUS LIKE 'Key%';
++--------------------+----------+
+| Variable_name      | Value    |
++--------------------+----------+
+| Key_blocks_used    | 14955    |
+| Key_read_requests  | 96854827 |
+| Key_reads          | 162040   |
+| Key_write_requests | 7589728  |
+| Key_writes         | 3813196  |
++--------------------+----------+</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Silent Column Specification Changes</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="silent-column-changes"></a>13.1.18.6&nbsp;Silent Column Specification Changes</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852581791376"></a><p>
+        In some cases, MySQL silently changes column specifications from
+        those given in a <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> or
+        <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement. These
+        might be changes to a data type, to attributes associated with a
+        data type, or to an index specification.
+      </p><p>
+        All changes are subject to the internal row-size limit of 65,535
+        bytes, which may cause some attempts at data type changes to
+        fail. See <a class="xref" href="column-count-limit.html" title="8.4.7&nbsp;Limits on Table Column Count and Row Size">Section&nbsp;8.4.7, “Limits on Table Column Count and Row Size”</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Columns that are part of a <code class="literal">PRIMARY KEY</code>
+            are made <code class="literal">NOT NULL</code> even if not declared
+            that way.
+          </p></li><li class="listitem"><p>
+            Trailing spaces are automatically deleted from
+            <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> and
+            <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> member values when the
+            table is created.
+          </p></li><li class="listitem"><p>
+            MySQL maps certain data types used by other SQL database
+            vendors to MySQL types. See
+            <a class="xref" href="other-vendor-data-types.html" title="11.9&nbsp;Using Data Types from Other Database Engines">Section&nbsp;11.9, “Using Data Types from Other Database Engines”</a>.
+          </p></li><li class="listitem"><p>
+            If you include a <code class="literal">USING</code> clause to specify
+            an index type that is not permitted for a given storage
+            engine, but there is another index type available that the
+            engine can use without affecting query results, the engine
+            uses the available type.
+          </p></li><li class="listitem"><p>
+            If strict SQL mode is not enabled, a
+            <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a> column with a length
+            specification greater than 65535 is converted to
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a>, and a
+            <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a> column with a
+            length specification greater than 65535 is converted to
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>. Otherwise, an error
+            occurs in either of these cases.
+          </p></li><li class="listitem"><p>
+            Specifying the <code class="literal">CHARACTER SET binary</code>
+            attribute for a character data type causes the column to be
+            created as the corresponding binary data type:
+            <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a> becomes
+            <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a>,
+            <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a> becomes
+            <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a>, and
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> becomes
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>. For the
+            <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> and
+            <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> data types, this does not
+            occur; they are created as declared. Suppose that you
+            specify a table using this definition:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t
+(
+  c1 VARCHAR(10) CHARACTER SET binary,
+  c2 TEXT CHARACTER SET binary,
+  c3 ENUM('a','b','c') CHARACTER SET binary
+);</code></pre><p>
+            The resulting table has this definition:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t
+(
+  c1 VARBINARY(10),
+  c2 BLOB,
+  c3 ENUM('a','b','c') CHARACTER SET binary
+);</code></pre></li></ul>
+</div>
+<p>
+        To see whether MySQL used a data type other than the one you
+        specified, issue a <a class="link" href="describe.html" title="13.8.1&nbsp;DESCRIBE Statement"><code class="literal">DESCRIBE</code></a> or
+        <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE TABLE</code></a> statement after
+        creating or altering the table.
+      </p><a class="indexterm" name="idm45852581753392"></a><p>
+        Certain other data type changes can occur if you compress a
+        table using <a class="link" href="myisampack.html" title="4.6.5&nbsp;myisampack — Generate Compressed, Read-Only MyISAM Tables"><span class="command"><strong>myisampack</strong></span></a>. See
+        <a class="xref" href="compressed-format.html" title="15.2.3.3&nbsp;Compressed Table Characteristics">Section&nbsp;15.2.3.3, “Compressed Table Characteristics”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

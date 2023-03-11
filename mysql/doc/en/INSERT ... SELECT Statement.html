@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>INSERT ... SELECT Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="insert-select"></a>13.2.5.1&nbsp;INSERT ... SELECT Statement</h4>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852579776000"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">INSERT [LOW_PRIORITY | HIGH_PRIORITY] [IGNORE]
+    [INTO] <em class="replaceable">tbl_name</em>
+    [PARTITION (<em class="replaceable">partition_name</em> [, <em class="replaceable">partition_name</em>] ...)]
+    [(<em class="replaceable">col_name</em> [, <em class="replaceable">col_name</em>] ...)]
+    SELECT ...
+    [ON DUPLICATE KEY UPDATE <em class="replaceable">assignment_list</em>]
+
+<em class="replaceable">value</em>:
+    {<em class="replaceable">expr</em> | DEFAULT}
+
+<em class="replaceable">assignment</em>:
+    <em class="replaceable">col_name</em> = <em class="replaceable">value</em>
+
+<em class="replaceable">assignment_list</em>:
+    <em class="replaceable">assignment</em> [, <em class="replaceable">assignment</em>] ...</code></pre><p>
+        With <a class="link" href="insert-select.html" title="13.2.5.1&nbsp;INSERT ... SELECT Statement"><code class="literal">INSERT ...
+        SELECT</code></a>, you can quickly insert many rows into a table
+        from the result of a <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+        statement, which can select from one or many tables. For
+        example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">INSERT INTO tbl_temp2 (fld_id)
+  SELECT tbl_temp1.fld_order_id
+  FROM tbl_temp1 WHERE tbl_temp1.fld_order_id &gt; 100;</code></pre><p>
+        The following conditions hold for
+        <a class="link" href="insert-select.html" title="13.2.5.1&nbsp;INSERT ... SELECT Statement"><code class="literal">INSERT ...
+        SELECT</code></a> statements:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Specify <code class="literal">IGNORE</code> to ignore rows that would
+            cause duplicate-key violations.
+          </p></li><li class="listitem"><p>
+            The target table of the
+            <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> statement may appear
+            in the <code class="literal">FROM</code> clause of the
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> part of the query.
+            However, you cannot insert into a table and select from the
+            same table in a subquery.
+          </p><p>
+            When selecting from and inserting into the same table, MySQL
+            creates an internal temporary table to hold the rows from
+            the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> and then inserts
+            those rows into the target table. However, you cannot use
+            <code class="literal">INSERT INTO t ... SELECT ... FROM t</code> when
+            <code class="literal">t</code> is a <code class="literal">TEMPORARY</code>
+            table, because <code class="literal">TEMPORARY</code> tables cannot be
+            referred to twice in the same statement. See
+            <a class="xref" href="internal-temporary-tables.html" title="8.4.4&nbsp;Internal Temporary Table Use in MySQL">Section&nbsp;8.4.4, “Internal Temporary Table Use in MySQL”</a>, and
+            <a class="xref" href="temporary-table-problems.html" title="B.3.6.2&nbsp;TEMPORARY Table Problems">Section&nbsp;B.3.6.2, “TEMPORARY Table Problems”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">AUTO_INCREMENT</code> columns work as usual.
+          </p></li><li class="listitem"><p>
+            To ensure that the binary log can be used to re-create the
+            original tables, MySQL does not permit concurrent inserts
+            for <a class="link" href="insert-select.html" title="13.2.5.1&nbsp;INSERT ... SELECT Statement"><code class="literal">INSERT
+            ... SELECT</code></a> statements (see
+            <a class="xref" href="concurrent-inserts.html" title="8.11.3&nbsp;Concurrent Inserts">Section&nbsp;8.11.3, “Concurrent Inserts”</a>).
+          </p></li><li class="listitem"><p>
+            To avoid ambiguous column reference problems when the
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> and the
+            <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> refer to the same
+            table, provide a unique alias for each table used in the
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> part, and qualify
+            column names in that part with the appropriate alias.
+</p></li></ul>
+</div>
+<p>
+        You can explicitly select which partitions or subpartitions (or
+        both) of the source or target table (or both) are to be used
+        with a <code class="literal">PARTITION</code> clause following the name of
+        the table. When <code class="literal">PARTITION</code> is used with the
+        name of the source table in the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> portion of the statement,
+        rows are selected only from the partitions or subpartitions
+        named in its partition list. When <code class="literal">PARTITION</code>
+        is used with the name of the target table for the
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> portion of the statement,
+        it must be possible to insert all rows selected into the
+        partitions or subpartitions named in the partition list
+        following the option. Otherwise, the <code class="literal">INSERT ...
+        SELECT</code> statement fails. For more information and
+        examples, see <a class="xref" href="partitioning-selection.html" title="22.5&nbsp;Partition Selection">Section&nbsp;22.5, “Partition Selection”</a>.
+      </p><p>
+        For <a class="link" href="insert-on-duplicate.html" title="13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement"><code class="literal">INSERT
+        ... SELECT</code></a> statements, see
+        <a class="xref" href="insert-on-duplicate.html" title="13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement">Section&nbsp;13.2.5.2, “INSERT ... ON DUPLICATE KEY UPDATE Statement”</a> for conditions under which
+        the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> columns can be
+        referred to in an <code class="literal">ON DUPLICATE KEY UPDATE</code>
+        clause.
+      </p><p>
+        The order in which a <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+        statement with no <code class="literal">ORDER BY</code> clause returns
+        rows is nondeterministic. This means that, when using
+        replication, there is no guarantee that such a
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> returns rows in the same
+        order on the source and the replica, which can lead to
+        inconsistencies between them. To prevent this from occurring,
+        always write <code class="literal">INSERT ... SELECT</code> statements
+        that are to be replicated using an <code class="literal">ORDER BY</code>
+        clause that produces the same row order on the source and the
+        replica. See also <a class="xref" href="replication-features-limit.html" title="16.4.1.17&nbsp;Replication and LIMIT">Section&nbsp;16.4.1.17, “Replication and LIMIT”</a>.
+      </p><p>
+        Due to this issue,
+        <a class="link" href="insert-on-duplicate.html" title="13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement"><code class="literal">INSERT ...
+        SELECT ON DUPLICATE KEY UPDATE</code></a> and
+        <a class="link" href="insert-select.html" title="13.2.5.1&nbsp;INSERT ... SELECT Statement"><code class="literal">INSERT IGNORE ...
+        SELECT</code></a> statements are flagged as unsafe for
+        statement-based replication. Such statements produce a warning
+        in the error log when using statement-based mode and are written
+        to the binary log using the row-based format when using
+        <code class="literal">MIXED</code> mode. (Bug #11758262, Bug #50439)
+      </p><p>
+        See also <a class="xref" href="replication-sbr-rbr.html" title="16.2.1.1&nbsp;Advantages and Disadvantages of Statement-Based and Row-Based Replication">Section&nbsp;16.2.1.1, “Advantages and Disadvantages of Statement-Based and Row-Based
+        Replication”</a>.
+      </p><p>
+        An <code class="literal">INSERT ... SELECT</code> statement affecting
+        partitioned tables using a storage engine such as
+        <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> that employs table-level
+        locks locks all partitions of the target table; however, only
+        those partitions that are actually read from the source table
+        are locked. (This does not occur with tables using storage
+        engines such as <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> that employ
+        row-level locking.) For more information, see
+        <a class="xref" href="partitioning-limitations-locking.html" title="22.6.4&nbsp;Partitioning and Locking">Section&nbsp;22.6.4, “Partitioning and Locking”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

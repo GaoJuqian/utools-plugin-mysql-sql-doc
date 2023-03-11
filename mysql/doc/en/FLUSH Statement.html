@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>FLUSH Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="flush"></a>13.7.6.3&nbsp;FLUSH Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852569335584"></a><a class="indexterm" name="idm45852569334512"></a><a class="indexterm" name="idm45852569333440"></a><a class="indexterm" name="idm45852569331952"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">FLUSH [NO_WRITE_TO_BINLOG | LOCAL] {
+    <em class="replaceable">flush_option</em> [, <em class="replaceable">flush_option</em>] ...
+  | <em class="replaceable">tables_option</em>
+}
+
+<em class="replaceable">flush_option</em>: {
+    BINARY LOGS
+  | DES_KEY_FILE
+  | ENGINE LOGS
+  | ERROR LOGS
+  | GENERAL LOGS
+  | HOSTS
+  | LOGS
+  | PRIVILEGES
+  | OPTIMIZER_COSTS
+  | QUERY CACHE
+  | RELAY LOGS [FOR CHANNEL <em class="replaceable">channel</em>]
+  | SLOW LOGS
+  | STATUS
+  | USER_RESOURCES
+}
+
+<em class="replaceable">tables_option</em>: {
+    TABLES
+  | TABLES <em class="replaceable">tbl_name</em> [, <em class="replaceable">tbl_name</em>] ...
+  | TABLES WITH READ LOCK
+  | TABLES <em class="replaceable">tbl_name</em> [, <em class="replaceable">tbl_name</em>] ... WITH READ LOCK
+  | TABLES <em class="replaceable">tbl_name</em> [, <em class="replaceable">tbl_name</em>] ... FOR EXPORT
+}</code></pre><p>
+        The <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a> statement has several
+        variant forms that clear or reload various internal caches,
+        flush tables, or acquire locks. To execute
+        <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a>, you must have the
+        <a class="link" href="privileges-provided.html#priv_reload"><code class="literal">RELOAD</code></a> privilege. Specific flush
+        options might require additional privileges, as indicated in the
+        option descriptions.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          It is not possible to issue
+          <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a> statements within stored
+          functions or triggers. However, you may use
+          <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a> in stored procedures, so
+          long as these are not called from stored functions or
+          triggers. See <a class="xref" href="stored-program-restrictions.html" title="23.8&nbsp;Restrictions on Stored Programs">Section&nbsp;23.8, “Restrictions on Stored Programs”</a>.
+</p>
+</div>
+<p>
+        By default, the server writes
+        <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a> statements to the binary
+        log so that they replicate to replicas. To suppress logging,
+        specify the optional <code class="literal">NO_WRITE_TO_BINLOG</code>
+        keyword or its alias <code class="literal">LOCAL</code>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          <a class="link" href="flush.html#flush-logs"><code class="literal">FLUSH LOGS</code></a>,
+          <a class="link" href="flush.html#flush-binary-logs"><code class="literal">FLUSH BINARY LOGS</code></a>,
+          <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH TABLES WITH READ LOCK</code></a>
+          (with or without a table list), and
+          <a class="link" href="flush.html#flush-tables-for-export-with-list"><code class="literal">FLUSH
+          TABLES <em class="replaceable"><code>tbl_name</code></em> ... FOR
+          EXPORT</code></a> are not written to the binary log in any case
+          because they would cause problems if replicated to a replica.
+</p>
+</div>
+<p>
+        The <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a> statement causes an
+        implicit commit. See <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+      </p><p>
+        The <a class="link" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program"><span class="command"><strong>mysqladmin</strong></span></a> utility provides a
+        command-line interface to some flush operations, using commands
+        such as <code class="literal">flush-hosts</code>,
+        <code class="literal">flush-logs</code>,
+        <code class="literal">flush-privileges</code>,
+        <code class="literal">flush-status</code>, and
+        <code class="literal">flush-tables</code>. See
+        <a class="xref" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program">Section&nbsp;4.5.2, “mysqladmin — A MySQL Server Administration Program”</a>.
+      </p><a class="indexterm" name="idm45852569294368"></a><p>
+        Sending a <code class="literal">SIGHUP</code> signal to the server causes
+        several flush operations to occur that are similar to various
+        forms of the <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a> statement.
+        Signals can be sent by the <code class="literal">root</code> system
+        account or the system account that owns the server process. This
+        enables the flush operations to be performed without having to
+        connect to the server, which requires a MySQL account that has
+        privileges sufficient for those operations. See
+        <a class="xref" href="unix-signal-response.html" title="4.10&nbsp;Unix Signal Handling in MySQL">Section&nbsp;4.10, “Unix Signal Handling in MySQL”</a>.
+      </p><p>
+        The <a class="link" href="reset.html" title="13.7.6.6&nbsp;RESET Statement"><code class="literal">RESET</code></a> statement is similar to
+        <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a>. See
+        <a class="xref" href="reset.html" title="13.7.6.6&nbsp;RESET Statement">Section&nbsp;13.7.6.6, “RESET Statement”</a>, for information about using
+        <a class="link" href="reset.html" title="13.7.6.6&nbsp;RESET Statement"><code class="literal">RESET</code></a> with replication.
+      </p><p>
+        The following list describes the permitted
+        <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a> statement
+        <em class="replaceable"><code>flush_option</code></em> values. For descriptions
+        of the permitted <em class="replaceable"><code>tables_option</code></em>
+        values, see <a class="xref" href="flush.html#flush-tables-variants" title="FLUSH TABLES Syntax">FLUSH TABLES Syntax</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a name="flush-binary-logs"></a>
+            <a class="link" href="flush.html#flush-binary-logs"><code class="literal">FLUSH BINARY LOGS</code></a>
+          </p><p>
+            Closes and reopens any binary log file to which the server
+            is writing. If binary logging is enabled, the sequence
+            number of the binary log file is incremented by one relative
+            to the previous file.
+          </p><p>
+            This operation has no effect on tables used for the binary
+            and relay logs (as controlled by the
+            <a class="link" href="replication-options-replica.html#sysvar_master_info_repository"><code class="literal">master_info_repository</code></a> and
+            <a class="link" href="replication-options-replica.html#sysvar_relay_log_info_repository"><code class="literal">relay_log_info_repository</code></a>
+            system variables).
+          </p></li><li class="listitem"><p><a name="flush-des-key-file"></a>
+            <a class="link" href="flush.html#flush-des-key-file"><code class="literal">FLUSH DES_KEY_FILE</code></a>
+          </p><p>
+            Reloads the DES keys from the file that was specified with
+            the <a class="link" href="server-options.html#option_mysqld_des-key-file"><code class="option">--des-key-file</code></a> option at
+            server startup time.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              The <a class="link" href="encryption-functions.html#function_des-encrypt"><code class="literal">DES_ENCRYPT()</code></a> and
+              <a class="link" href="encryption-functions.html#function_des-decrypt"><code class="literal">DES_DECRYPT()</code></a> functions are
+              deprecated in MySQL 5.7, are removed in MySQL
+              8.0, and should no longer be used. Consequently,
+              <a class="link" href="server-options.html#option_mysqld_des-key-file"><code class="option">--des-key-file</code></a> and
+              <code class="literal">DES_KEY_FILE</code> also are deprecated and
+              are removed in MySQL 8.0.
+</p>
+</div>
+</li><li class="listitem"><p><a name="flush-engine-logs"></a>
+            <a class="link" href="flush.html#flush-engine-logs"><code class="literal">FLUSH ENGINE LOGS</code></a>
+          </p><p>
+            Closes and reopens any flushable logs for installed storage
+            engines. This causes <code class="literal">InnoDB</code> to flush its
+            logs to disk.
+          </p></li><li class="listitem"><p><a name="flush-error-logs"></a>
+            <a class="link" href="flush.html#flush-error-logs"><code class="literal">FLUSH ERROR LOGS</code></a>
+          </p><p>
+            Closes and reopens any error log file to which the server is
+            writing.
+          </p></li><li class="listitem"><p><a name="flush-general-logs"></a>
+            <a class="link" href="flush.html#flush-general-logs"><code class="literal">FLUSH GENERAL LOGS</code></a>
+          </p><p>
+            Closes and reopens any general query log file to which the
+            server is writing.
+          </p><p>
+            This operation has no effect on tables used for the general
+            query log (see <a class="xref" href="log-destinations.html" title="5.4.1&nbsp;Selecting General Query Log and Slow Query Log Output Destinations">Section&nbsp;5.4.1, “Selecting General Query Log and Slow Query Log Output Destinations”</a>).
+          </p></li><li class="listitem"><p><a name="flush-hosts"></a>
+            <a class="link" href="flush.html#flush-hosts"><code class="literal">FLUSH HOSTS</code></a>
+          </p><p>
+            Empties the host cache and the Performance Schema
+            <a class="link" href="performance-schema-host-cache-table.html" title="25.12.16.1&nbsp;The host_cache Table"><code class="literal">host_cache</code></a> table that exposes
+            the cache contents, and unblocks any blocked hosts.
+          </p><p>
+            For information about why host cache flushing might be
+            advisable or desirable, see <a class="xref" href="host-cache.html" title="5.1.11.2&nbsp;DNS Lookups and the Host Cache">Section&nbsp;5.1.11.2, “DNS Lookups and the Host Cache”</a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              The statement
+              <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE
+              TABLE performance_schema.host_cache</code></a>, unlike
+              <code class="literal">FLUSH HOSTS</code>, is not written to the
+              binary log. To obtain the same behavior from the latter,
+              specify <code class="literal">NO_WRITE_TO_BINLOG</code> or
+              <code class="literal">LOCAL</code> as part of the <code class="literal">FLUSH
+              HOSTS</code> statement.
+</p>
+</div>
+</li><li class="listitem"><p><a name="flush-logs"></a>
+            <a class="link" href="flush.html#flush-logs"><code class="literal">FLUSH LOGS</code></a>
+          </p><p>
+            Closes and reopens any log file to which the server is
+            writing.
+          </p><p>
+            The effect of this operation is equivalent to the combined
+            effects of these operations:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">FLUSH BINARY LOGS
+FLUSH ENGINE LOGS
+FLUSH ERROR LOGS
+FLUSH GENERAL LOGS
+FLUSH RELAY LOGS
+FLUSH SLOW LOGS</code></pre></li><li class="listitem"><p><a name="flush-optimizer-costs"></a>
+            <a class="link" href="flush.html#flush-optimizer-costs"><code class="literal">FLUSH OPTIMIZER_COSTS</code></a>
+          </p><p>
+            Re-reads the cost model tables so that the optimizer starts
+            using the current cost estimates stored in them.
+          </p><p>
+            The server writes a warning to the error log for any
+            unrecognized cost model table entries. For information about
+            these tables, see <a class="xref" href="cost-model.html" title="8.9.5&nbsp;The Optimizer Cost Model">Section&nbsp;8.9.5, “The Optimizer Cost Model”</a>. This
+            operation affects only sessions that begin subsequent to the
+            flush. Existing sessions continue to use the cost estimates
+            that were current when they began.
+          </p></li><li class="listitem"><p><a name="flush-privileges"></a>
+            <a class="link" href="flush.html#flush-privileges"><code class="literal">FLUSH PRIVILEGES</code></a>
+          </p><p>
+            Re-reads the privileges from the grant tables in the
+            <code class="literal">mysql</code> system database.
+          </p><p>
+            Reloading the grant tables is necessary to enable updates to
+            MySQL privileges and users only if you make such changes
+            directly to the grant tables; it is not needed for account
+            management statements such as
+            <a class="link" href="grant.html" title="13.7.1.4&nbsp;GRANT Statement"><code class="literal">GRANT</code></a> or
+            <a class="link" href="revoke.html" title="13.7.1.6&nbsp;REVOKE Statement"><code class="literal">REVOKE</code></a>, which take effect
+            immediately. See <a class="xref" href="privilege-changes.html" title="6.2.9&nbsp;When Privilege Changes Take Effect">Section&nbsp;6.2.9, “When Privilege Changes Take Effect”</a>, for
+            more information.
+          </p><p>
+            If the <a class="link" href="server-options.html#option_mysqld_skip-grant-tables"><code class="option">--skip-grant-tables</code></a>
+            option was specified at server startup to disable the MySQL
+            privilege system, <a class="link" href="flush.html#flush-privileges"><code class="literal">FLUSH
+            PRIVILEGES</code></a> provides a way to enable the privilege
+            system at runtime.
+          </p><p>
+            Frees memory cached by the server as a result of
+            <a class="link" href="grant.html" title="13.7.1.4&nbsp;GRANT Statement"><code class="literal">GRANT</code></a>,
+            <a class="link" href="create-user.html" title="13.7.1.2&nbsp;CREATE USER Statement"><code class="literal">CREATE USER</code></a>,
+            <a class="link" href="create-server.html" title="13.1.17&nbsp;CREATE SERVER Statement"><code class="literal">CREATE SERVER</code></a>, and
+            <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a> statements.
+            This memory is not released by the corresponding
+            <a class="link" href="revoke.html" title="13.7.1.6&nbsp;REVOKE Statement"><code class="literal">REVOKE</code></a>,
+            <a class="link" href="drop-user.html" title="13.7.1.3&nbsp;DROP USER Statement"><code class="literal">DROP USER</code></a>,
+            <a class="link" href="drop-server.html" title="13.1.28&nbsp;DROP SERVER Statement"><code class="literal">DROP SERVER</code></a>, and
+            <a class="link" href="uninstall-plugin.html" title="13.7.3.4&nbsp;UNINSTALL PLUGIN Statement"><code class="literal">UNINSTALL PLUGIN</code></a> statements,
+            so for a server that executes many instances of the
+            statements that cause caching, cached memory use increases
+            unless it is freed with <a class="link" href="flush.html#flush-privileges"><code class="literal">FLUSH
+            PRIVILEGES</code></a>.
+          </p></li><li class="listitem"><p><a name="flush-query-cache"></a>
+            <a class="link" href="flush.html#flush-query-cache"><code class="literal">FLUSH QUERY CACHE</code></a>
+          </p><p>
+            Defragment the query cache to better utilize its memory.
+            <a class="link" href="flush.html#flush-query-cache"><code class="literal">FLUSH QUERY CACHE</code></a> does not
+            remove any queries from the cache, unlike
+            <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH TABLES</code></a> or
+            <code class="literal">RESET QUERY CACHE</code>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              The query cache is deprecated as of MySQL 5.7.20, and is
+              removed in MySQL 8.0. Deprecation includes
+              <a class="link" href="flush.html#flush-query-cache"><code class="literal">FLUSH QUERY CACHE</code></a>.
+</p>
+</div>
+</li><li class="listitem"><p><a name="flush-relay-logs"></a>
+            <a class="link" href="flush.html#flush-relay-logs"><code class="literal">FLUSH
+            RELAY LOGS [FOR CHANNEL
+            <em class="replaceable"><code>channel</code></em>]</code></a>
+          </p><p>
+            Closes and reopens any relay log file to which the server is
+            writing. If relay logging is enabled, the sequence number of
+            the relay log file is incremented by one relative to the
+            previous file.
+          </p><p>
+            The <code class="literal">FOR CHANNEL
+            <em class="replaceable"><code>channel</code></em></code> clause enables
+            you to name which replication channel the operation applies
+            to. Execute
+            <a class="link" href="flush.html#flush-relay-logs"><code class="literal">FLUSH
+            RELAY LOGS FOR CHANNEL
+            <em class="replaceable"><code>channel</code></em></code></a> to flush the
+            relay log for a specific replication channel. If no channel
+            is named and no extra replication channels exist, the
+            operation applies to the default channel. If no channel is
+            named and multiple replication channels exist, the operation
+            applies to all replication channels, with the exception of
+            the <code class="literal">group_replication_applier</code> channel.
+            For more information, see
+            <a class="xref" href="replication-channels.html" title="16.2.2&nbsp;Replication Channels">Section&nbsp;16.2.2, “Replication Channels”</a>.
+          </p><p>
+            This operation has no effect on tables used for the binary
+            and relay logs (as controlled by the
+            <a class="link" href="replication-options-replica.html#sysvar_master_info_repository"><code class="literal">master_info_repository</code></a> and
+            <a class="link" href="replication-options-replica.html#sysvar_relay_log_info_repository"><code class="literal">relay_log_info_repository</code></a>
+            system variables).
+          </p></li><li class="listitem"><p><a name="flush-slow-logs"></a>
+            <a class="link" href="flush.html#flush-slow-logs"><code class="literal">FLUSH SLOW LOGS</code></a>
+          </p><p>
+            Closes and reopens any slow query log file to which the
+            server is writing.
+          </p><p>
+            This operation has no effect on tables used for the slow
+            query log (see <a class="xref" href="log-destinations.html" title="5.4.1&nbsp;Selecting General Query Log and Slow Query Log Output Destinations">Section&nbsp;5.4.1, “Selecting General Query Log and Slow Query Log Output Destinations”</a>).
+          </p></li><li class="listitem"><p><a name="flush-status"></a>
+            <a class="link" href="flush.html#flush-status"><code class="literal">FLUSH STATUS</code></a>
+          </p><p>
+            Flushes status indicators.
+          </p><p>
+            This operation adds the current thread's session status
+            variable values to the global values and resets the session
+            values to zero. Some global variables may be reset to zero
+            as well. It also resets the counters for key caches (default
+            and named) to zero and sets
+            <a class="link" href="server-status-variables.html#statvar_Max_used_connections"><code class="literal">Max_used_connections</code></a> to
+            the current number of open connections. This information may
+            be of use when debugging a query. See
+            <a class="xref" href="bug-reports.html" title="1.5&nbsp;How to Report Bugs or Problems">Section&nbsp;1.5, “How to Report Bugs or Problems”</a>.
+          </p><p>
+            <code class="literal">FLUSH STATUS</code> is unaffected by
+            <a class="link" href="server-system-variables.html#sysvar_read_only"><code class="literal">read_only</code></a> or
+            <a class="link" href="server-system-variables.html#sysvar_super_read_only"><code class="literal">super_read_only</code></a>, and is
+            always written to the binary log.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              The value of the
+              <a class="link" href="server-system-variables.html#sysvar_show_compatibility_56"><code class="literal">show_compatibility_56</code></a>
+              system variable affects the operation of this
+              <code class="literal">FLUSH</code> option. For details, see the
+              description of that variable in
+              <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>.
+</p>
+</div>
+</li><li class="listitem"><p><a name="flush-user-resources"></a>
+            <a class="link" href="flush.html#flush-user-resources"><code class="literal">FLUSH USER_RESOURCES</code></a>
+          </p><p>
+            Resets all per-hour user resource indicators to zero.
+          </p><p>
+            Resetting resource indicators enables clients that have
+            reached their hourly connection, query, or update limits to
+            resume activity immediately. <a class="link" href="flush.html#flush-user-resources"><code class="literal">FLUSH
+            USER_RESOURCES</code></a> does not apply to the limit on
+            maximum simultaneous connections that is controlled by the
+            <a class="link" href="server-system-variables.html#sysvar_max_user_connections"><code class="literal">max_user_connections</code></a> system
+            variable. See <a class="xref" href="user-resources.html" title="6.2.16&nbsp;Setting Account Resource Limits">Section&nbsp;6.2.16, “Setting Account Resource Limits”</a>.
+</p></li></ul>
+</div>
+<h5><a name="flush-tables-variants"></a>FLUSH TABLES Syntax</h5>
+<p>
+        <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH TABLES</code></a> flushes tables, and,
+        depending on the variant used, acquires locks. Any
+        <code class="literal">TABLES</code> variant used in a
+        <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a> statement must be the only
+        option used. <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH
+        TABLE</code></a> is a synonym for <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH
+        TABLES</code></a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          The descriptions here that indicate tables are flushed by
+          closing them apply differently for <code class="literal">InnoDB</code>,
+          which flushes table contents to disk but leaves them open.
+          This still permits table files to be copied while the tables
+          are open, as long as other activity does not modify them.
+</p>
+</div>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a name="flush-tables"></a>
+            <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH TABLES</code></a>
+          </p><p>
+            Closes all open tables, forces all tables in use to be
+            closed, and flushes the query cache and prepared statement
+            cache. <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH TABLES</code></a> also
+            removes all query results from the query cache, like the
+            <code class="literal">RESET QUERY CACHE</code> statement. For
+            information about query caching and prepared statement
+            caching, see <a class="xref" href="query-cache.html" title="8.10.3&nbsp;The MySQL Query Cache">Section&nbsp;8.10.3, “The MySQL Query Cache”</a>. and
+            <a class="xref" href="statement-caching.html" title="8.10.4&nbsp;Caching of Prepared Statements and Stored Programs">Section&nbsp;8.10.4, “Caching of Prepared Statements and Stored Programs”</a>.
+          </p><p>
+            <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH TABLES</code></a> is not permitted
+            when there is an active
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES ...
+            READ</code></a>. To flush and lock tables, use
+            <a class="link" href="flush.html#flush-tables-with-read-lock-with-list"><code class="literal">FLUSH
+            TABLES <em class="replaceable"><code>tbl_name</code></em> ... WITH READ
+            LOCK</code></a> instead.
+          </p></li><li class="listitem"><p><a name="flush-tables-with-list"></a>
+            <a class="link" href="flush.html#flush-tables-with-list"><code class="literal">FLUSH
+            TABLES <em class="replaceable"><code>tbl_name</code></em> [,
+            <em class="replaceable"><code>tbl_name</code></em>] ...</code></a>
+          </p><p>
+            With a list of one or more comma-separated table names, this
+            operation is like <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH
+            TABLES</code></a> with no names except that the server
+            flushes only the named tables. If a named table does not
+            exist, no error occurs.
+          </p></li><li class="listitem"><p><a name="flush-tables-with-read-lock"></a>
+            <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH
+            TABLES WITH READ LOCK</code></a>
+          </p><p>
+            Closes all open tables and locks all tables for all
+            databases with a global read lock.
+          </p><p>
+            This operation is a very convenient way to get backups if
+            you have a file system such as Veritas or ZFS that can take
+            snapshots in time. Use
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> to release the lock.
+          </p><p>
+            <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH TABLES WITH READ LOCK</code></a>
+            acquires a global read lock rather than table locks, so it
+            is not subject to the same behavior as
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> and
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> with respect to table locking and implicit
+            commits:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+                TABLES</code></a> implicitly commits any active
+                transaction only if any tables currently have been
+                locked with <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a>.
+                The commit does not occur for
+                <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+                TABLES</code></a> following <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH
+                TABLES WITH READ LOCK</code></a> because the latter
+                statement does not acquire table locks.
+              </p></li><li class="listitem"><p>
+                Beginning a transaction causes table locks acquired with
+                <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> to be
+                released, as though you had executed
+                <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+                TABLES</code></a>. Beginning a transaction does not
+                release a global read lock acquired with
+                <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH TABLES WITH READ
+                LOCK</code></a>.
+</p></li></ul>
+</div>
+<p>
+            Prior to MySQL 5.7.19, <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH TABLES
+            WITH READ LOCK</code></a> is not compatible with XA
+            transactions.
+          </p><p>
+            <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH TABLES WITH READ LOCK</code></a>
+            does not prevent the server from inserting rows into the log
+            tables (see <a class="xref" href="log-destinations.html" title="5.4.1&nbsp;Selecting General Query Log and Slow Query Log Output Destinations">Section&nbsp;5.4.1, “Selecting General Query Log and Slow Query Log Output Destinations”</a>).
+          </p></li><li class="listitem"><p><a name="flush-tables-with-read-lock-with-list"></a>
+            <a class="link" href="flush.html#flush-tables-with-read-lock-with-list"><code class="literal">FLUSH
+            TABLES <em class="replaceable"><code>tbl_name</code></em> [,
+            <em class="replaceable"><code>tbl_name</code></em>] ... WITH READ
+            LOCK</code></a>
+          </p><p>
+            Flushes and acquires read locks for the named tables.
+          </p><p>
+            Because this operation acquires table locks, it requires the
+            <a class="link" href="privileges-provided.html#priv_lock-tables"><code class="literal">LOCK TABLES</code></a> privilege for
+            each table, in addition to the
+            <a class="link" href="privileges-provided.html#priv_reload"><code class="literal">RELOAD</code></a> privilege.
+          </p><p>
+            The operation first acquires exclusive metadata locks for
+            the tables, so it waits for transactions that have those
+            tables open to complete. Then the operation flushes the
+            tables from the table cache, reopens the tables, acquires
+            table locks (like
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES ...
+            READ</code></a>), and downgrades the metadata locks from
+            exclusive to shared. After the operation acquires locks and
+            downgrades the metadata locks, other sessions can read but
+            not modify the tables.
+          </p><p>
+            This operation applies only to existing base
+            (non-<code class="literal">TEMPORARY) </code>tables. If a name refers
+            to a base table, that table is used. If it refers to a
+            <code class="literal">TEMPORARY</code> table, it is ignored. If a name
+            applies to a view, an
+            <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_wrong_object" target="_top"><code class="literal">ER_WRONG_OBJECT</code></a> error
+            occurs. Otherwise, an
+            <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_no_such_table" target="_top"><code class="literal">ER_NO_SUCH_TABLE</code></a> error
+            occurs.
+          </p><p>
+            Use <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> to release the locks,
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> to release the
+            locks and acquire other locks, or
+            <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+            TRANSACTION</code></a> to release the locks and begin a new
+            transaction.
+          </p><p>
+            This <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH TABLES</code></a> variant
+            enables tables to be flushed and locked in a single
+            operation. It provides a workaround for the restriction that
+            <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH TABLES</code></a> is not permitted
+            when there is an active
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES ...
+            READ</code></a>.
+          </p><p>
+            This operation does not perform an implicit
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a>, so an error results if you perform the
+            operation while there is any active
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> or use it a
+            second time without first releasing the locks acquired.
+          </p><p>
+            If a flushed table was opened with
+            <a class="link" href="handler.html" title="13.2.4&nbsp;HANDLER Statement"><code class="literal">HANDLER</code></a>, the handler is
+            implicitly flushed and loses its position.
+          </p></li><li class="listitem"><p><a name="flush-tables-for-export-with-list"></a>
+            <a class="link" href="flush.html#flush-tables-for-export-with-list"><code class="literal">FLUSH
+            TABLES <em class="replaceable"><code>tbl_name</code></em> [,
+            <em class="replaceable"><code>tbl_name</code></em>] ... FOR
+            EXPORT</code></a>
+          </p><p>
+            This <a class="link" href="flush.html#flush-tables"><code class="literal">FLUSH TABLES</code></a> variant
+            applies to <code class="literal">InnoDB</code> tables. It ensures that
+            changes to the named tables have been flushed to disk so
+            that binary table copies can be made while the server is
+            running.
+          </p><p>
+            Because the
+            <a class="link" href="flush.html#flush-tables-for-export-with-list"><code class="literal">FLUSH
+            TABLES ... FOR EXPORT</code></a> operation acquires locks on
+            tables in preparation for exporting them, it requires the
+            <a class="link" href="privileges-provided.html#priv_lock-tables"><code class="literal">LOCK TABLES</code></a> and
+            <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privileges for each
+            table, in addition to the
+            <a class="link" href="privileges-provided.html#priv_reload"><code class="literal">RELOAD</code></a> privilege.
+          </p><p>
+            The operation works like this:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+                It acquires shared metadata locks for the named tables.
+                The operation blocks as long as other sessions have
+                active transactions that have modified those tables or
+                hold table locks for them. When the locks have been
+                acquired, the operation blocks transactions that attempt
+                to update the tables, while permitting read-only
+                operations to continue.
+              </p></li><li class="listitem"><p>
+                It checks whether all storage engines for the tables
+                support <code class="literal">FOR EXPORT</code>. If any do not, an
+                <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_illegal_ha" target="_top"><code class="literal">ER_ILLEGAL_HA</code></a> error
+                occurs and the operation fails.
+              </p></li><li class="listitem"><p>
+                The operation notifies the storage engine for each table
+                to make the table ready for export. The storage engine
+                must ensure that any pending changes are written to
+                disk.
+              </p></li><li class="listitem"><p>
+                The operation puts the session in lock-tables mode so
+                that the metadata locks acquired earlier are not
+                released when the <code class="literal">FOR EXPORT</code>
+                operation completes.
+</p></li></ol>
+</div>
+<p>
+            This operation applies only to existing base
+            (non-<code class="literal">TEMPORARY</code>) tables. If a name refers
+            to a base table, that table is used. If it refers to a
+            <code class="literal">TEMPORARY</code> table, it is ignored. If a name
+            applies to a view, an
+            <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_wrong_object" target="_top"><code class="literal">ER_WRONG_OBJECT</code></a> error
+            occurs. Otherwise, an
+            <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_no_such_table" target="_top"><code class="literal">ER_NO_SUCH_TABLE</code></a> error
+            occurs.
+          </p><p>
+            <code class="literal">InnoDB</code> supports <code class="literal">FOR
+            EXPORT</code> for tables that have their own
+            <a class="link" href="glossary.html#glos_ibd_file" title=".ibd file"><code class="filename">.ibd</code>
+            file</a> file (that is, tables created with the
+            <a class="link" href="innodb-parameters.html#sysvar_innodb_file_per_table"><code class="literal">innodb_file_per_table</code></a>
+            setting enabled). <code class="literal">InnoDB</code> ensures when
+            notified by the <code class="literal">FOR EXPORT</code> operation that
+            any changes have been flushed to disk. This permits a binary
+            copy of table contents to be made while the <code class="literal">FOR
+            EXPORT</code> operation is in effect because the
+            <code class="filename">.ibd</code> file is transaction consistent and
+            can be copied while the server is running. <code class="literal">FOR
+            EXPORT</code> does not apply to <code class="literal">InnoDB</code>
+            system tablespace files, or to <code class="literal">InnoDB</code>
+            tables that have <code class="literal">FULLTEXT</code> indexes.
+          </p><p>
+            <a class="link" href="flush.html#flush-tables-for-export-with-list"><code class="literal">FLUSH
+            TABLES ...FOR EXPORT</code></a> is supported for partitioned
+            <code class="literal">InnoDB</code> tables.
+          </p><p>
+            When notified by <code class="literal">FOR EXPORT</code>,
+            <code class="literal">InnoDB</code> writes to disk certain kinds of
+            data that is normally held in memory or in separate disk
+            buffers outside the tablespace files. For each table,
+            <code class="literal">InnoDB</code> also produces a file named
+            <code class="filename"><em class="replaceable"><code>table_name</code></em>.cfg</code>
+            in the same database directory as the table. The
+            <code class="filename">.cfg</code> file contains metadata needed to
+            reimport the tablespace files later, into the same or
+            different server.
+          </p><p>
+            When the <code class="literal">FOR EXPORT</code> operation completes,
+            <code class="literal">InnoDB</code> has flushed all
+            <a class="link" href="glossary.html#glos_dirty_page" title="dirty page">dirty pages</a> to the
+            table data files. Any
+            <a class="link" href="glossary.html#glos_change_buffer" title="change buffer">change buffer</a>
+            entries are merged prior to flushing. At this point, the
+            tables are locked and quiescent: The tables are in a
+            transactionally consistent state on disk and you can copy
+            the <code class="filename">.ibd</code> tablespace files along with
+            the corresponding <code class="filename">.cfg</code> files to get a
+            consistent snapshot of those tables.
+          </p><p>
+            For the procedure to reimport the copied table data into a
+            MySQL instance, see <a class="xref" href="innodb-table-import.html" title="14.6.1.3&nbsp;Importing InnoDB Tables">Section&nbsp;14.6.1.3, “Importing InnoDB Tables”</a>.
+          </p><p>
+            After you are done with the tables, use
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> to release the locks,
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> to release the
+            locks and acquire other locks, or
+            <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+            TRANSACTION</code></a> to release the locks and begin a new
+            transaction.
+          </p><p>
+            While any of these statements is in effect within the
+            session, attempts to use
+            <a class="link" href="flush.html#flush-tables-for-export-with-list"><code class="literal">FLUSH
+            TABLES ... FOR EXPORT</code></a> produce an error:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">FLUSH TABLES ... WITH READ LOCK
+FLUSH TABLES ... FOR EXPORT
+LOCK TABLES ... READ
+LOCK TABLES ... WRITE</code></pre><p>
+            While
+            <a class="link" href="flush.html#flush-tables-for-export-with-list"><code class="literal">FLUSH
+            TABLES ... FOR EXPORT</code></a> is in effect within the
+            session, attempts to use any of these statements produce an
+            error:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">FLUSH TABLES WITH READ LOCK
+FLUSH TABLES ... WITH READ LOCK
+FLUSH TABLES ... FOR EXPORT</code></pre></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

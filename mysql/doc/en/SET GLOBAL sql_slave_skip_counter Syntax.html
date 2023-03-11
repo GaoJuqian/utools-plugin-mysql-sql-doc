@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SET GLOBAL sql_slave_skip_counter Syntax</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="set-global-sql-slave-skip-counter"></a>13.4.2.5&nbsp;SET GLOBAL sql_slave_skip_counter Syntax</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575802640"></a><a class="indexterm" name="idm45852575801600"></a><a class="indexterm" name="idm45852575800528"></a><a class="indexterm" name="idm45852575799456"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET GLOBAL sql_slave_skip_counter = <em class="replaceable">N</em></code></pre><p>
+        This statement skips the next <em class="replaceable"><code>N</code></em>
+        events from the master. This is useful for recovering from
+        replication stops caused by a statement.
+      </p><p>
+        This statement is valid only when the slave threads are not
+        running. Otherwise, it produces an error.
+      </p><p>
+        When using this statement, it is important to understand that
+        the binary log is actually organized as a sequence of groups
+        known as <span class="firstterm">event groups</span>.
+        Each event group consists of a sequence of events.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            For transactional tables, an event group corresponds to a
+            transaction.
+          </p></li><li class="listitem"><p>
+            For nontransactional tables, an event group corresponds to a
+            single SQL statement.
+</p></li></ul>
+</div>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Note
+</div>
+<p>
+          A single transaction can contain changes to both transactional
+          and nontransactional tables.
+</p>
+</div>
+<p>
+        When you use <a class="link" href="set-global-sql-slave-skip-counter.html" title="13.4.2.5&nbsp;SET GLOBAL sql_slave_skip_counter Syntax"><code class="literal">SET GLOBAL
+        sql_slave_skip_counter</code></a> to skip events and the result
+        is in the middle of a group, the slave continues to skip events
+        until it reaches the end of the group. Execution then starts
+        with the next event group.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

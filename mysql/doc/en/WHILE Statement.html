@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>WHILE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="while"></a>13.6.5.8&nbsp;WHILE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575063680"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">[<em class="replaceable">begin_label</em>:] WHILE <em class="replaceable">search_condition</em> DO
+    <em class="replaceable">statement_list</em>
+END WHILE [<em class="replaceable">end_label</em>]</code></pre><p>
+        The statement list within a <a class="link" href="while.html" title="13.6.5.8&nbsp;WHILE Statement"><code class="literal">WHILE</code></a>
+        statement is repeated as long as the
+        <em class="replaceable"><code>search_condition</code></em> expression is true.
+        <em class="replaceable"><code>statement_list</code></em> consists of one or
+        more SQL statements, each terminated by a semicolon
+        (<code class="literal">;</code>) statement delimiter.
+      </p><p>
+        A <a class="link" href="while.html" title="13.6.5.8&nbsp;WHILE Statement"><code class="literal">WHILE</code></a> statement can be labeled.
+        For the rules regarding label use, see
+        <a class="xref" href="statement-labels.html" title="13.6.2&nbsp;Statement Labels">Section&nbsp;13.6.2, “Statement Labels”</a>.
+      </p><p>
+        Example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE dowhile()
+BEGIN
+  DECLARE v1 INT DEFAULT 5;
+
+  WHILE v1 &gt; 0 DO
+    ...
+    SET v1 = v1 - 1;
+  END WHILE;
+END;</code></pre>
+</div>
+
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>USE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="use"></a>13.8.4&nbsp;USE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852568676928"></a><a class="indexterm" name="idm45852568675888"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">USE <em class="replaceable">db_name</em></code></pre><p>
+      The <a class="link" href="use.html" title="13.8.4&nbsp;USE Statement"><code class="literal">USE</code></a> statement tells MySQL to
+      use the named database as the default (current) database for
+      subsequent statements. This statement requires some privilege for
+      the database or some object within it.
+    </p><p>
+      The named database remains the default until the end of the
+      session or another <a class="link" href="use.html" title="13.8.4&nbsp;USE Statement"><code class="literal">USE</code></a> statement is
+      issued:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">USE db1;
+SELECT COUNT(*) FROM mytable;   # selects from db1.mytable
+USE db2;
+SELECT COUNT(*) FROM mytable;   # selects from db2.mytable</code></pre><p>
+      The database name must be specified on a single line. Newlines in
+      database names are not supported.
+    </p><p>
+      Making a particular database the default by means of the
+      <a class="link" href="use.html" title="13.8.4&nbsp;USE Statement"><code class="literal">USE</code></a> statement does not preclude
+      accessing tables in other databases. The following example
+      accesses the <code class="literal">author</code> table from the
+      <code class="literal">db1</code> database and the <code class="literal">editor</code>
+      table from the <code class="literal">db2</code> database:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">USE db1;
+SELECT author_name,editor_name FROM author,db2.editor
+  WHERE author.editor_id = db2.editor.editor_id;</code></pre>
+</div>
+
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP USER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="drop-user"></a>13.7.1.3&nbsp;DROP USER Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852573519648"></a><a class="indexterm" name="idm45852573518576"></a><a class="indexterm" name="idm45852573517088"></a><a class="indexterm" name="idm45852573515600"></a><a class="indexterm" name="idm45852573514112"></a><a class="indexterm" name="idm45852573512624"></a><a class="indexterm" name="idm45852573511136"></a><a class="indexterm" name="idm45852573509648"></a><a class="indexterm" name="idm45852573508160"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DROP USER [IF EXISTS] <em class="replaceable">user</em> [, <em class="replaceable">user</em>] ...</code></pre><p>
+        The <a class="link" href="drop-user.html" title="13.7.1.3&nbsp;DROP USER Statement"><code class="literal">DROP USER</code></a> statement removes
+        one or more MySQL accounts and their privileges. It removes
+        privilege rows for the account from all grant tables.
+      </p><p>
+        To use <a class="link" href="drop-user.html" title="13.7.1.3&nbsp;DROP USER Statement"><code class="literal">DROP USER</code></a>, you must have
+        the global <a class="link" href="privileges-provided.html#priv_create-user"><code class="literal">CREATE USER</code></a> privilege,
+        or the <a class="link" href="privileges-provided.html#priv_delete"><code class="literal">DELETE</code></a> privilege for the
+        <code class="literal">mysql</code> system database. When the
+        <a class="link" href="server-system-variables.html#sysvar_read_only"><code class="literal">read_only</code></a> system variable is
+        enabled, <a class="link" href="drop-user.html" title="13.7.1.3&nbsp;DROP USER Statement"><code class="literal">DROP USER</code></a> additionally
+        requires the <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege.
+      </p><p>
+        An error occurs if you try to drop an account that does not
+        exist. If the <code class="literal">IF EXISTS</code> clause is given, the
+        statement produces a warning for each named user that does not
+        exist, rather than an error.
+      </p><p>
+        Each account name uses the format described in
+        <a class="xref" href="account-names.html" title="6.2.4&nbsp;Specifying Account Names">Section&nbsp;6.2.4, “Specifying Account Names”</a>. For example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DROP USER 'jeffrey'@'localhost';</code></pre><p>
+        The host name part of the account name, if omitted, defaults to
+        <code class="literal">'%'</code>.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+          <a class="link" href="drop-user.html" title="13.7.1.3&nbsp;DROP USER Statement"><code class="literal">DROP USER</code></a> does not
+          automatically close any open user sessions. Rather, in the
+          event that a user with an open session is dropped, the
+          statement does not take effect until that user's session is
+          closed. Once the session is closed, the user is dropped, and
+          that user's next attempt to log in fails. <span class="emphasis"><em>This
+          is by design</em></span>.
+</p>
+</div>
+<p>
+        <a class="link" href="drop-user.html" title="13.7.1.3&nbsp;DROP USER Statement"><code class="literal">DROP USER</code></a> does not automatically
+        drop or invalidate databases or objects within them that the old
+        user created. This includes stored programs or views for which
+        the <code class="literal">DEFINER</code> attribute names the dropped user.
+        Attempts to access such objects may produce an error if they
+        execute in definer security context. (For information about
+        security context, see
+        <a class="xref" href="stored-objects-security.html" title="23.6&nbsp;Stored Object Access Control">Section&nbsp;23.6, “Stored Object Access Control”</a>.)
+</p>
+</div>
+<br>
+        
+</body>
+</html>

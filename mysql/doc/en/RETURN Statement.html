@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>RETURN Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="return"></a>13.6.5.7&nbsp;RETURN Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575075760"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">RETURN <em class="replaceable">expr</em></code></pre><p>
+        The <a class="link" href="return.html" title="13.6.5.7&nbsp;RETURN Statement"><code class="literal">RETURN</code></a> statement terminates
+        execution of a stored function and returns the value
+        <em class="replaceable"><code>expr</code></em> to the function caller. There
+        must be at least one <a class="link" href="return.html" title="13.6.5.7&nbsp;RETURN Statement"><code class="literal">RETURN</code></a>
+        statement in a stored function. There may be more than one if
+        the function has multiple exit points.
+      </p><p>
+        This statement is not used in stored procedures, triggers, or
+        events. The <a class="link" href="leave.html" title="13.6.5.4&nbsp;LEAVE Statement"><code class="literal">LEAVE</code></a> statement can
+        be used to exit a stored program of those types.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW CREATE USER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-create-user"></a>13.7.5.12&nbsp;SHOW CREATE USER Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571207824"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW CREATE USER <em class="replaceable">user</em></code></pre><p>
+        This statement shows the <a class="link" href="create-user.html" title="13.7.1.2&nbsp;CREATE USER Statement"><code class="literal">CREATE
+        USER</code></a> statement that creates the named user. An error
+        occurs if the user does not exist. The statement requires the
+        <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for the
+        <code class="literal">mysql</code> system database, except to display
+        information for the current user.
+      </p><p>
+        To name the account, use the format described in
+        <a class="xref" href="account-names.html" title="6.2.4&nbsp;Specifying Account Names">Section&nbsp;6.2.4, “Specifying Account Names”</a>. The host name part of the
+        account name, if omitted, defaults to <code class="literal">'%'</code>. It
+        is also possible to specify
+        <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a> or
+        <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER()</code></a> to refer to the
+        account associated with the current session.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW CREATE USER 'root'@'localhost'\G
+*************************** 1. row ***************************
+CREATE USER for root@localhost: CREATE USER 'root'@'localhost'
+IDENTIFIED WITH 'mysql_native_password'
+AS '*2470C0C06DEE42FD1618BB99005ADCA2EC9D1E19'
+REQUIRE NONE PASSWORD EXPIRE DEFAULT ACCOUNT UNLOCK</code></pre><p>
+        The output format is affected by the setting of the
+        <a class="link" href="replication-options-binary-log.html#sysvar_log_builtin_as_identified_by_password"><code class="literal">log_builtin_as_identified_by_password</code></a>
+        system variable.
+      </p><p>
+        To display the privileges granted to an account, use the
+        <a class="link" href="show-grants.html" title="13.7.5.21&nbsp;SHOW GRANTS Statement"><code class="literal">SHOW GRANTS</code></a> statement. See
+        <a class="xref" href="show-grants.html" title="13.7.5.21&nbsp;SHOW GRANTS Statement">Section&nbsp;13.7.5.21, “SHOW GRANTS Statement”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

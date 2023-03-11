@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>LOCK TABLES and UNLOCK TABLES StatementsTable Lock AcquisitionTable Lock ReleaseInteraction of Table Locking and TransactionsLOCK TABLES and TriggersTable-Locking Restrictions and Conditions</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="lock-tables"></a>13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577035536"></a><a class="indexterm" name="idm45852577034496"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOCK TABLES
+    <em class="replaceable">tbl_name</em> [[AS] <em class="replaceable">alias</em>] <em class="replaceable">lock_type</em>
+    [, <em class="replaceable">tbl_name</em> [[AS] <em class="replaceable">alias</em>] <em class="replaceable">lock_type</em>] ...
+
+<em class="replaceable">lock_type</em>: {
+    READ [LOCAL]
+  | [LOW_PRIORITY] WRITE
+}
+
+UNLOCK TABLES</code></pre><p>
+      MySQL enables client sessions to acquire table locks explicitly
+      for the purpose of cooperating with other sessions for access to
+      tables, or to prevent other sessions from modifying tables during
+      periods when a session requires exclusive access to them. A
+      session can acquire or release locks only for itself. One session
+      cannot acquire locks for another session or release locks held by
+      another session.
+    </p><p>
+      Locks may be used to emulate transactions or to get more speed
+      when updating tables. This is explained in more detail in
+      <a class="xref" href="lock-tables.html#lock-tables-restrictions" title="Table-Locking Restrictions and Conditions">Table-Locking Restrictions and Conditions</a>.
+    </p><p>
+      <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> explicitly acquires
+      table locks for the current client session. Table locks can be
+      acquired for base tables or views. You must have the
+      <a class="link" href="privileges-provided.html#priv_lock-tables"><code class="literal">LOCK TABLES</code></a> privilege, and the
+      <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for each object to
+      be locked.
+    </p><p>
+      For view locking, <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> adds
+      all base tables used in the view to the set of tables to be locked
+      and locks them automatically. As of MySQL 5.7.32,
+      <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> checks that the view
+      definer has the proper privileges on the tables underlying the
+      view.
+    </p><p>
+      If you lock a table explicitly with <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+      TABLES</code></a>, any tables used in triggers are also locked
+      implicitly, as described in
+      <a class="xref" href="lock-tables.html#lock-tables-and-triggers" title="LOCK TABLES and Triggers">LOCK TABLES and Triggers</a>.
+    </p><p>
+      <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+      TABLES</code></a> explicitly releases any table locks held by the
+      current session. <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a>
+      implicitly releases any table locks held by the current session
+      before acquiring new locks.
+    </p><p>
+      Another use for
+      <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+      TABLES</code></a> is to release the global read lock acquired with
+      the <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH TABLES WITH READ LOCK</code></a>
+      statement, which enables you to lock all tables in all databases.
+      See <a class="xref" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement">Section&nbsp;13.7.6.3, “FLUSH Statement”</a>. (This is a very convenient way to get
+      backups if you have a file system such as Veritas that can take
+      snapshots in time.)
+    </p><p>
+      A table lock protects only against inappropriate reads or writes
+      by other sessions. A session holding a <code class="literal">WRITE</code>
+      lock can perform table-level operations such as
+      <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> or
+      <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a>. For sessions
+      holding a <code class="literal">READ</code> lock, <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP
+      TABLE</code></a> and <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a>
+      operations are not permitted.
+    </p><p>
+      The following discussion applies only to
+      non-<code class="literal">TEMPORARY</code> tables. <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+      TABLES</code></a> is permitted (but ignored) for a
+      <code class="literal">TEMPORARY</code> table. The table can be accessed
+      freely by the session within which it was created, regardless of
+      what other locking may be in effect. No lock is necessary because
+      no other session can see the table.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="lock-tables.html#table-lock-acquisition" title="Table Lock Acquisition">Table Lock Acquisition</a></p></li><li class="listitem"><p><a class="xref" href="lock-tables.html#table-lock-release" title="Table Lock Release">Table Lock Release</a></p></li><li class="listitem"><p><a class="xref" href="lock-tables.html#lock-tables-and-transactions" title="Interaction of Table Locking and Transactions">Interaction of Table Locking and Transactions</a></p></li><li class="listitem"><p><a class="xref" href="lock-tables.html#lock-tables-and-triggers" title="LOCK TABLES and Triggers">LOCK TABLES and Triggers</a></p></li><li class="listitem"><p><a class="xref" href="lock-tables.html#lock-tables-restrictions" title="Table-Locking Restrictions and Conditions">Table-Locking Restrictions and Conditions</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h4 class="title"><a name="table-lock-acquisition"></a>Table Lock Acquisition</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        To acquire table locks within the current session, use the
+        <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> statement, which
+        acquires metadata locks (see
+        <a class="xref" href="metadata-locking.html" title="8.11.4&nbsp;Metadata Locking">Section&nbsp;8.11.4, “Metadata Locking”</a>).
+      </p><p>
+        The following lock types are available:
+      </p><p>
+        <code class="literal">READ [LOCAL]</code> lock:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            The session that holds the lock can read the table (but not
+            write it).
+          </p></li><li class="listitem"><p>
+            Multiple sessions can acquire a <code class="literal">READ</code> lock
+            for the table at the same time.
+          </p></li><li class="listitem"><p>
+            Other sessions can read the table without explicitly
+            acquiring a <code class="literal">READ</code> lock.
+          </p></li><li class="listitem"><p>
+            The <code class="literal">LOCAL</code> modifier enables nonconflicting
+            <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> statements (concurrent
+            inserts) by other sessions to execute while the lock is
+            held. (See <a class="xref" href="concurrent-inserts.html" title="8.11.3&nbsp;Concurrent Inserts">Section&nbsp;8.11.3, “Concurrent Inserts”</a>.) However,
+            <code class="literal">READ LOCAL</code> cannot be used if you are
+            going to manipulate the database using processes external to
+            the server while you hold the lock. For
+            <code class="literal">InnoDB</code> tables, <code class="literal">READ
+            LOCAL</code> is the same as <code class="literal">READ</code>.
+</p></li></ul>
+</div>
+<p>
+        <code class="literal">[LOW_PRIORITY] WRITE</code> lock:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            The session that holds the lock can read and write the
+            table.
+          </p></li><li class="listitem"><p>
+            Only the session that holds the lock can access the table.
+            No other session can access it until the lock is released.
+          </p></li><li class="listitem"><p>
+            Lock requests for the table by other sessions block while
+            the <code class="literal">WRITE</code> lock is held.
+          </p></li><li class="listitem"><p>
+            The <code class="literal">LOW_PRIORITY</code> modifier has no effect.
+            In previous versions of MySQL, it affected locking behavior,
+            but this is no longer true. It is now deprecated and its use
+            produces a warning. Use <code class="literal">WRITE</code> without
+            <code class="literal">LOW_PRIORITY</code> instead.
+</p></li></ul>
+</div>
+<p>
+        <code class="literal">WRITE</code> locks normally have higher priority
+        than <code class="literal">READ</code> locks to ensure that updates are
+        processed as soon as possible. This means that if one session
+        obtains a <code class="literal">READ</code> lock and then another session
+        requests a <code class="literal">WRITE</code> lock, subsequent
+        <code class="literal">READ</code> lock requests wait until the session
+        that requested the <code class="literal">WRITE</code> lock has obtained
+        the lock and released it. (An exception to this policy can occur
+        for small values of the
+        <a class="link" href="server-system-variables.html#sysvar_max_write_lock_count"><code class="literal">max_write_lock_count</code></a> system
+        variable; see <a class="xref" href="metadata-locking.html" title="8.11.4&nbsp;Metadata Locking">Section&nbsp;8.11.4, “Metadata Locking”</a>.)
+      </p><p>
+        If the <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> statement must
+        wait due to locks held by other sessions on any of the tables,
+        it blocks until all locks can be acquired.
+      </p><p>
+        A session that requires locks must acquire all the locks that it
+        needs in a single <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a>
+        statement. While the locks thus obtained are held, the session
+        can access only the locked tables. For example, in the following
+        sequence of statements, an error occurs for the attempt to
+        access <code class="literal">t2</code> because it was not locked in the
+        <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> statement:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; LOCK TABLES t1 READ;
+mysql&gt; SELECT COUNT(*) FROM t1;
++----------+
+| COUNT(*) |
++----------+
+|        3 |
++----------+
+mysql&gt; SELECT COUNT(*) FROM t2;
+ERROR 1100 (HY000): Table 't2' was not locked with LOCK TABLES</code></pre><p>
+        Tables in the <code class="literal">INFORMATION_SCHEMA</code> database are
+        an exception. They can be accessed without being locked
+        explicitly even while a session holds table locks obtained with
+        <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a>.
+      </p><p>
+        You cannot refer to a locked table multiple times in a single
+        query using the same name. Use aliases instead, and obtain a
+        separate lock for the table and each alias:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; LOCK TABLE t WRITE, t AS t1 READ;
+mysql&gt; INSERT INTO t SELECT * FROM t;
+ERROR 1100: Table 't' was not locked with LOCK TABLES
+mysql&gt; INSERT INTO t SELECT * FROM t AS t1;</code></pre><p>
+        The error occurs for the first
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> because there are two
+        references to the same name for a locked table. The second
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> succeeds because the
+        references to the table use different names.
+      </p><p>
+        If your statements refer to a table by means of an alias, you
+        must lock the table using that same alias. It does not work to
+        lock the table without specifying the alias:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; LOCK TABLE t READ;
+mysql&gt; SELECT * FROM t AS myalias;
+ERROR 1100: Table 'myalias' was not locked with LOCK TABLES</code></pre><p>
+        Conversely, if you lock a table using an alias, you must refer
+        to it in your statements using that alias:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; LOCK TABLE t AS myalias READ;
+mysql&gt; SELECT * FROM t;
+ERROR 1100: Table 't' was not locked with LOCK TABLES
+mysql&gt; SELECT * FROM t AS myalias;</code></pre>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          <code class="literal">LOCK TABLES</code> or <code class="literal">UNLOCK
+          TABLES</code>, when applied to a partitioned table, always
+          locks or unlocks the entire table; these statements do not
+          support partition lock pruning. See
+          <a class="xref" href="partitioning-limitations-locking.html" title="22.6.4&nbsp;Partitioning and Locking">Section&nbsp;22.6.4, “Partitioning and Locking”</a>.
+</p>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="table-lock-release"></a>Table Lock Release</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        When the table locks held by a session are released, they are
+        all released at the same time. A session can release its locks
+        explicitly, or locks may be released implicitly under certain
+        conditions.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            A session can release its locks explicitly with
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a>.
+          </p></li><li class="listitem"><p>
+            If a session issues a <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+            TABLES</code></a> statement to acquire a lock while already
+            holding locks, its existing locks are released implicitly
+            before the new locks are granted.
+          </p></li><li class="listitem"><p>
+            If a session begins a transaction (for example, with
+            <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+            TRANSACTION</code></a>), an implicit
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> is performed, which causes existing locks
+            to be released. (For additional information about the
+            interaction between table locking and transactions, see
+            <a class="xref" href="lock-tables.html#lock-tables-and-transactions" title="Interaction of Table Locking and Transactions">Interaction of Table Locking and Transactions</a>.)
+</p></li></ul>
+</div>
+<p>
+        If the connection for a client session terminates, whether
+        normally or abnormally, the server implicitly releases all table
+        locks held by the session (transactional and nontransactional).
+        If the client reconnects, the locks are longer in effect. In
+        addition, if the client had an active transaction, the server
+        rolls back the transaction upon disconnect, and if reconnect
+        occurs, the new session begins with autocommit enabled. For this
+        reason, clients may wish to disable auto-reconnect. With
+        auto-reconnect in effect, the client is not notified if
+        reconnect occurs but any table locks or current transactions are
+        lost. With auto-reconnect disabled, if the connection drops, an
+        error occurs for the next statement issued. The client can
+        detect the error and take appropriate action such as reacquiring
+        the locks or redoing the transaction. See
+        <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/c-api-auto-reconnect.html" target="_top">Automatic Reconnection Control</a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          If you use <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> on a
+          locked table, it may become unlocked. For example, if you
+          attempt a second <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+          operation, the result may be an error <code class="literal">Table
+          '<em class="replaceable"><code>tbl_name</code></em>' was not locked with LOCK
+          TABLES</code>. To handle this, lock the table again prior
+          to the second alteration. See also
+          <a class="xref" href="alter-table-problems.html" title="B.3.6.1&nbsp;Problems with ALTER TABLE">Section&nbsp;B.3.6.1, “Problems with ALTER TABLE”</a>.
+</p>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="lock-tables-and-transactions"></a>Interaction of Table Locking and Transactions</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852576912640"></a><p>
+        <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> and
+        <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+        TABLES</code></a> interact with the use of transactions as
+        follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> is not
+            transaction-safe and implicitly commits any active
+            transaction before attempting to lock the tables.
+          </p></li><li class="listitem"><p>
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> implicitly commits any active transaction,
+            but only if <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> has
+            been used to acquire table locks. For example, in the
+            following set of statements,
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> releases the global read lock but does not
+            commit the transaction because no table locks are in effect:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">FLUSH TABLES WITH READ LOCK;
+START TRANSACTION;
+SELECT ... ;
+UNLOCK TABLES;</code></pre></li><li class="listitem"><p>
+            Beginning a transaction (for example, with
+            <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+            TRANSACTION</code></a>) implicitly commits any current
+            transaction and releases existing table locks.
+          </p></li><li class="listitem"><p>
+            <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH TABLES WITH READ LOCK</code></a>
+            acquires a global read lock and not table locks, so it is
+            not subject to the same behavior as
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> and
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> with respect to table locking and implicit
+            commits. For example,
+            <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+            TRANSACTION</code></a> does not release the global read lock.
+            See <a class="xref" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement">Section&nbsp;13.7.6.3, “FLUSH Statement”</a>.
+          </p></li><li class="listitem"><p>
+            Other statements that implicitly cause transactions to be
+            committed do not release existing table locks. For a list of
+            such statements, see <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+          </p></li><li class="listitem"><p>
+            The correct way to use <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+            TABLES</code></a> and
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> with transactional tables, such as
+            <code class="literal">InnoDB</code> tables, is to begin a transaction
+            with <code class="literal">SET autocommit = 0</code> (not
+            <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+            TRANSACTION</code></a>) followed by <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+            TABLES</code></a>, and to not call
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> until you commit the transaction
+            explicitly. For example, if you need to write to table
+            <code class="literal">t1</code> and read from table
+            <code class="literal">t2</code>, you can do this:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET autocommit=0;
+LOCK TABLES t1 WRITE, t2 READ, ...;
+<em class="replaceable">... do something with tables t1 and t2 here ...</em>
+COMMIT;
+UNLOCK TABLES;</code></pre><p>
+            When you call <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a>,
+            <code class="literal">InnoDB</code> internally takes its own table
+            lock, and MySQL takes its own table lock.
+            <code class="literal">InnoDB</code> releases its internal table lock
+            at the next commit, but for MySQL to release its table lock,
+            you have to call
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a>. You should not have
+            <a class="link" href="server-system-variables.html#sysvar_autocommit"><code class="literal">autocommit = 1</code></a>, because
+            then <code class="literal">InnoDB</code> releases its internal table
+            lock immediately after the call of <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+            TABLES</code></a>, and deadlocks can very easily happen.
+            <code class="literal">InnoDB</code> does not acquire the internal
+            table lock at all if <a class="link" href="server-system-variables.html#sysvar_autocommit"><code class="literal">autocommit =
+            1</code></a>, to help old applications avoid unnecessary
+            deadlocks.
+          </p></li><li class="listitem"><p>
+            <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">ROLLBACK</code></a>
+            does not release table locks.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="lock-tables-and-triggers"></a>LOCK TABLES and Triggers</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        If you lock a table explicitly with <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+        TABLES</code></a>, any tables used in triggers are also locked
+        implicitly:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            The locks are taken as the same time as those acquired
+            explicitly with the <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+            TABLES</code></a> statement.
+          </p></li><li class="listitem"><p>
+            The lock on a table used in a trigger depends on whether the
+            table is used only for reading. If so, a read lock suffices.
+            Otherwise, a write lock is used.
+          </p></li><li class="listitem"><p>
+            If a table is locked explicitly for reading with
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a>, but needs to be
+            locked for writing because it might be modified within a
+            trigger, a write lock is taken rather than a read lock.
+            (That is, an implicit write lock needed due to the table's
+            appearance within a trigger causes an explicit read lock
+            request for the table to be converted to a write lock
+            request.)
+</p></li></ul>
+</div>
+<p>
+        Suppose that you lock two tables, <code class="literal">t1</code> and
+        <code class="literal">t2</code>, using this statement:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">LOCK TABLES t1 WRITE, t2 READ;</code></pre><p>
+        If <code class="literal">t1</code> or <code class="literal">t2</code> have any
+        triggers, tables used within the triggers are also locked.
+        Suppose that <code class="literal">t1</code> has a trigger defined like
+        this:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TRIGGER t1_a_ins AFTER INSERT ON t1 FOR EACH ROW
+BEGIN
+  UPDATE t4 SET count = count+1
+      WHERE id = NEW.id AND EXISTS (SELECT a FROM t3);
+  INSERT INTO t2 VALUES(1, 2);
+END;</code></pre><p>
+        The result of the <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a>
+        statement is that <code class="literal">t1</code> and
+        <code class="literal">t2</code> are locked because they appear in the
+        statement, and <code class="literal">t3</code> and <code class="literal">t4</code>
+        are locked because they are used within the trigger:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">t1</code> is locked for writing per the
+            <code class="literal">WRITE</code> lock request.
+          </p></li><li class="listitem"><p>
+            <code class="literal">t2</code> is locked for writing, even though the
+            request is for a <code class="literal">READ</code> lock. This occurs
+            because <code class="literal">t2</code> is inserted into within the
+            trigger, so the <code class="literal">READ</code> request is converted
+            to a <code class="literal">WRITE</code> request.
+          </p></li><li class="listitem"><p>
+            <code class="literal">t3</code> is locked for reading because it is
+            only read from within the trigger.
+          </p></li><li class="listitem"><p>
+            <code class="literal">t4</code> is locked for writing because it might
+            be updated within the trigger.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="lock-tables-restrictions"></a>Table-Locking Restrictions and Conditions</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        You can safely use <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL</code></a> to
+        terminate a session that is waiting for a table lock. See
+        <a class="xref" href="kill.html" title="13.7.6.4&nbsp;KILL Statement">Section&nbsp;13.7.6.4, “KILL Statement”</a>.
+      </p><p>
+        <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> and
+        <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+        TABLES</code></a> cannot be used within stored programs.
+      </p><p>
+        Tables in the <code class="literal">performance_schema</code> database
+        cannot be locked with <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+        TABLES</code></a>, except the
+        <code class="literal">setup_<em class="replaceable"><code>xxx</code></em></code> tables.
+      </p><p>
+        The scope of a lock generated by <code class="literal">LOCK TABLES</code>
+        is a single MySQL server. It is not compatible with NDB Cluster,
+        which has no way of enforcing an SQL-level lock across multiple
+        instances of <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a>. You can enforce locking
+        in an API application instead. See
+        <a class="xref" href="mysql-cluster-limitations-multiple-nodes.html" title="21.2.7.10&nbsp;Limitations Relating to Multiple NDB Cluster Nodes">Section&nbsp;21.2.7.10, “Limitations Relating to Multiple NDB Cluster Nodes”</a>, for
+        more information.
+      </p><p>
+        The following statements are prohibited while a
+        <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> statement is in
+        effect: <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>,
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE ...
+        LIKE</code></a>, <a class="link" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement"><code class="literal">CREATE VIEW</code></a>,
+        <a class="link" href="drop-view.html" title="13.1.32&nbsp;DROP VIEW Statement"><code class="literal">DROP VIEW</code></a>, and DDL statements on
+        stored functions and procedures and events.
+      </p><p>
+        For some operations, system tables in the
+        <code class="literal">mysql</code> database must be accessed. For example,
+        the <a class="link" href="help.html" title="13.8.3&nbsp;HELP Statement"><code class="literal">HELP</code></a> statement requires the
+        contents of the server-side help tables, and
+        <a class="link" href="date-and-time-functions.html#function_convert-tz"><code class="literal">CONVERT_TZ()</code></a> might need to read
+        the time zone tables. The server implicitly locks the system
+        tables for reading as necessary so that you need not lock them
+        explicitly. These tables are treated as just described:
+      </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">mysql.help_category
+mysql.help_keyword
+mysql.help_relation
+mysql.help_topic
+mysql.proc
+mysql.time_zone
+mysql.time_zone_leap_second
+mysql.time_zone_name
+mysql.time_zone_transition
+mysql.time_zone_transition_type</code></pre><p>
+        If you want to explicitly place a <code class="literal">WRITE</code> lock
+        on any of those tables with a <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+        TABLES</code></a> statement, the table must be the only one
+        locked; no other table can be locked with the same statement.
+      </p><p>
+        Normally, you do not need to lock tables, because all single
+        <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statements are atomic; no
+        other session can interfere with any other currently executing
+        SQL statement. However, there are a few cases when locking
+        tables may provide an advantage:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            If you are going to run many operations on a set of
+            <code class="literal">MyISAM</code> tables, it is much faster to lock
+            the tables you are going to use. Locking
+            <code class="literal">MyISAM</code> tables speeds up inserting,
+            updating, or deleting on them because MySQL does not flush
+            the key cache for the locked tables until
+            <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+            TABLES</code></a> is called. Normally, the key cache is
+            flushed after each SQL statement.
+          </p><p>
+            The downside to locking the tables is that no session can
+            update a <code class="literal">READ</code>-locked table (including the
+            one holding the lock) and no session can access a
+            <code class="literal">WRITE</code>-locked table other than the one
+            holding the lock.
+          </p></li><li class="listitem"><p>
+            If you are using tables for a nontransactional storage
+            engine, you must use <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+            TABLES</code></a> if you want to ensure that no other session
+            modifies the tables between a
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> and an
+            <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>. The example shown
+            here requires <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a> to
+            execute safely:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOCK TABLES trans READ, customer WRITE;
+SELECT SUM(value) FROM trans WHERE customer_id=<em class="replaceable">some_id</em>;
+UPDATE customer
+  SET total_value=<em class="replaceable">sum_from_previous_statement</em>
+  WHERE customer_id=<em class="replaceable">some_id</em>;
+UNLOCK TABLES;</code></pre><p>
+            Without <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a>, it is
+            possible that another session might insert a new row in the
+            <code class="literal">trans</code> table between execution of the
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> and
+            <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statements.
+</p></li></ul>
+</div>
+<p>
+        You can avoid using <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a>
+        in many cases by using relative updates (<code class="literal">UPDATE
+        customer SET
+        <em class="replaceable"><code>value</code></em>=<em class="replaceable"><code>value</code></em>+<em class="replaceable"><code>new_value</code></em></code>)
+        or the <a class="link" href="information-functions.html#function_last-insert-id"><code class="literal">LAST_INSERT_ID()</code></a> function.
+      </p><p>
+        You can also avoid locking tables in some cases by using the
+        user-level advisory lock functions
+        <a class="link" href="locking-functions.html#function_get-lock"><code class="literal">GET_LOCK()</code></a> and
+        <a class="link" href="locking-functions.html#function_release-lock"><code class="literal">RELEASE_LOCK()</code></a>. These locks are
+        saved in a hash table in the server and implemented with
+        <code class="literal">pthread_mutex_lock()</code> and
+        <code class="literal">pthread_mutex_unlock()</code> for high speed. See
+        <a class="xref" href="locking-functions.html" title="12.15&nbsp;Locking Functions">Section&nbsp;12.15, “Locking Functions”</a>.
+      </p><p>
+        See <a class="xref" href="internal-locking.html" title="8.11.1&nbsp;Internal Locking Methods">Section&nbsp;8.11.1, “Internal Locking Methods”</a>, for more information on
+        locking policy.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

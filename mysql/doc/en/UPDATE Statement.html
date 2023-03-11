@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>UPDATE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="update"></a>13.2.11&nbsp;UPDATE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577477632"></a><a class="indexterm" name="idm45852577476560"></a><p>
+      <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> is a DML statement that
+      modifies rows in a table.
+    </p><p>
+      Single-table syntax:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">UPDATE [LOW_PRIORITY] [IGNORE] <em class="replaceable">table_reference</em>
+    SET <em class="replaceable">assignment_list</em>
+    [WHERE <em class="replaceable">where_condition</em>]
+    [ORDER BY ...]
+    [LIMIT <em class="replaceable">row_count</em>]
+
+<em class="replaceable">value</em>:
+    {<em class="replaceable">expr</em> | DEFAULT}
+
+<em class="replaceable">assignment</em>:
+    <em class="replaceable">col_name</em> = <em class="replaceable">value</em>
+
+<em class="replaceable">assignment_list</em>:
+    <em class="replaceable">assignment</em> [, <em class="replaceable">assignment</em>] ...</code></pre><p>
+      Multiple-table syntax:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">UPDATE [LOW_PRIORITY] [IGNORE] <em class="replaceable">table_references</em>
+    SET <em class="replaceable">assignment_list</em>
+    [WHERE <em class="replaceable">where_condition</em>]</code></pre><p>
+      For the single-table syntax, the
+      <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statement updates columns of
+      existing rows in the named table with new values. The
+      <code class="literal">SET</code> clause indicates which columns to modify
+      and the values they should be given. Each value can be given as an
+      expression, or the keyword <code class="literal">DEFAULT</code> to set a
+      column explicitly to its default value. The
+      <code class="literal">WHERE</code> clause, if given, specifies the
+      conditions that identify which rows to update. With no
+      <code class="literal">WHERE</code> clause, all rows are updated. If the
+      <code class="literal">ORDER BY</code> clause is specified, the rows are
+      updated in the order that is specified. The
+      <code class="literal">LIMIT</code> clause places a limit on the number of
+      rows that can be updated.
+    </p><p>
+      For the multiple-table syntax,
+      <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> updates rows in each table
+      named in <em class="replaceable"><code>table_references</code></em> that satisfy
+      the conditions. Each matching row is updated once, even if it
+      matches the conditions multiple times. For multiple-table syntax,
+      <code class="literal">ORDER BY</code> and <code class="literal">LIMIT</code> cannot be
+      used.
+    </p><p>
+      For partitioned tables, both the single-single and multiple-table
+      forms of this statement support the use of a
+      <code class="literal">PARTITION</code> clause as part of a table reference.
+      This option takes a list of one or more partitions or
+      subpartitions (or both). Only the partitions (or subpartitions)
+      listed are checked for matches, and a row that is not in any of
+      these partitions or subpartitions is not updated, whether it
+      satisfies the <em class="replaceable"><code>where_condition</code></em> or not.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        Unlike the case when using <code class="literal">PARTITION</code> with an
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> or
+        <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a> statement, an otherwise
+        valid <code class="literal">UPDATE ... PARTITION</code> statement is
+        considered successful even if no rows in the listed partitions
+        (or subpartitions) match the
+        <em class="replaceable"><code>where_condition</code></em>.
+</p>
+</div>
+<p>
+      For more information and examples, see
+      <a class="xref" href="partitioning-selection.html" title="22.5&nbsp;Partition Selection">Section&nbsp;22.5, “Partition Selection”</a>.
+    </p><p>
+      <em class="replaceable"><code>where_condition</code></em> is an expression that
+      evaluates to true for each row to be updated. For expression
+      syntax, see <a class="xref" href="expressions.html" title="9.5&nbsp;Expressions">Section&nbsp;9.5, “Expressions”</a>.
+    </p><p>
+      <em class="replaceable"><code>table_references</code></em> and
+      <em class="replaceable"><code>where_condition</code></em> are specified as
+      described in <a class="xref" href="select.html" title="13.2.9&nbsp;SELECT Statement">Section&nbsp;13.2.9, “SELECT Statement”</a>.
+    </p><p>
+      You need the <a class="link" href="privileges-provided.html#priv_update"><code class="literal">UPDATE</code></a> privilege only
+      for columns referenced in an <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>
+      that are actually updated. You need only the
+      <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for any columns
+      that are read but not modified.
+    </p><p>
+      The <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statement supports the
+      following modifiers:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          With the <code class="literal">LOW_PRIORITY</code> modifier, execution
+          of the <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> is delayed until
+          no other clients are reading from the table. This affects only
+          storage engines that use only table-level locking (such as
+          <code class="literal">MyISAM</code>, <code class="literal">MEMORY</code>, and
+          <code class="literal">MERGE</code>).
+        </p><a class="indexterm" name="idm45852577427632"></a></li><li class="listitem"><p>
+          With the <code class="literal">IGNORE</code> modifier, the update
+          statement does not abort even if errors occur during the
+          update. Rows for which duplicate-key conflicts occur on a
+          unique key value are not updated. Rows updated to values that
+          would cause data conversion errors are updated to the closest
+          valid values instead. For more information, see
+          <a class="xref" href="sql-mode.html#ignore-effect-on-execution" title="The Effect of IGNORE on Statement Execution">The Effect of IGNORE on Statement Execution</a>.
+</p><a class="indexterm" name="idm45852577423520"></a></li></ul>
+</div>
+<p>
+      <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE IGNORE</code></a>
+      statements, including those having an <code class="literal">ORDER BY</code>
+      clause, are flagged as unsafe for statement-based replication.
+      (This is because the order in which the rows are updated
+      determines which rows are ignored.) Such statements produce a
+      warning in the error log when using statement-based mode and are
+      written to the binary log using the row-based format when using
+      <code class="literal">MIXED</code> mode. (Bug #11758262, Bug #50439) See
+      <a class="xref" href="replication-rbr-safe-unsafe.html" title="16.2.1.3&nbsp;Determination of Safe and Unsafe Statements in Binary Logging">Section&nbsp;16.2.1.3, “Determination of Safe and Unsafe Statements in Binary Logging”</a>, for more
+      information.
+    </p><p>
+      If you access a column from the table to be updated in an
+      expression, <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> uses the current
+      value of the column. For example, the following statement sets
+      <code class="literal">col1</code> to one more than its current value:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">UPDATE t1 SET col1 = col1 + 1;</code></pre><p>
+      The second assignment in the following statement sets
+      <code class="literal">col2</code> to the current (updated)
+      <code class="literal">col1</code> value, not the original
+      <code class="literal">col1</code> value. The result is that
+      <code class="literal">col1</code> and <code class="literal">col2</code> have the same
+      value. This behavior differs from standard SQL.
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">UPDATE t1 SET col1 = col1 + 1, col2 = col1;</code></pre><p>
+      Single-table <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> assignments are
+      generally evaluated from left to right. For multiple-table
+      updates, there is no guarantee that assignments are carried out in
+      any particular order.
+    </p><p>
+      If you set a column to the value it currently has, MySQL notices
+      this and does not update it.
+    </p><p>
+      If you update a column that has been declared <code class="literal">NOT
+      NULL</code> by setting to <code class="literal">NULL</code>, an error
+      occurs if strict SQL mode is enabled; otherwise, the column is set
+      to the implicit default value for the column data type and the
+      warning count is incremented. The implicit default value is
+      <code class="literal">0</code> for numeric types, the empty string
+      (<code class="literal">''</code>) for string types, and the
+      <span class="quote">“<span class="quote">zero</span>”</span> value for date and time types. See
+      <a class="xref" href="data-type-defaults.html" title="11.6&nbsp;Data Type Default Values">Section&nbsp;11.6, “Data Type Default Values”</a>.
+    </p><a class="indexterm" name="idm45852577401312"></a><p>
+      If a generated column is updated explicitly, the only permitted
+      value is <code class="literal">DEFAULT</code>. For information about
+      generated columns, see
+      <a class="xref" href="create-table-generated-columns.html" title="13.1.18.7&nbsp;CREATE TABLE and Generated Columns">Section&nbsp;13.1.18.7, “CREATE TABLE and Generated Columns”</a>.
+    </p><a class="indexterm" name="idm45852577397824"></a><p>
+      <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> returns the number of rows
+      that were actually changed. The
+      <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-info.html" target="_top"><code class="literal">mysql_info()</code></a> C API function
+      returns the number of rows that were matched and updated and the
+      number of warnings that occurred during the
+      <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>.
+    </p><p>
+      You can use <code class="literal">LIMIT
+      <em class="replaceable"><code>row_count</code></em></code> to restrict the
+      scope of the <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>. A
+      <code class="literal">LIMIT</code> clause is a rows-matched restriction. The
+      statement stops as soon as it has found
+      <em class="replaceable"><code>row_count</code></em> rows that satisfy the
+      <code class="literal">WHERE</code> clause, whether or not they actually were
+      changed.
+    </p><p>
+      If an <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statement includes an
+      <code class="literal">ORDER BY</code> clause, the rows are updated in the
+      order specified by the clause. This can be useful in certain
+      situations that might otherwise result in an error. Suppose that a
+      table <code class="literal">t</code> contains a column <code class="literal">id</code>
+      that has a unique index. The following statement could fail with a
+      duplicate-key error, depending on the order in which rows are
+      updated:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">UPDATE t SET id = id + 1;</code></pre><p>
+      For example, if the table contains 1 and 2 in the
+      <code class="literal">id</code> column and 1 is updated to 2 before 2 is
+      updated to 3, an error occurs. To avoid this problem, add an
+      <code class="literal">ORDER BY</code> clause to cause the rows with larger
+      <code class="literal">id</code> values to be updated before those with
+      smaller values:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">UPDATE t SET id = id + 1 ORDER BY id DESC;</code></pre><p>
+      You can also perform <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>
+      operations covering multiple tables. However, you cannot use
+      <code class="literal">ORDER BY</code> or <code class="literal">LIMIT</code> with a
+      multiple-table <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>. The
+      <em class="replaceable"><code>table_references</code></em> clause lists the
+      tables involved in the join. Its syntax is described in
+      <a class="xref" href="join.html" title="13.2.9.2&nbsp;JOIN Clause">Section&nbsp;13.2.9.2, “JOIN Clause”</a>. Here is an example:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">UPDATE items,month SET items.price=month.price
+WHERE items.id=month.id;</code></pre><p>
+      The preceding example shows an inner join that uses the comma
+      operator, but multiple-table <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>
+      statements can use any type of join permitted in
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements, such as
+      <code class="literal">LEFT JOIN</code>.
+    </p><p>
+      If you use a multiple-table <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>
+      statement involving <code class="literal">InnoDB</code> tables for which
+      there are foreign key constraints, the MySQL optimizer might
+      process tables in an order that differs from that of their
+      parent/child relationship. In this case, the statement fails and
+      rolls back. Instead, update a single table and rely on the
+      <code class="literal">ON UPDATE</code> capabilities that
+      <code class="literal">InnoDB</code> provides to cause the other tables to be
+      modified accordingly. See
+      <a class="xref" href="create-table-foreign-keys.html" title="13.1.18.5&nbsp;FOREIGN KEY Constraints">Section&nbsp;13.1.18.5, “FOREIGN KEY Constraints”</a>.
+    </p><p>
+      You cannot update a table and select directly from the same table
+      in a subquery. You can work around this by using a multi-table
+      update in which one of the tables is derived from the table that
+      you actually wish to update, and referring to the derived table
+      using an alias. Suppose you wish to update a table named
+      <code class="literal">items</code> which is defined using the statement
+      shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE items (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    wholesale DECIMAL(6,2) NOT NULL DEFAULT 0.00,
+    retail DECIMAL(6,2) NOT NULL DEFAULT 0.00,
+    quantity BIGINT NOT NULL DEFAULT 0
+);</code></pre><p>
+      To reduce the retail price of any items for which the markup is
+      30% or greater and of which you have fewer than one hundred in
+      stock, you might try to use an <code class="literal">UPDATE</code> statement
+      such as the one following, which uses a subquery in the
+      <code class="literal">WHERE</code> clause. As shown here, this statement
+      does not work:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; UPDATE items
+     &gt; SET retail = retail * 0.9
+     &gt; WHERE id IN
+     &gt;     (SELECT id FROM items
+     &gt;         WHERE retail / wholesale &gt;= 1.3 AND quantity &gt; 100);
+ERROR 1093 (HY000): You can't specify target table 'items' for update in FROM clause</code></pre><p>
+      Instead, you can employ a multi-table update in which the subquery
+      is moved into the list of tables to be updated, using an alias to
+      reference it in the outermost <code class="literal">WHERE</code> clause,
+      like this:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">UPDATE items,
+       (SELECT id FROM items
+        WHERE id IN
+            (SELECT id FROM items
+             WHERE retail / wholesale &gt;= 1.3 AND quantity &lt; 100))
+        AS discounted
+SET items.retail = items.retail * 0.9
+WHERE items.id = discounted.id;</code></pre><p>
+      Because the optimizer tries by default to merge the derived table
+      <code class="literal">discounted</code> into the outermost query block, this
+      works only if you force materialization of the derived table. You
+      can do this by setting the
+      <a class="link" href="switchable-optimizations.html#optflag_derived-merge"><code class="literal">derived_merge</code></a> flag of the
+      <a class="link" href="server-system-variables.html#sysvar_optimizer_switch"><code class="literal">optimizer_switch</code></a> system variable
+      to <code class="literal">off</code> before running the update, or by using
+      the <a class="link" href="optimizer-hints.html#optimizer-hints-table-level" title="Table-Level Optimizer Hints"><code class="literal">NO_MERGE</code></a> optimizer hint, as
+      shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">UPDATE /*+ NO_MERGE(discounted) */ items,
+       (SELECT id FROM items
+        WHERE retail / wholesale &gt;= 1.3 AND quantity &lt; 100)
+        AS discounted
+    SET items.retail = items.retail * 0.9
+    WHERE items.id = discounted.id;</code></pre><p>
+      The advantage of using the optimizer hint in such a case is that
+      it applies only within the query block where it is used, so that
+      it is not necessary to change the value of
+      <code class="literal">optimizer_switch</code> again after executing the
+      <code class="literal">UPDATE</code>.
+    </p><p>
+      Another possibility is to rewrite the subquery so that it does not
+      use <code class="literal">IN</code> or <code class="literal">EXISTS</code>, like this:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">UPDATE items,
+       (SELECT id, retail / wholesale AS markup, quantity FROM items)
+       AS discounted
+    SET items.retail = items.retail * 0.9
+    WHERE discounted.markup &gt;= 1.3
+    AND discounted.quantity &lt; 100
+    AND items.id = discounted.id;</code></pre><p>
+      In this case, the subquery is materialized by default rather than
+      merged, so it is not necessary to disable merging of the derived
+      table.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

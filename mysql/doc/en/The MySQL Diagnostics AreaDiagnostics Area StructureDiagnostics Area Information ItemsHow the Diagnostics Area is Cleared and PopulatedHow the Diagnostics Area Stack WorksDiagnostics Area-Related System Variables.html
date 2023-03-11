@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>The MySQL Diagnostics AreaDiagnostics Area StructureDiagnostics Area Information ItemsHow the Diagnostics Area is Cleared and PopulatedHow the Diagnostics Area Stack WorksDiagnostics Area-Related System Variables</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="diagnostics-area"></a>13.6.7.7&nbsp;The MySQL Diagnostics Area</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        SQL statements produce diagnostic information that populates the
+        diagnostics area. Standard SQL has a diagnostics area stack,
+        containing a diagnostics area for each nested execution context.
+        Standard SQL also supports
+        <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET STACKED
+        DIAGNOSTICS</code></a> syntax for referring to the second
+        diagnostics area during condition handler execution. MySQL
+        supports the <code class="literal">STACKED</code> keyword as of MySQL 5.7.
+        Before that, MySQL does not support <code class="literal">STACKED</code>;
+        there is a single diagnostics area containing information from
+        the most recent statement that wrote to it.
+      </p><p>
+        The following discussion describes the structure of the
+        diagnostics area in MySQL, the information items recognized by
+        MySQL, how statements clear and set the diagnostics area, and
+        how diagnostics areas are pushed to and popped from the stack.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="diagnostics-area.html#diagnostics-area-structure" title="Diagnostics Area Structure">Diagnostics Area Structure</a></p></li><li class="listitem"><p><a class="xref" href="diagnostics-area.html#diagnostics-area-information-items" title="Diagnostics Area Information Items">Diagnostics Area Information Items</a></p></li><li class="listitem"><p><a class="xref" href="diagnostics-area.html#diagnostics-area-populating" title="How the Diagnostics Area is Cleared and Populated">How the Diagnostics Area is Cleared and Populated</a></p></li><li class="listitem"><p><a class="xref" href="diagnostics-area.html#diagnostics-area-stack" title="How the Diagnostics Area Stack Works">How the Diagnostics Area Stack Works</a></p></li><li class="listitem"><p><a class="xref" href="diagnostics-area.html#diagnostics-area-system-variables" title="Diagnostics Area-Related System Variables">Diagnostics Area-Related System Variables</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="diagnostics-area-structure"></a>Diagnostics Area Structure</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          The diagnostics area contains two kinds of information:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Statement information, such as the number of conditions
+              that occurred or the affected-rows count.
+            </p></li><li class="listitem"><p>
+              Condition information, such as the error code and message.
+              If a statement raises multiple conditions, this part of
+              the diagnostics area has a condition area for each one. If
+              a statement raises no conditions, this part of the
+              diagnostics area is empty.
+</p></li></ul>
+</div>
+<p>
+          For a statement that produces three conditions, the
+          diagnostics area contains statement and condition information
+          like this:
+        </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">Statement information:
+  row count
+  ... other statement information items ...
+Condition area list:
+  Condition area 1:
+    error code for condition 1
+    error message for condition 1
+    ... other condition information items ...
+  Condition area 2:
+    error code for condition 2:
+    error message for condition 2
+    ... other condition information items ...
+  Condition area 3:
+    error code for condition 3
+    error message for condition 3
+    ... other condition information items ...</code></pre>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="diagnostics-area-information-items"></a>Diagnostics Area Information Items</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          The diagnostics area contains statement and condition
+          information items. Numeric items are integers. The character
+          set for character items is UTF-8. No item can be
+          <code class="literal">NULL</code>. If a statement or condition item is
+          not set by a statement that populates the diagnostics area,
+          its value is 0 or the empty string, depending on the item data
+          type.
+        </p><p>
+          The statement information part of the diagnostics area
+          contains these items:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              <code class="literal">NUMBER</code>: An integer indicating the
+              number of condition areas that have information.
+            </p></li><li class="listitem"><p>
+              <code class="literal">ROW_COUNT</code>: An integer indicating the
+              number of rows affected by the statement.
+              <code class="literal">ROW_COUNT</code> has the same value as the
+              <a class="link" href="information-functions.html#function_row-count"><code class="literal">ROW_COUNT()</code></a> function (see
+              <a class="xref" href="information-functions.html" title="12.16&nbsp;Information Functions">Section&nbsp;12.16, “Information Functions”</a>).
+</p></li></ul>
+</div>
+<p>
+          The condition information part of the diagnostics area
+          contains a condition area for each condition. Condition areas
+          are numbered from 1 to the value of the
+          <code class="literal">NUMBER</code> statement condition item. If
+          <code class="literal">NUMBER</code> is 0, there are no condition areas.
+        </p><p>
+          Each condition area contains the items in the following list.
+          All items are standard SQL except
+          <code class="literal">MYSQL_ERRNO</code>, which is a MySQL extension.
+          The definitions apply for conditions generated other than by a
+          signal (that is, by a <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> or
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> statement). For
+          nonsignal conditions, MySQL populates only those condition
+          items not described as always empty. The effects of signals on
+          the condition area are described later.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              <code class="literal">CLASS_ORIGIN</code>: A string containing the
+              class of the <code class="literal">RETURNED_SQLSTATE</code> value.
+              If the <code class="literal">RETURNED_SQLSTATE</code> value begins
+              with a class value defined in SQL standards document ISO
+              9075-2 (section 24.1, SQLSTATE),
+              <code class="literal">CLASS_ORIGIN</code> is <code class="literal">'ISO
+              9075'</code>. Otherwise,
+              <code class="literal">CLASS_ORIGIN</code> is
+              <code class="literal">'MySQL'</code>.
+            </p></li><li class="listitem"><p>
+              <code class="literal">SUBCLASS_ORIGIN</code>: A string containing
+              the subclass of the <code class="literal">RETURNED_SQLSTATE</code>
+              value. If <code class="literal">CLASS_ORIGIN</code> is <code class="literal">'ISO
+              9075'</code> or <code class="literal">RETURNED_SQLSTATE</code>
+              ends with <code class="literal">'000'</code>,
+              <code class="literal">SUBCLASS_ORIGIN</code> is <code class="literal">'ISO
+              9075'</code>. Otherwise,
+              <code class="literal">SUBCLASS_ORIGIN</code> is
+              <code class="literal">'MySQL'</code>.
+            </p></li><li class="listitem"><p>
+              <code class="literal">RETURNED_SQLSTATE</code>: A string that
+              indicates the <code class="literal">SQLSTATE</code> value for the
+              condition.
+            </p></li><li class="listitem"><p>
+              <code class="literal">MESSAGE_TEXT</code>: A string that indicates
+              the error message for the condition.
+            </p></li><li class="listitem"><p>
+              <code class="literal">MYSQL_ERRNO</code>: An integer that indicates
+              the MySQL error code for the condition.
+            </p></li><li class="listitem"><p>
+              <code class="literal">CONSTRAINT_CATALOG</code>,
+              <code class="literal">CONSTRAINT_SCHEMA</code>,
+              <code class="literal">CONSTRAINT_NAME</code>: Strings that indicate
+              the catalog, schema, and name for a violated constraint.
+              They are always empty.
+            </p></li><li class="listitem"><p>
+              <code class="literal">CATALOG_NAME</code>,
+              <code class="literal">SCHEMA_NAME</code>,
+              <code class="literal">TABLE_NAME</code>,
+              <code class="literal">COLUMN_NAME</code>: Strings that indicate the
+              catalog, schema, table, and column related to the
+              condition. They are always empty.
+            </p></li><li class="listitem"><p>
+              <code class="literal">CURSOR_NAME</code>: A string that indicates
+              the cursor name. This is always empty.
+</p></li></ul>
+</div>
+<p>
+          For the <code class="literal">RETURNED_SQLSTATE</code>,
+          <code class="literal">MESSAGE_TEXT</code>, and
+          <code class="literal">MYSQL_ERRNO</code> values for particular errors,
+          see <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html" target="_top">Server Error Message Reference</a>.
+        </p><p>
+          If a <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> (or
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a>) statement populates
+          the diagnostics area, its <code class="literal">SET</code> clause can
+          assign to any condition information item except
+          <code class="literal">RETURNED_SQLSTATE</code> any value that is legal
+          for the item data type. <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a>
+          also sets the <code class="literal">RETURNED_SQLSTATE</code> value, but
+          not directly in its <code class="literal">SET</code> clause. That value
+          comes from the <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement
+          <code class="literal">SQLSTATE</code> argument.
+        </p><p>
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> also sets statement
+          information items. It sets <code class="literal">NUMBER</code> to 1. It
+          sets <code class="literal">ROW_COUNT</code> to −1 for errors and 0
+          otherwise.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="diagnostics-area-populating"></a>How the Diagnostics Area is Cleared and Populated</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          Nondiagnostic SQL statements populate the diagnostics area
+          automatically, and its contents can be set explicitly with the
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> and
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> statements. The
+          diagnostics area can be examined with <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+          DIAGNOSTICS</code></a> to extract specific items, or with
+          <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW WARNINGS</code></a> or
+          <a class="link" href="show-errors.html" title="13.7.5.17&nbsp;SHOW ERRORS Statement"><code class="literal">SHOW ERRORS</code></a> to see conditions
+          or errors.
+        </p><p>
+          SQL statements clear and set the diagnostics area as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              When the server starts executing a statement after parsing
+              it, it clears the diagnostics area for nondiagnostic
+              statements. Diagnostic statements do not clear the
+              diagnostics area. These statements are diagnostic:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                  <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a>
+                </p></li><li class="listitem"><p>
+                  <a class="link" href="show-errors.html" title="13.7.5.17&nbsp;SHOW ERRORS Statement"><code class="literal">SHOW ERRORS</code></a>
+                </p></li><li class="listitem"><p>
+                  <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW WARNINGS</code></a>
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+              If a statement raises a condition, the diagnostics area is
+              cleared of conditions that belong to earlier statements.
+              The exception is that conditions raised by
+              <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> and
+              <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> are added to the
+              diagnostics area without clearing it.
+</p></li></ul>
+</div>
+<p>
+          Thus, even a statement that does not normally clear the
+          diagnostics area when it begins executing clears it if the
+          statement raises a condition.
+        </p><p>
+          The following example shows the effect of various statements
+          on the diagnostics area, using <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW
+          WARNINGS</code></a> to display information about conditions
+          stored there.
+        </p><p>
+          This <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> statement
+          clears the diagnostics area and populates it when the
+          condition occurs:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; DROP TABLE IF EXISTS test.no_such_table;
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+mysql&gt; SHOW WARNINGS;
++-------+------+------------------------------------+
+| Level | Code | Message                            |
++-------+------+------------------------------------+
+| Note  | 1051 | Unknown table 'test.no_such_table' |
++-------+------+------------------------------------+
+1 row in set (0.00 sec)</code></pre><p>
+          This
+          <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+          statement generates an error, so it clears and populates the
+          diagnostics area:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SET @x = @@x;
+ERROR 1193 (HY000): Unknown system variable 'x'
+
+mysql&gt; SHOW WARNINGS;
++-------+------+-----------------------------+
+| Level | Code | Message                     |
++-------+------+-----------------------------+
+| Error | 1193 | Unknown system variable 'x' |
++-------+------+-----------------------------+
+1 row in set (0.00 sec)</code></pre><p>
+          The previous
+          <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+          statement produced a single condition, so 1 is the only valid
+          condition number for <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+          DIAGNOSTICS</code></a> at this point. The following statement
+          uses a condition number of 2, which produces a warning that is
+          added to the diagnostics area without clearing it:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; GET DIAGNOSTICS CONDITION 2 @p = MESSAGE_TEXT;
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql&gt; SHOW WARNINGS;
++-------+------+------------------------------+
+| Level | Code | Message                      |
++-------+------+------------------------------+
+| Error | 1193 | Unknown system variable 'xx' |
+| Error | 1753 | Invalid condition number     |
++-------+------+------------------------------+
+2 rows in set (0.00 sec)</code></pre><p>
+          Now there are two conditions in the diagnostics area, so the
+          same <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> statement
+          succeeds:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; GET DIAGNOSTICS CONDITION 2 @p = MESSAGE_TEXT;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; SELECT @p;
++--------------------------+
+| @p                       |
++--------------------------+
+| Invalid condition number |
++--------------------------+
+1 row in set (0.01 sec)</code></pre>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="diagnostics-area-stack"></a>How the Diagnostics Area Stack Works</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          When a push to the diagnostics area stack occurs, the first
+          (current) diagnostics area becomes the second (stacked)
+          diagnostics area and a new current diagnostics area is created
+          as a copy of it. Diagnostics areas are pushed to and popped
+          from the stack under the following circumstances:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Execution of a stored program
+            </p><p>
+              A push occurs before the program executes and a pop occurs
+              afterward. If the stored program ends while handlers are
+              executing, there can be more than one diagnostics area to
+              pop; this occurs due to an exception for which there are
+              no appropriate handlers or due to
+              <a class="link" href="return.html" title="13.6.5.7&nbsp;RETURN Statement"><code class="literal">RETURN</code></a> in the handler.
+            </p><p>
+              Any warning or error conditions in the popped diagnostics
+              areas then are added to the current diagnostics area,
+              except that, for triggers, only errors are added. When the
+              stored program ends, the caller sees these conditions in
+              its current diagonstics area.
+            </p></li><li class="listitem"><p>
+              Execution of a condition handler within a stored program
+            </p><p>
+              When a push occurs as a result of condition handler
+              activation, the stacked diagnostics area is the area that
+              was current within the stored program prior to the push.
+              The new now-current diagnostics area is the handler's
+              current diagnostics area.
+              <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+              [CURRENT] DIAGNOSTICS</code></a> and
+              <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET
+              STACKED DIAGNOSTICS</code></a> can be used within the
+              handler to access the contents of the current (handler)
+              and stacked (stored program) diagnostics areas. Initially,
+              they return the same result, but statements executing
+              within the handler modify the current diagnostics area,
+              clearing and setting its contents according to the normal
+              rules (see <a class="xref" href="diagnostics-area.html#diagnostics-area-populating" title="How the Diagnostics Area is Cleared and Populated">How the Diagnostics Area is Cleared and Populated</a>).
+              The stacked diagnostics area cannot be modified by
+              statements executing within the handler except
+              <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a>.
+            </p><p>
+              If the handler executes successfully, the current
+              (handler) diagnostics area is popped and the stacked
+              (stored program) diagnostics area again becomes the
+              current diagnostics area. Conditions added to the handler
+              diagnostics area during handler execution are added to the
+              current diagnostics area.
+            </p></li><li class="listitem"><p>
+              Execution of <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a>
+            </p><p>
+              The <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> statement
+              passes on the error condition information that is
+              available during execution of a condition handler within a
+              compound statement inside a stored program.
+              <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> may change some or
+              all information before passing it on, modifying the
+              diagnostics stack as described in
+              <a class="xref" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement">Section&nbsp;13.6.7.4, “RESIGNAL Statement”</a>.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="diagnostics-area-system-variables"></a>Diagnostics Area-Related System Variables</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          Certain system variables control or are related to some
+          aspects of the diagnostics area:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a> controls
+              the number of condition areas in the diagnostics area. If
+              more conditions than this occur, MySQL silently discards
+              information for the excess conditions. (Conditions added
+              by <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> are always
+              added, with older conditions being discarded as necessary
+              to make room.)
+            </p></li><li class="listitem"><p>
+              <a class="link" href="server-system-variables.html#sysvar_warning_count"><code class="literal">warning_count</code></a> indicates
+              the number of conditions that occurred. This includes
+              errors, warnings, and notes. Normally,
+              <code class="literal">NUMBER</code> and
+              <a class="link" href="server-system-variables.html#sysvar_warning_count"><code class="literal">warning_count</code></a> are the
+              same. However, as the number of conditions generated
+              exceeds <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a>,
+              the value of
+              <a class="link" href="server-system-variables.html#sysvar_warning_count"><code class="literal">warning_count</code></a> continues
+              to rise whereas <code class="literal">NUMBER</code> remains capped
+              at <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a>
+              because no additional conditions are stored in the
+              diagnostics area.
+            </p></li><li class="listitem"><p>
+              <a class="link" href="server-system-variables.html#sysvar_error_count"><code class="literal">error_count</code></a> indicates the
+              number of errors that occurred. This value includes
+              <span class="quote">“<span class="quote">not found</span>”</span> and exception conditions, but
+              excludes warnings and notes. Like
+              <a class="link" href="server-system-variables.html#sysvar_warning_count"><code class="literal">warning_count</code></a>, its value
+              can exceed
+              <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a>.
+            </p></li><li class="listitem"><p>
+              If the <a class="link" href="server-system-variables.html#sysvar_sql_notes"><code class="literal">sql_notes</code></a> system
+              variable is set to 0, notes are not stored and do not
+              increment <a class="link" href="server-system-variables.html#sysvar_warning_count"><code class="literal">warning_count</code></a>.
+</p></li></ul>
+</div>
+<p>
+          Example: If <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a>
+          is 10, the diagnostics area can contain a maximum of 10
+          condition areas. Suppose that a statement raises 20
+          conditions, 12 of which are errors. In that case, the
+          diagnostics area contains the first 10 conditions,
+          <code class="literal">NUMBER</code> is 10,
+          <a class="link" href="server-system-variables.html#sysvar_warning_count"><code class="literal">warning_count</code></a> is 20, and
+          <a class="link" href="server-system-variables.html#sysvar_error_count"><code class="literal">error_count</code></a> is 12.
+        </p><p>
+          Changes to the value of
+          <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a> have no
+          effect until the next attempt to modify the diagnostics area.
+          If the diagnostics area contains 10 condition areas and
+          <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a> is set to 5,
+          that has no immediate effect on the size or content of the
+          diagnostics area.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

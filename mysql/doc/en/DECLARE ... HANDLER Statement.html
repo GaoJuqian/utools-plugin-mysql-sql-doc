@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DECLARE ... HANDLER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="declare-handler"></a>13.6.7.2&nbsp;DECLARE ... HANDLER Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852574919216"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE <em class="replaceable">handler_action</em> HANDLER
+    FOR <em class="replaceable">condition_value</em> [, <em class="replaceable">condition_value</em>] ...
+    <em class="replaceable">statement</em>
+
+<em class="replaceable">handler_action</em>: {
+    CONTINUE
+  | EXIT
+  | UNDO
+}
+
+<em class="replaceable">condition_value</em>: {
+    <em class="replaceable">mysql_error_code</em>
+  | SQLSTATE [VALUE] <em class="replaceable">sqlstate_value</em>
+  | <em class="replaceable">condition_name</em>
+  | SQLWARNING
+  | NOT FOUND
+  | SQLEXCEPTION
+}</code></pre><p>
+        The <a class="link" href="declare-handler.html" title="13.6.7.2&nbsp;DECLARE ... HANDLER Statement"><code class="literal">DECLARE ...
+        HANDLER</code></a> statement specifies a handler that deals with
+        one or more conditions. If one of these conditions occurs, the
+        specified <em class="replaceable"><code>statement</code></em> executes.
+        <em class="replaceable"><code>statement</code></em> can be a simple statement
+        such as <code class="literal">SET <em class="replaceable"><code>var_name</code></em> =
+        <em class="replaceable"><code>value</code></em></code>, or a compound
+        statement written using <code class="literal">BEGIN</code> and
+        <code class="literal">END</code> (see <a class="xref" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement">Section&nbsp;13.6.1, “BEGIN ... END Compound Statement”</a>).
+      </p><p>
+        Handler declarations must appear after variable or condition
+        declarations.
+      </p><p>
+        The <em class="replaceable"><code>handler_action</code></em> value indicates
+        what action the handler takes after execution of the handler
+        statement:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">CONTINUE</code>: Execution of the current
+            program continues.
+          </p></li><li class="listitem"><p>
+            <code class="literal">EXIT</code>: Execution terminates for the
+            <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+            END</code></a> compound statement in which the handler is
+            declared. This is true even if the condition occurs in an
+            inner block.
+          </p></li><li class="listitem"><p>
+            <code class="literal">UNDO</code>: Not supported.
+</p></li></ul>
+</div>
+<p>
+        The <em class="replaceable"><code>condition_value</code></em> for
+        <a class="link" href="declare-handler.html" title="13.6.7.2&nbsp;DECLARE ... HANDLER Statement"><code class="literal">DECLARE ...
+        HANDLER</code></a> indicates the specific condition or class of
+        conditions that activates the handler. It can take the following
+        forms:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <em class="replaceable"><code>mysql_error_code</code></em>: An integer
+            literal indicating a MySQL error code, such as 1051 to
+            specify <span class="quote">“<span class="quote">unknown table</span>”</span>:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE CONTINUE HANDLER FOR 1051
+  BEGIN
+    -- body of handler
+  END;</code></pre><p>
+            Do not use MySQL error code 0 because that indicates success
+            rather than an error condition. For a list of MySQL error
+            codes, see <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html" target="_top">Server Error Message Reference</a>.
+          </p></li><li class="listitem"><p>
+            SQLSTATE [VALUE] <em class="replaceable"><code>sqlstate_value</code></em>:
+            A 5-character string literal indicating an SQLSTATE value,
+            such as <code class="literal">'42S01'</code> to specify <span class="quote">“<span class="quote">unknown
+            table</span>”</span>:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE CONTINUE HANDLER FOR SQLSTATE '42S02'
+  BEGIN
+    -- body of handler
+  END;</code></pre><p>
+            Do not use SQLSTATE values that begin with
+            <code class="literal">'00'</code> because those indicate success
+            rather than an error condition. For a list of SQLSTATE
+            values, see <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html" target="_top">Server Error Message Reference</a>.
+          </p></li><li class="listitem"><p>
+            <em class="replaceable"><code>condition_name</code></em>: A condition name
+            previously specified with
+            <a class="link" href="declare-condition.html" title="13.6.7.1&nbsp;DECLARE ... CONDITION Statement"><code class="literal">DECLARE
+            ... CONDITION</code></a>. A condition name can be associated
+            with a MySQL error code or SQLSTATE value. See
+            <a class="xref" href="declare-condition.html" title="13.6.7.1&nbsp;DECLARE ... CONDITION Statement">Section&nbsp;13.6.7.1, “DECLARE ... CONDITION Statement”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">SQLWARNING</code>: Shorthand for the class of
+            SQLSTATE values that begin with <code class="literal">'01'</code>.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE CONTINUE HANDLER FOR SQLWARNING
+  BEGIN
+    -- body of handler
+  END;</code></pre></li><li class="listitem"><p>
+            <code class="literal">NOT FOUND</code>: Shorthand for the class of
+            SQLSTATE values that begin with <code class="literal">'02'</code>.
+            This is relevant within the context of cursors and is used
+            to control what happens when a cursor reaches the end of a
+            data set. If no more rows are available, a No Data condition
+            occurs with SQLSTATE value <code class="literal">'02000'</code>. To
+            detect this condition, you can set up a handler for it or
+            for a <code class="literal">NOT FOUND</code> condition.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE CONTINUE HANDLER FOR NOT FOUND
+  BEGIN
+    -- body of handler
+  END;</code></pre><p>
+            For another example, see <a class="xref" href="cursors.html" title="13.6.6&nbsp;Cursors">Section&nbsp;13.6.6, “Cursors”</a>. The
+            <code class="literal">NOT FOUND</code> condition also occurs for
+            <code class="literal">SELECT ... INTO
+            <em class="replaceable"><code>var_list</code></em></code> statements
+            that retrieve no rows.
+          </p></li><li class="listitem"><p>
+            <code class="literal">SQLEXCEPTION</code>: Shorthand for the class of
+            SQLSTATE values that do not begin with
+            <code class="literal">'00'</code>, <code class="literal">'01'</code>, or
+            <code class="literal">'02'</code>.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+  BEGIN
+    -- body of handler
+  END;</code></pre></li></ul>
+</div>
+<p>
+        For information about how the server chooses handlers when a
+        condition occurs, see <a class="xref" href="handler-scope.html" title="13.6.7.6&nbsp;Scope Rules for Handlers">Section&nbsp;13.6.7.6, “Scope Rules for Handlers”</a>.
+      </p><p>
+        If a condition occurs for which no handler has been declared,
+        the action taken depends on the condition class:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            For <code class="literal">SQLEXCEPTION</code> conditions, the stored
+            program terminates at the statement that raised the
+            condition, as if there were an <code class="literal">EXIT</code>
+            handler. If the program was called by another stored
+            program, the calling program handles the condition using the
+            handler selection rules applied to its own handlers.
+          </p></li><li class="listitem"><p>
+            For <code class="literal">SQLWARNING</code> conditions, the program
+            continues executing, as if there were a
+            <code class="literal">CONTINUE</code> handler.
+          </p></li><li class="listitem"><p>
+            For <code class="literal">NOT FOUND</code> conditions, if the
+            condition was raised normally, the action is
+            <code class="literal">CONTINUE</code>. If it was raised by
+            <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> or
+            <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a>, the action is
+            <code class="literal">EXIT</code>.
+</p></li></ul>
+</div>
+<p>
+        The following example uses a handler for <code class="literal">SQLSTATE
+        '23000'</code>, which occurs for a duplicate-key error:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLE test.t (s1 INT, PRIMARY KEY (s1));
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; delimiter //
+
+mysql&gt; CREATE PROCEDURE handlerdemo ()
+       BEGIN
+         DECLARE CONTINUE HANDLER FOR SQLSTATE '23000' SET @x2 = 1;
+         SET @x = 1;
+         INSERT INTO test.t VALUES (1);
+         SET @x = 2;
+         INSERT INTO test.t VALUES (1);
+         SET @x = 3;
+       END;
+       //
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; CALL handlerdemo()//
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; SELECT @x//
+    +------+
+    | @x   |
+    +------+
+    | 3    |
+    +------+
+    1 row in set (0.00 sec)</code></pre><p>
+        Notice that <code class="literal">@x</code> is <code class="literal">3</code> after
+        the procedure executes, which shows that execution continued to
+        the end of the procedure after the error occurred. If the
+        <a class="link" href="declare-handler.html" title="13.6.7.2&nbsp;DECLARE ... HANDLER Statement"><code class="literal">DECLARE ...
+        HANDLER</code></a> statement had not been present, MySQL would
+        have taken the default action (<code class="literal">EXIT</code>) after
+        the second <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> failed due to
+        the <code class="literal">PRIMARY KEY</code> constraint, and
+        <code class="literal">SELECT @x</code> would have returned
+        <code class="literal">2</code>.
+      </p><p>
+        To ignore a condition, declare a <code class="literal">CONTINUE</code>
+        handler for it and associate it with an empty block. For
+        example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DECLARE CONTINUE HANDLER FOR SQLWARNING BEGIN END;</code></pre><p>
+        The scope of a block label does not include the code for
+        handlers declared within the block. Therefore, the statement
+        associated with a handler cannot use
+        <a class="link" href="iterate.html" title="13.6.5.3&nbsp;ITERATE Statement"><code class="literal">ITERATE</code></a> or
+        <a class="link" href="leave.html" title="13.6.5.4&nbsp;LEAVE Statement"><code class="literal">LEAVE</code></a> to refer to labels for
+        blocks that enclose the handler declaration. Consider the
+        following example, where the
+        <a class="link" href="repeat.html" title="13.6.5.6&nbsp;REPEAT Statement"><code class="literal">REPEAT</code></a> block has a label of
+        <code class="literal">retry</code>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p ()
+BEGIN
+  DECLARE i INT DEFAULT 3;
+  retry:
+    REPEAT
+      BEGIN
+        DECLARE CONTINUE HANDLER FOR SQLWARNING
+          BEGIN
+            ITERATE retry;    # illegal
+          END;
+        IF i &lt; 0 THEN
+          LEAVE retry;        # legal
+        END IF;
+        SET i = i - 1;
+      END;
+    UNTIL FALSE END REPEAT;
+END;</code></pre><p>
+        The <code class="literal">retry</code> label is in scope for the
+        <a class="link" href="if.html" title="13.6.5.2&nbsp;IF Statement"><code class="literal">IF</code></a> statement within the block. It
+        is not in scope for the <code class="literal">CONTINUE</code> handler, so
+        the reference there is invalid and results in an error:
+      </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">ERROR 1308 (42000): LEAVE with no matching label: retry</code></pre><p>
+        To avoid references to outer labels in handlers, use one of
+        these strategies:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            To leave the block, use an <code class="literal">EXIT</code> handler.
+            If no block cleanup is required, the
+            <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+            END</code></a> handler body can be empty:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DECLARE EXIT HANDLER FOR SQLWARNING BEGIN END;</code></pre><p>
+            Otherwise, put the cleanup statements in the handler body:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE EXIT HANDLER FOR SQLWARNING
+  BEGIN
+    <em class="replaceable">block cleanup statements</em>
+  END;</code></pre></li><li class="listitem"><p>
+            To continue execution, set a status variable in a
+            <code class="literal">CONTINUE</code> handler that can be checked in
+            the enclosing block to determine whether the handler was
+            invoked. The following example uses the variable
+            <code class="literal">done</code> for this purpose:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p ()
+BEGIN
+  DECLARE i INT DEFAULT 3;
+  DECLARE done INT DEFAULT FALSE;
+  retry:
+    REPEAT
+      BEGIN
+        DECLARE CONTINUE HANDLER FOR SQLWARNING
+          BEGIN
+            SET done = TRUE;
+          END;
+        IF done OR i &lt; 0 THEN
+          LEAVE retry;
+        END IF;
+        SET i = i - 1;
+      END;
+    UNTIL FALSE END REPEAT;
+END;</code></pre></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

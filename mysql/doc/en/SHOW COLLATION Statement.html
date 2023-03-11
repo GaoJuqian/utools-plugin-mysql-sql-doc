@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW COLLATION Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-collation"></a>13.7.5.4&nbsp;SHOW COLLATION Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571486992"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW COLLATION
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        This statement lists collations supported by the server. By
+        default, the output from <a class="link" href="show-collation.html" title="13.7.5.4&nbsp;SHOW COLLATION Statement"><code class="literal">SHOW
+        COLLATION</code></a> includes all available collations. The
+        <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, if present, indicates
+        which collation names to match. The <code class="literal">WHERE</code>
+        clause can be given to select rows using more general
+        conditions, as discussed in <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>. For
+        example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW COLLATION WHERE Charset = 'latin1';
++-------------------+---------+----+---------+----------+---------+
+| Collation         | Charset | Id | Default | Compiled | Sortlen |
++-------------------+---------+----+---------+----------+---------+
+| latin1_german1_ci | latin1  |  5 |         | Yes      |       1 |
+| latin1_swedish_ci | latin1  |  8 | Yes     | Yes      |       1 |
+| latin1_danish_ci  | latin1  | 15 |         | Yes      |       1 |
+| latin1_german2_ci | latin1  | 31 |         | Yes      |       2 |
+| latin1_bin        | latin1  | 47 |         | Yes      |       1 |
+| latin1_general_ci | latin1  | 48 |         | Yes      |       1 |
+| latin1_general_cs | latin1  | 49 |         | Yes      |       1 |
+| latin1_spanish_ci | latin1  | 94 |         | Yes      |       1 |
++-------------------+---------+----+---------+----------+---------+</code></pre><p>
+        <a class="link" href="show-collation.html" title="13.7.5.4&nbsp;SHOW COLLATION Statement"><code class="literal">SHOW COLLATION</code></a> output has these
+        columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Collation</code>
+          </p><p>
+            The collation name.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Charset</code>
+          </p><p>
+            The name of the character set with which the collation is
+            associated.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Id</code>
+          </p><p>
+            The collation ID.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Default</code>
+          </p><p>
+            Whether the collation is the default for its character set.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Compiled</code>
+          </p><p>
+            Whether the character set is compiled into the server.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Sortlen</code>
+          </p><p>
+            This is related to the amount of memory required to sort
+            strings expressed in the character set.
+</p></li></ul>
+</div>
+<p>
+        To see the default collation for each character set, use the
+        following statement. <code class="literal">Default</code> is a reserved
+        word, so to use it as an identifier, it must be quoted as such:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW COLLATION WHERE `Default` = 'Yes';
++---------------------+----------+----+---------+----------+---------+
+| Collation           | Charset  | Id | Default | Compiled | Sortlen |
++---------------------+----------+----+---------+----------+---------+
+| big5_chinese_ci     | big5     |  1 | Yes     | Yes      |       1 |
+| dec8_swedish_ci     | dec8     |  3 | Yes     | Yes      |       1 |
+| cp850_general_ci    | cp850    |  4 | Yes     | Yes      |       1 |
+| hp8_english_ci      | hp8      |  6 | Yes     | Yes      |       1 |
+| koi8r_general_ci    | koi8r    |  7 | Yes     | Yes      |       1 |
+| latin1_swedish_ci   | latin1   |  8 | Yes     | Yes      |       1 |
+...</code></pre><p>
+        Collation information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-collations-table.html" title="24.3.3&nbsp;The INFORMATION_SCHEMA COLLATIONS Table"><code class="literal">COLLATIONS</code></a> table. See
+        <a class="xref" href="information-schema-collations-table.html" title="24.3.3&nbsp;The INFORMATION_SCHEMA COLLATIONS Table">Section&nbsp;24.3.3, “The INFORMATION_SCHEMA COLLATIONS Table”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

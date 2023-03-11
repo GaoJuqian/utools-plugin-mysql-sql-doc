@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW CREATE TRIGGER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-create-trigger"></a>13.7.5.11&nbsp;SHOW CREATE TRIGGER Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571241296"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW CREATE TRIGGER <em class="replaceable">trigger_name</em></code></pre><p>
+        This statement shows the <a class="link" href="create-trigger.html" title="13.1.20&nbsp;CREATE TRIGGER Statement"><code class="literal">CREATE
+        TRIGGER</code></a> statement that creates the named trigger. This
+        statement requires the <a class="link" href="privileges-provided.html#priv_trigger"><code class="literal">TRIGGER</code></a>
+        privilege for the table associated with the trigger.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW CREATE TRIGGER ins_sum\G
+*************************** 1. row ***************************
+               Trigger: ins_sum
+              sql_mode: ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,
+                        NO_ZERO_IN_DATE,NO_ZERO_DATE,
+                        ERROR_FOR_DIVISION_BY_ZERO,
+                        NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+SQL Original Statement: CREATE DEFINER=`me`@`localhost` TRIGGER ins_sum
+                        BEFORE INSERT ON account
+                        FOR EACH ROW SET @sum = @sum + NEW.amount
+  character_set_client: utf8
+  collation_connection: utf8_general_ci
+    Database Collation: latin1_swedish_ci
+               Created: 2018-08-08 10:10:07.90</code></pre><p>
+        <a class="link" href="show-create-trigger.html" title="13.7.5.11&nbsp;SHOW CREATE TRIGGER Statement"><code class="literal">SHOW CREATE TRIGGER</code></a> output has
+        these columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Trigger</code>: The trigger name.
+          </p></li><li class="listitem"><p>
+            <code class="literal">sql_mode</code>: The SQL mode in effect when the
+            trigger executes.
+          </p></li><li class="listitem"><p>
+            <code class="literal">SQL Original Statement</code>: The
+            <a class="link" href="create-trigger.html" title="13.1.20&nbsp;CREATE TRIGGER Statement"><code class="literal">CREATE TRIGGER</code></a> statement that
+            defines the trigger.
+          </p></li><li class="listitem"><p>
+            <code class="literal">character_set_client</code>: The session value
+            of the <a class="link" href="server-system-variables.html#sysvar_character_set_client"><code class="literal">character_set_client</code></a>
+            system variable when the trigger was created.
+          </p></li><li class="listitem"><p>
+            <code class="literal">collation_connection</code>: The session value
+            of the <a class="link" href="server-system-variables.html#sysvar_collation_connection"><code class="literal">collation_connection</code></a>
+            system variable when the trigger was created.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Database Collation</code>: The collation of the
+            database with which the trigger is associated.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Created</code>: The date and time when the
+            trigger was created. This is a
+            <code class="literal">TIMESTAMP(2)</code> value (with a fractional
+            part in hundredths of seconds) for triggers created in MySQL
+            5.7.2 or later, <code class="literal">NULL</code> for triggers created
+            prior to 5.7.2.
+</p></li></ul>
+</div>
+<p>
+        Trigger information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-triggers-table.html" title="24.3.29&nbsp;The INFORMATION_SCHEMA TRIGGERS Table"><code class="literal">TRIGGERS</code></a> table. See
+        <a class="xref" href="information-schema-triggers-table.html" title="24.3.29&nbsp;The INFORMATION_SCHEMA TRIGGERS Table">Section&nbsp;24.3.29, “The INFORMATION_SCHEMA TRIGGERS Table”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

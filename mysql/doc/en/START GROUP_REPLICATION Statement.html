@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>START GROUP_REPLICATION Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="start-group-replication"></a>13.4.3.1&nbsp;START GROUP_REPLICATION Statement</h4>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852575592416"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">START GROUP_REPLICATION</code></pre><p>
+        Starts Group Replication on this server instance. This statement
+        requires the <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege. If
+        <a class="link" href="server-system-variables.html#sysvar_super_read_only"><code class="literal">super_read_only=ON</code></a> and the
+        member should join as a primary,
+        <a class="link" href="server-system-variables.html#sysvar_super_read_only"><code class="literal">super_read_only</code></a> is set to
+        <code class="literal">OFF</code> once Group Replication successfully
+        starts.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

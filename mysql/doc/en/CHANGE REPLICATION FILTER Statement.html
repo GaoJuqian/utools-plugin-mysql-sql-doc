@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CHANGE REPLICATION FILTER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="change-replication-filter"></a>13.4.2.2&nbsp;CHANGE REPLICATION FILTER Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575979472"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CHANGE REPLICATION FILTER <em class="replaceable">filter</em>[, <em class="replaceable">filter</em>][, ...]
+
+<em class="replaceable">filter</em>: {
+    REPLICATE_DO_DB = (<em class="replaceable">db_list</em>)
+  | REPLICATE_IGNORE_DB = (<em class="replaceable">db_list</em>)
+  | REPLICATE_DO_TABLE = (<em class="replaceable">tbl_list</em>)
+  | REPLICATE_IGNORE_TABLE = (<em class="replaceable">tbl_list</em>)
+  | REPLICATE_WILD_DO_TABLE = (<em class="replaceable">wild_tbl_list</em>)
+  | REPLICATE_WILD_IGNORE_TABLE = (<em class="replaceable">wild_tbl_list</em>)
+  | REPLICATE_REWRITE_DB = (<em class="replaceable">db_pair_list</em>)
+}
+
+<em class="replaceable">db_list</em>:
+    <em class="replaceable">db_name</em>[, <em class="replaceable">db_name</em>][, ...]
+
+<em class="replaceable">tbl_list</em>:
+    <em class="replaceable">db_name.table_name</em>[, <em class="replaceable">db_table_name</em>][, ...]
+<em class="replaceable">wild_tbl_list</em>:
+    '<em class="replaceable">db_pattern.table_pattern</em>'[, '<em class="replaceable">db_pattern.table_pattern</em>'][, ...]
+
+<em class="replaceable">db_pair_list</em>:
+    (<em class="replaceable">db_pair</em>)[, (<em class="replaceable">db_pair</em>)][, ...]
+
+<em class="replaceable">db_pair</em>:
+    <em class="replaceable">from_db</em>, <em class="replaceable">to_db</em></code></pre><p>
+        <code class="literal">CHANGE REPLICATION FILTER</code> sets one or more
+        replication filtering rules on the replica in the same way as
+        starting the replica <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> with replication
+        filtering options such as
+        <a class="link" href="replication-options-replica.html#option_mysqld_replicate-do-db"><code class="option">--replicate-do-db</code></a> or
+        <a class="link" href="replication-options-replica.html#option_mysqld_replicate-wild-ignore-table"><code class="option">--replicate-wild-ignore-table</code></a>.
+        Filters set using this statement differ from those set using the
+        server options in two key respects:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+            The statement does not require restarting the server to take
+            effect, only that the replication SQL thread be stopped
+            using <a class="link" href="stop-slave.html" title="13.4.2.7&nbsp;STOP SLAVE Statement"><code class="literal">STOP SLAVE
+            SQL_THREAD</code></a> first (and restarted with
+            <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START SLAVE
+            SQL_THREAD</code></a> afterwards).
+          </p></li><li class="listitem"><p>
+            The effects of the statement are not persistent; any filters
+            set using <code class="literal">CHANGE REPLICATION FILTER</code> are
+            lost following a restart of the replica
+            <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a>.
+</p></li></ol>
+</div>
+<p>
+        <a class="link" href="change-replication-filter.html" title="13.4.2.2&nbsp;CHANGE REPLICATION FILTER Statement"><code class="literal">CHANGE REPLICATION FILTER</code></a>
+        requires the <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege.
+      </p><p>
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            Replication filters cannot be set on a MySQL server instance
+            that is configured for Group Replication, because filtering
+            transactions on some servers would make the group unable to
+            reach agreement on a consistent state.
+</p>
+</div>
+<p>
+      </p><p>
+        The following list shows the <code class="literal">CHANGE REPLICATION
+        FILTER</code> options and how they relate to
+        <code class="option">--replicate-*</code> server options:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">REPLICATE_DO_DB</code>: Include updates based on
+            database name. Equivalent to
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-do-db"><code class="option">--replicate-do-db</code></a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">REPLICATE_IGNORE_DB</code>: Exclude updates
+            based on database name. Equivalent to
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-ignore-db"><code class="option">--replicate-ignore-db</code></a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">REPLICATE_DO_TABLE</code>: Include updates based
+            on table name. Equivalent to
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-do-table"><code class="option">--replicate-do-table</code></a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">REPLICATE_IGNORE_TABLE</code>: Exclude updates
+            based on table name. Equivalent to
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-ignore-table"><code class="option">--replicate-ignore-table</code></a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">REPLICATE_WILD_DO_TABLE</code>: Include updates
+            based on wildcard pattern matching table name. Equivalent to
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-wild-do-table"><code class="option">--replicate-wild-do-table</code></a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">REPLICATE_WILD_IGNORE_TABLE</code>: Exclude
+            updates based on wildcard pattern matching table name.
+            Equivalent to
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-wild-ignore-table"><code class="option">--replicate-wild-ignore-table</code></a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">REPLICATE_REWRITE_DB</code>: Perform updates on
+            replica after substituting new name on replica for specified
+            database on source. Equivalent to
+            <a class="link" href="replication-options-replica.html#option_mysqld_replicate-rewrite-db"><code class="option">--replicate-rewrite-db</code></a>.
+</p></li></ul>
+</div>
+<p>
+        The precise effects of <code class="literal">REPLICATE_DO_DB</code> and
+        <code class="literal">REPLICATE_IGNORE_DB</code> filters are dependent on
+        whether statement-based or row-based replication is in effect.
+        See <a class="xref" href="replication-rules.html" title="16.2.5&nbsp;How Servers Evaluate Replication Filtering Rules">Section&nbsp;16.2.5, “How Servers Evaluate Replication Filtering Rules”</a>, for more information.
+      </p><p>
+        Multiple replication filtering rules can be created in a single
+        <code class="literal">CHANGE REPLICATION FILTER</code> statement by
+        separating the rules with commas, as shown here:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CHANGE REPLICATION FILTER
+    REPLICATE_DO_DB = (d1), REPLICATE_IGNORE_DB = (d2);</code></pre><p>
+        Issuing the statement just shown is equivalent to starting the
+        replica <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> with the options
+        <a class="link" href="replication-options-replica.html#option_mysqld_replicate-do-db"><code class="option">--replicate-do-db=d1</code></a>
+        <a class="link" href="replication-options-replica.html#option_mysqld_replicate-ignore-db"><code class="option">--replicate-ignore-db=d2</code></a>.
+      </p><p>
+        If the same filtering rule is specified multiple times, only the
+        <span class="emphasis"><em>last</em></span> such rule is actually used. For
+        example, the two statements shown here have exactly the same
+        effect, because the first <code class="literal">REPLICATE_DO_DB</code>
+        rule in the first statement is ignored:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CHANGE REPLICATION FILTER
+    REPLICATE_DO_DB = (db1, db2), REPLICATE_DO_DB = (db3, db4);
+
+CHANGE REPLICATION FILTER
+    REPLICATE_DO_DB = (db3,db4);</code></pre>
+<div class="caution" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Caution
+</div>
+<p>
+          This behavior differs from that of the
+          <code class="option">--replicate-*</code> filter options where specifying
+          the same option multiple times causes the creation of multiple
+          filter rules.
+</p>
+</div>
+<p>
+        Names of tables and database not containing any special
+        characters need not be quoted. Values used with
+        <code class="literal">REPLICATION_WILD_TABLE</code> and
+        <code class="literal">REPLICATION_WILD_IGNORE_TABLE</code> are string
+        expressions, possibly containing (special) wildcard characters,
+        and so must be quoted. This is shown in the following example
+        statements:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CHANGE REPLICATION FILTER
+    REPLICATE_WILD_DO_TABLE = ('db1.old%');
+
+CHANGE REPLICATION FILTER
+    REPLICATE_WILD_IGNORE_TABLE = ('db1.new%', 'db2.new%');</code></pre><p>
+        Values used with <code class="literal">REPLICATE_REWRITE_DB</code>
+        represent <span class="emphasis"><em>pairs</em></span> of database names; each
+        such value must be enclosed in parentheses. The following
+        statement rewrites statements occurring on database
+        <code class="literal">db1</code> on the source to database
+        <code class="literal">db2</code> on the replica:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CHANGE REPLICATION FILTER REPLICATE_REWRITE_DB = ((db1, db2));</code></pre><p>
+        The statement just shown contains two sets of parentheses, one
+        enclosing the pair of database names, and the other enclosing
+        the entire list. This is perhaps more easily seen in the
+        following example, which creates two
+        <code class="literal">rewrite-db</code> rules, one rewriting database
+        <code class="literal">dbA</code> to <code class="literal">dbB</code>, and one
+        rewriting database <code class="literal">dbC</code> to
+        <code class="literal">dbD</code>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CHANGE REPLICATION FILTER
+  REPLICATE_REWRITE_DB = ((dbA, dbB), (dbC, dbD));</code></pre><p>
+        This statement leaves any existing replication filtering rules
+        unchanged; to unset all filters of a given type, set the
+        filter's value to an explicitly empty list, as shown in
+        this example, which removes all existing
+        <code class="literal">REPLICATE_DO_DB</code> and
+        <code class="literal">REPLICATE_IGNORE_DB</code> rules:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CHANGE REPLICATION FILTER
+    REPLICATE_DO_DB = (), REPLICATE_IGNORE_DB = ();</code></pre><p>
+        Setting a filter to empty in this way removes all existing
+        rules, does not create any new ones, and does not restore any
+        rules set at mysqld startup using <code class="option">--replicate-*</code>
+        options on the command line or in the configuration file.
+      </p><p>
+        Values employed with <code class="literal">REPLICATE_WILD_DO_TABLE</code>
+        and <code class="literal">REPLICATE_WILD_IGNORE_TABLE</code> must be in
+        the format
+        <code class="literal"><em class="replaceable"><code>db_name</code></em>.<em class="replaceable"><code>tbl_name</code></em></code>.
+        Prior to MySQL 5.7.5, this was not strictly enforced, although
+        using nonconforming values with these options could lead to
+        erroneous results (Bug #18095449).
+      </p><p>
+        For more information, see <a class="xref" href="replication-rules.html" title="16.2.5&nbsp;How Servers Evaluate Replication Filtering Rules">Section&nbsp;16.2.5, “How Servers Evaluate Replication Filtering Rules”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

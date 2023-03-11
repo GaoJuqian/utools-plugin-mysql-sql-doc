@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Secondary Indexes and Generated ColumnsIndexing a Generated Column to Provide a JSON Column Index</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="create-table-secondary-indexes"></a>13.1.18.8&nbsp;Secondary Indexes and Generated Columns</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852581654656"></a><p>
+        <code class="literal">InnoDB</code> supports secondary indexes on virtual
+        generated columns. Other index types are not supported. A
+        secondary index defined on a virtual column is sometimes
+        referred to as a <span class="quote">“<span class="quote">virtual index</span>”</span>.
+      </p><p>
+        A secondary index may be created on one or more virtual columns
+        or on a combination of virtual columns and regular columns or
+        stored generated columns. Secondary indexes that include virtual
+        columns may be defined as <code class="literal">UNIQUE</code>.
+      </p><p>
+        When a secondary index is created on a virtual generated column,
+        generated column values are materialized in the records of the
+        index. If the index is a
+        <a class="link" href="glossary.html#glos_covering_index" title="covering index">covering index</a> (one
+        that includes all the columns retrieved by a query), generated
+        column values are retrieved from materialized values in the
+        index structure instead of computed <span class="quote">“<span class="quote">on the fly</span>”</span>.
+      </p><p>
+        There are additional write costs to consider when using a
+        secondary index on a virtual column due to computation performed
+        when materializing virtual column values in secondary index
+        records during <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> and
+        <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> operations. Even with
+        additional write costs, secondary indexes on virtual columns may
+        be preferable to generated <span class="emphasis"><em>stored</em></span> columns,
+        which are materialized in the clustered index, resulting in
+        larger tables that require more disk space and memory. If a
+        secondary index is not defined on a virtual column, there are
+        additional costs for reads, as virtual column values must be
+        computed each time the column's row is examined.
+      </p><p>
+        Values of an indexed virtual column are MVCC-logged to avoid
+        unnecessary recomputation of generated column values during
+        rollback or during a purge operation. The data length of logged
+        values is limited by the index key limit of 767 bytes for
+        <code class="literal">COMPACT</code> and <code class="literal">REDUNDANT</code> row
+        formats, and 3072 bytes for <code class="literal">DYNAMIC</code> and
+        <code class="literal">COMPRESSED</code> row formats.
+      </p><p>
+        Adding or dropping a secondary index on a virtual column is an
+        in-place operation.
+      </p><p>
+        Prior to 5.7.16, a foreign key constraint cannot reference a
+        secondary index defined on a virtual generated column.
+      </p><p>
+        In MySQL 5.7.13 and earlier, <code class="literal">InnoDB</code> does not
+        permit defining a foreign key constraint with a cascading
+        referential action on the base column of an indexed generated
+        virtual column. This restriction is lifted in MySQL 5.7.14.
+</p>
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="json-column-indirect-index"></a>Indexing a Generated Column to Provide a JSON Column Index</h5>
+</div>
+</div>
+</div>
+<p>
+          As noted elsewhere, <a class="link" href="json.html" title="11.5&nbsp;The JSON Data Type"><code class="literal">JSON</code></a>
+          columns cannot be indexed directly. To create an index that
+          references such a column indirectly, you can define a
+          generated column that extracts the information that should be
+          indexed, then create an index on the generated column, as
+          shown in this example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLE jemp (
+    -&gt;     c JSON,
+    -&gt;     g INT GENERATED ALWAYS AS (c-&gt;"$.id"),
+    -&gt;     INDEX i (g)
+    -&gt; );
+Query OK, 0 rows affected (0.28 sec)
+
+mysql&gt; INSERT INTO jemp (c) VALUES
+     &gt;   ('{"id": "1", "name": "Fred"}'), ('{"id": "2", "name": "Wilma"}'),
+     &gt;   ('{"id": "3", "name": "Barney"}'), ('{"id": "4", "name": "Betty"}');
+Query OK, 4 rows affected (0.04 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql&gt; SELECT c-&gt;&gt;"$.name" AS name
+     &gt;     FROM jemp WHERE g &gt; 2;
++--------+
+| name   |
++--------+
+| Barney |
+| Betty  |
++--------+
+2 rows in set (0.00 sec)
+
+mysql&gt; EXPLAIN SELECT c-&gt;&gt;"$.name" AS name
+     &gt;    FROM jemp WHERE g &gt; 2\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: jemp
+   partitions: NULL
+         type: range
+possible_keys: i
+          key: i
+      key_len: 5
+          ref: NULL
+         rows: 2
+     filtered: 100.00
+        Extra: Using where
+1 row in set, 1 warning (0.00 sec)
+
+mysql&gt; SHOW WARNINGS\G
+*************************** 1. row ***************************
+  Level: Note
+   Code: 1003
+Message: /* select#1 */ select json_unquote(json_extract(`test`.`jemp`.`c`,'$.name'))
+AS `name` from `test`.`jemp` where (`test`.`jemp`.`g` &gt; 2)
+1 row in set (0.00 sec)</code></pre><p>
+          (We have wrapped the output from the last statement in this
+          example to fit the viewing area.)
+        </p><p>
+          The
+          <a class="link" href="json-search-functions.html#operator_json-column-path"><code class="literal">-&gt;</code></a>
+          operator is supported in MySQL 5.7.9 and later. The
+          <a class="link" href="json-search-functions.html#operator_json-inline-path"><code class="literal">-&gt;&gt;</code></a>
+          operator is supported beginning with MySQL 5.7.13.
+        </p><p>
+          When you use <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> on a
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> or other SQL statement
+          containing one or more expressions that use the
+          <code class="literal">-&gt;</code> or <code class="literal">-&gt;&gt;</code>
+          operator, these expressions are translated into their
+          equivalents using <code class="literal">JSON_EXTRACT()</code> and (if
+          needed) <code class="literal">JSON_UNQUOTE()</code> instead, as shown
+          here in the output from <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW
+          WARNINGS</code></a> immediately following this
+          <code class="literal">EXPLAIN</code> statement:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; EXPLAIN SELECT c-&gt;&gt;"$.name"
+     &gt; FROM jemp WHERE g &gt; 2 ORDER BY c-&gt;"$.name"\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: jemp
+   partitions: NULL
+         type: range
+possible_keys: i
+          key: i
+      key_len: 5
+          ref: NULL
+         rows: 2
+     filtered: 100.00
+        Extra: Using where; Using filesort
+1 row in set, 1 warning (0.00 sec)
+
+mysql&gt; SHOW WARNINGS\G
+*************************** 1. row ***************************
+  Level: Note
+   Code: 1003
+Message: /* select#1 */ select json_unquote(json_extract(`test`.`jemp`.`c`,'$.name')) AS
+`c-&gt;&gt;"$.name"` from `test`.`jemp` where (`test`.`jemp`.`g` &gt; 2) order by
+json_extract(`test`.`jemp`.`c`,'$.name')
+1 row in set (0.00 sec)</code></pre><p>
+          See the descriptions of the
+          <a class="link" href="json-search-functions.html#operator_json-column-path"><code class="literal">-&gt;</code></a>
+          and
+          <a class="link" href="json-search-functions.html#operator_json-inline-path"><code class="literal">-&gt;&gt;</code></a>
+          operators, as well as those of the
+          <a class="link" href="json-search-functions.html#function_json-extract"><code class="literal">JSON_EXTRACT()</code></a> and
+          <a class="link" href="json-modification-functions.html#function_json-unquote"><code class="literal">JSON_UNQUOTE()</code></a> functions, for
+          additional information and examples.
+        </p><p>
+          This technique also can be used to provide indexes that
+          indirectly reference columns of other types that cannot be
+          indexed directly, such as <code class="literal">GEOMETRY</code> columns.
+        </p><h6><a name="json-column-indirect-index-mysql-cluster"></a>JSON columns and indirect indexing in NDB Cluster</h6><p>
+          <a class="indexterm" name="idm45852581598352"></a>
+
+          <a class="indexterm" name="idm45852581596864"></a>
+
+          <a class="indexterm" name="idm45852581595376"></a>
+
+          <a class="indexterm" name="idm45852581593888"></a>
+
+          It is also possible to use indirect indexing of JSON columns
+          in MySQL NDB Cluster, subject to the following conditions:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+              <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> handles a
+              <a class="link" href="json.html" title="11.5&nbsp;The JSON Data Type"><code class="literal">JSON</code></a> column value
+              internally as a <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>. This
+              means that any <code class="literal">NDB</code> table having one or
+              more JSON columns must have a primary key, else it cannot
+              be recorded in the binary log.
+            </p></li><li class="listitem"><p>
+              The <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage engine does
+              not support indexing of virtual columns. Since the default
+              for generated columns is <code class="literal">VIRTUAL</code>, you
+              must specify explicitly the generated column to which to
+              apply the indirect index as <code class="literal">STORED</code>.
+</p></li></ol>
+</div>
+<p>
+          The <strong class="userinput"><code>CREATE TABLE</code></strong> statement
+          used to create the table <code class="literal">jempn</code> shown here
+          is a version of the <code class="literal">jemp</code> table shown
+          previously, with modifications making it compatible with
+          <code class="literal">NDB</code>:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE jempn (
+  a BIGINT(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  c JSON DEFAULT NULL,
+  g INT GENERATED ALWAYS AS (c-&gt;"$.name") STORED,
+  INDEX i (g)
+) ENGINE=NDB;</code></pre><p>
+          We can populate this table using the following
+          <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> statement:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">INSERT INTO jempn (a, c) VALUES
+  (NULL, '{"id": "1", "name": "Fred"}'),
+  (NULL, '{"id": "2", "name": "Wilma"}'),
+  (NULL, '{"id": "3", "name": "Barney"}'),
+  (NULL, '{"id": "4", "name": "Betty"}');</code></pre><p>
+          Now <code class="literal">NDB</code> can use index <code class="literal">i</code>,
+          as shown here:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; EXPLAIN SELECT c-&gt;&gt;"$.name" AS name
+          FROM jempn WHERE g &gt; 2\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: jempn
+   partitions: p0,p1
+         type: range
+possible_keys: i
+          key: i
+      key_len: 5
+          ref: NULL
+         rows: 3
+     filtered: 100.00
+        Extra: Using where with pushed condition (`test`.`jempn`.`g` &gt; 2)
+1 row in set, 1 warning (0.00 sec)
+
+mysql&gt; SHOW WARNINGS\G
+*************************** 1. row ***************************
+  Level: Note
+   Code: 1003
+Message: /* select#1 */ select
+json_unquote(json_extract(`test`.`jempn`.`c`,'$.name')) AS `name` from
+`test`.`jempn` where (`test`.`jempn`.`g` &gt; 2)
+1 row in set (0.00 sec)</code></pre><p>
+          You should keep in mind that a stored generated column, as
+          well as any index on such a column, uses
+          <a class="link" href="mysql-cluster-ndbd-definition.html#ndbparam-ndbd-datamemory"><code class="literal">DataMemory</code></a>. In NDB
+          7.5, an index on a stored generated column also uses
+          <a class="link" href="mysql-cluster-ndbd-definition.html#ndbparam-ndbd-indexmemory"><code class="literal">IndexMemory</code></a>.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

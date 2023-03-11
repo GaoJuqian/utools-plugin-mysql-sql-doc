@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW RELAYLOG EVENTS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-relaylog-events"></a>13.7.5.32&nbsp;SHOW RELAYLOG EVENTS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570229392"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW RELAYLOG EVENTS
+    [IN '<em class="replaceable">log_name</em>']
+    [FROM <em class="replaceable">pos</em>]
+    [LIMIT [<em class="replaceable">offset</em>,] <em class="replaceable">row_count</em>]
+    [<em class="replaceable">channel_option</em>]
+
+<em class="replaceable">channel_option</em>:
+    FOR CHANNEL <em class="replaceable">channel</em></code></pre><p>
+        Shows the events in the relay log of a replica. If you do not
+        specify
+        <code class="literal">'<em class="replaceable"><code>log_name</code></em>'</code>, the
+        first relay log is displayed. This statement has no effect on
+        the source. <a class="link" href="show-relaylog-events.html" title="13.7.5.32&nbsp;SHOW RELAYLOG EVENTS Statement"><code class="literal">SHOW RELAYLOG EVENTS</code></a>
+        requires the <a class="link" href="privileges-provided.html#priv_replication-slave"><code class="literal">REPLICATION SLAVE</code></a>
+        privilege.
+      </p><p>
+        The <code class="literal">LIMIT</code> clause has the same syntax as for
+        the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement. See
+        <a class="xref" href="select.html" title="13.2.9&nbsp;SELECT Statement">Section&nbsp;13.2.9, “SELECT Statement”</a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          Issuing a <a class="link" href="show-relaylog-events.html" title="13.7.5.32&nbsp;SHOW RELAYLOG EVENTS Statement"><code class="literal">SHOW RELAYLOG EVENTS</code></a>
+          with no <code class="literal">LIMIT</code> clause could start a very
+          time- and resource-consuming process because the server
+          returns to the client the complete contents of the relay log
+          (including all statements modifying data that have been
+          received by the replica).
+</p>
+</div>
+<p>
+        The optional <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause enables you
+        to name which replication channel the statement applies to.
+        Providing a <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause applies the
+        statement to a specific replication channel. If no channel is
+        named and no extra channels exist, the statement applies to the
+        default channel.
+      </p><p>
+        When using multiple replication channels, if a
+        <a class="link" href="show-relaylog-events.html" title="13.7.5.32&nbsp;SHOW RELAYLOG EVENTS Statement"><code class="literal">SHOW RELAYLOG EVENTS</code></a> statement
+        does not have a channel defined using a <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause an error is
+        generated. See <a class="xref" href="replication-channels.html" title="16.2.2&nbsp;Replication Channels">Section&nbsp;16.2.2, “Replication Channels”</a> for more
+        information.
+      </p><p>
+        <a class="link" href="show-relaylog-events.html" title="13.7.5.32&nbsp;SHOW RELAYLOG EVENTS Statement"><code class="literal">SHOW RELAYLOG EVENTS</code></a> displays the
+        following fields for each event in the relay log:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Log_name</code>
+          </p><p>
+            The name of the file that is being listed.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Pos</code>
+          </p><p>
+            The position at which the event occurs.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Event_type</code>
+          </p><p>
+            An identifier that describes the event type.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Server_id</code>
+          </p><p>
+            The server ID of the server on which the event originated.
+          </p></li><li class="listitem"><p>
+            <code class="literal">End_log_pos</code>
+          </p><p>
+            The value of <code class="literal">End_log_pos</code> for this event
+            in the source's binary log.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Info</code>
+          </p><p>
+            More detailed information about the event type. The format
+            of this information depends on the event type.
+</p></li></ul>
+</div>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Note
+</div>
+<p>
+          Some events relating to the setting of user and system
+          variables are not included in the output from
+          <a class="link" href="show-relaylog-events.html" title="13.7.5.32&nbsp;SHOW RELAYLOG EVENTS Statement"><code class="literal">SHOW RELAYLOG EVENTS</code></a>. To get
+          complete coverage of events within a relay log, use
+          <a class="link" href="mysqlbinlog.html" title="4.6.7&nbsp;mysqlbinlog — Utility for Processing Binary Log Files"><span class="command"><strong>mysqlbinlog</strong></span></a>.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

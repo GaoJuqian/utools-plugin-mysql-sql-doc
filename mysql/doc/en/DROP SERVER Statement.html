@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP SERVER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="drop-server"></a>13.1.28&nbsp;DROP SERVER Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580645712"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DROP SERVER [ IF EXISTS ] <em class="replaceable">server_name</em></code></pre><p>
+      Drops the server definition for the server named
+      <code class="literal"><em class="replaceable"><code>server_name</code></em></code>. The
+      corresponding row in the <code class="literal">mysql.servers</code> table is
+      deleted. This statement requires the
+      <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege.
+    </p><p>
+      Dropping a server for a table does not affect any
+      <code class="literal">FEDERATED</code> tables that used this connection
+      information when they were created. See
+      <a class="xref" href="create-server.html" title="13.1.17&nbsp;CREATE SERVER Statement">Section&nbsp;13.1.17, “CREATE SERVER Statement”</a>.
+    </p><p>
+      <code class="literal">DROP SERVER</code> causes an implicit commit. See
+      <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+    </p><p>
+      <code class="literal">DROP SERVER</code> is not written to the binary log,
+      regardless of the logging format that is in use.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

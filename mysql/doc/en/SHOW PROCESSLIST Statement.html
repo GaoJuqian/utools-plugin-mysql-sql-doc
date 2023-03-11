@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW PROCESSLIST Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-processlist"></a>13.7.5.29&nbsp;SHOW PROCESSLIST Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570407728"></a><a class="indexterm" name="idm45852570406688"></a><a class="indexterm" name="idm45852570405616"></a><a class="indexterm" name="idm45852570404528"></a><a class="indexterm" name="idm45852570403040"></a><a class="indexterm" name="idm45852570401552"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW [FULL] PROCESSLIST</code></pre><p>
+        The MySQL process list indicates the operations currently being
+        performed by the set of threads executing within the server. The
+        <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW PROCESSLIST</code></a> statement is one
+        source of process information. For a comparison of this
+        statement with other sources, see
+        <a class="xref" href="processlist-access.html#processlist-sources" title="Sources of Process Information">Sources of Process Information</a>.
+      </p><p>
+        If you have the <a class="link" href="privileges-provided.html#priv_process"><code class="literal">PROCESS</code></a>
+        privilege, you can see all threads, even those belonging to
+        other users. Otherwise (without the
+        <a class="link" href="privileges-provided.html#priv_process"><code class="literal">PROCESS</code></a> privilege), nonanonymous
+        users have access to information about their own threads but not
+        threads for other users, and anonymous users have no access to
+        thread information.
+      </p><p>
+        Without the <code class="literal">FULL</code> keyword,
+        <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW PROCESSLIST</code></a> displays only
+        the first 100 characters of each statement in the
+        <code class="literal">Info</code> field.
+      </p><p>
+        The <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW PROCESSLIST</code></a> statement is
+        very useful if you get the <span class="quote">“<span class="quote">too many connections</span>”</span>
+        error message and want to find out what is going on. MySQL
+        reserves one extra connection to be used by accounts that have
+        the <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege, to ensure
+        that administrators should always be able to connect and check
+        the system (assuming that you are not giving this privilege to
+        all your users).
+      </p><p>
+        Threads can be killed with the
+        <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL</code></a> statement. See
+        <a class="xref" href="kill.html" title="13.7.6.4&nbsp;KILL Statement">Section&nbsp;13.7.6.4, “KILL Statement”</a>.
+      </p><p>
+        Example of <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW PROCESSLIST</code></a>
+        output:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW FULL PROCESSLIST\G
+*************************** 1. row ***************************
+     Id: 1
+   User: system user
+   Host:
+     db: NULL
+Command: Connect
+   Time: 1030455
+  State: Waiting for master to send event
+   Info: NULL
+*************************** 2. row ***************************
+     Id: 2
+   User: system user
+   Host:
+     db: NULL
+Command: Connect
+   Time: 1004
+  State: Has read all relay log; waiting for the slave
+         I/O thread to update it
+   Info: NULL
+*************************** 3. row ***************************
+     Id: 3112
+   User: replikator
+   Host: artemis:2204
+     db: NULL
+Command: Binlog Dump
+   Time: 2144
+  State: Has sent all binlog to slave; waiting for binlog to be updated
+   Info: NULL
+*************************** 4. row ***************************
+     Id: 3113
+   User: replikator
+   Host: iconnect2:45781
+     db: NULL
+Command: Binlog Dump
+   Time: 2086
+  State: Has sent all binlog to slave; waiting for binlog to be updated
+   Info: NULL
+*************************** 5. row ***************************
+     Id: 3123
+   User: stefan
+   Host: localhost
+     db: apollon
+Command: Query
+   Time: 0
+  State: NULL
+   Info: SHOW FULL PROCESSLIST</code></pre><p>
+        <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW PROCESSLIST</code></a> output has these
+        columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a name="processlist_id"></a>
+            <code class="literal">Id</code>
+          </p><p>
+            The connection identifier. This is the same value displayed
+            in the <code class="literal">ID</code> column of the
+            <code class="literal">INFORMATION_SCHEMA</code>
+            <a class="link" href="information-schema-processlist-table.html" title="24.3.18&nbsp;The INFORMATION_SCHEMA PROCESSLIST Table"><code class="literal">PROCESSLIST</code></a> table, displayed in
+            the <code class="literal">PROCESSLIST_ID</code> column of the
+            Performance Schema <a class="link" href="performance-schema-threads-table.html" title="25.12.16.4&nbsp;The threads Table"><code class="literal">threads</code></a>
+            table, and returned by the
+            <a class="link" href="information-functions.html#function_connection-id"><code class="literal">CONNECTION_ID()</code></a> function
+            within the thread.
+          </p></li><li class="listitem"><p><a name="processlist_user"></a>
+            <code class="literal">User</code>
+          </p><p>
+            The MySQL user who issued the statement. A value of
+            <code class="literal">system user</code> refers to a nonclient thread
+            spawned by the server to handle tasks internally, for
+            example, a delayed-row handler thread or an I/O or SQL
+            thread used on replica hosts. For <code class="literal">system
+            user</code>, there is no host specified in the
+            <code class="literal">Host</code> column. <code class="literal">unauthenticated
+            user</code> refers to a thread that has become associated
+            with a client connection but for which authentication of the
+            client user has not yet occurred.
+            <code class="literal">event_scheduler</code> refers to the thread that
+            monitors scheduled events (see
+            <a class="xref" href="event-scheduler.html" title="23.4&nbsp;Using the Event Scheduler">Section&nbsp;23.4, “Using the Event Scheduler”</a>).
+          </p></li><li class="listitem"><p><a name="processlist_host"></a>
+            <code class="literal">Host</code>
+          </p><p>
+            The host name of the client issuing the statement (except
+            for <code class="literal">system user</code>, for which there is no
+            host). The host name for TCP/IP connections is reported in
+            <code class="literal"><em class="replaceable"><code>host_name</code></em>:<em class="replaceable"><code>client_port</code></em></code>
+            format to make it easier to determine which client is doing
+            what.
+          </p></li><li class="listitem"><p><a name="processlist_db"></a>
+            <code class="literal">db</code>
+          </p><p>
+            The default database for the thread, or
+            <code class="literal">NULL</code> if none has been selected.
+          </p></li><li class="listitem"><p><a name="processlist_command"></a>
+            <code class="literal">Command</code>
+          </p><p>
+            The type of command the thread is executing on behalf of the
+            client, or <code class="literal">Sleep</code> if the session is idle.
+            For descriptions of thread commands, see
+            <a class="xref" href="thread-information.html" title="8.14&nbsp;Examining Server Thread (Process) Information">Section&nbsp;8.14, “Examining Server Thread (Process) Information”</a>. The value of this
+            column corresponds to the
+            <code class="literal">COM_<em class="replaceable"><code>xxx</code></em></code>
+            commands of the client/server protocol and
+            <code class="literal">Com_<em class="replaceable"><code>xxx</code></em></code> status
+            variables. See <a class="xref" href="server-status-variables.html" title="5.1.9&nbsp;Server Status Variables">Section&nbsp;5.1.9, “Server Status Variables”</a>.
+          </p></li><li class="listitem"><p><a name="processlist_time"></a>
+            <code class="literal">Time</code>
+          </p><p>
+            The time in seconds that the thread has been in its current
+            state. For a replica SQL thread, the value is the number of
+            seconds between the timestamp of the last replicated event
+            and the real time of the replica host. See
+            <a class="xref" href="replication-implementation-details.html" title="16.2.3&nbsp;Replication Threads">Section&nbsp;16.2.3, “Replication Threads”</a>.
+          </p></li><li class="listitem"><p><a name="processlist_state"></a>
+            <code class="literal">State</code>
+          </p><p>
+            An action, event, or state that indicates what the thread is
+            doing. For descriptions of <code class="literal">State</code> values,
+            see <a class="xref" href="thread-information.html" title="8.14&nbsp;Examining Server Thread (Process) Information">Section&nbsp;8.14, “Examining Server Thread (Process) Information”</a>.
+          </p><p>
+            Most states correspond to very quick operations. If a thread
+            stays in a given state for many seconds, there might be a
+            problem that needs to be investigated.
+          </p></li><li class="listitem"><p><a name="processlist_info"></a>
+            <code class="literal">Info</code>
+          </p><p>
+            The statement the thread is executing, or
+            <code class="literal">NULL</code> if it is executing no statement. The
+            statement might be the one sent to the server, or an
+            innermost statement if the statement executes other
+            statements. For example, if a <code class="literal">CALL</code>
+            statement executes a stored procedure that is executing a
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement, the
+            <code class="literal">Info</code> value shows the
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement.
+</p></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

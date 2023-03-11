@@ -1,0 +1,16 @@
+{
+    "version": "1.0.0",
+    "pluginName": "MySQL SQL API Doc（EN）",
+    "description": "MySQL官方文档SQL，API英文版",
+    "author": "gaojuqian",
+    "homepage": "https://github.com/GaoJuqian",
+    "preload": "preload.js",
+    "logo": "logo.png",
+    "features": [
+        {
+            "code": "MySQL-SQL-API-Doc-EN",
+            "explain": "MySQL官方文档SQL，API英文版",
+            "cmds": ["mysql", "sql", "sql-mysql"]
+        }
+    ]
+}

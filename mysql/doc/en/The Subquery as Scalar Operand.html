@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>The Subquery as Scalar Operand</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="scalar-subqueries"></a>13.2.10.1&nbsp;The Subquery as Scalar Operand</h4>
+</div>
+</div>
+</div>
+<p>
+        In its simplest form, a subquery is a scalar subquery that
+        returns a single value. A scalar subquery is a simple operand,
+        and you can use it almost anywhere a single column value or
+        literal is legal, and you can expect it to have those
+        characteristics that all operands have: a data type, a length,
+        an indication that it can be <code class="literal">NULL</code>, and so on.
+        For example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (s1 INT, s2 CHAR(5) NOT NULL);
+INSERT INTO t1 VALUES(100, 'abcde');
+SELECT (SELECT s2 FROM t1);</code></pre><p>
+        The subquery in this <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+        returns a single value (<code class="literal">'abcde'</code>) that has a
+        data type of <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>, a length of 5,
+        a character set and collation equal to the defaults in effect at
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> time, and an
+        indication that the value in the column can be
+        <code class="literal">NULL</code>. Nullability of the value selected by a
+        scalar subquery is not copied because if the subquery result is
+        empty, the result is <code class="literal">NULL</code>. For the subquery
+        just shown, if <code class="literal">t1</code> were empty, the result
+        would be <code class="literal">NULL</code> even though
+        <code class="literal">s2</code> is <code class="literal">NOT NULL</code>.
+      </p><p>
+        There are a few contexts in which a scalar subquery cannot be
+        used. If a statement permits only a literal value, you cannot
+        use a subquery. For example, <code class="literal">LIMIT</code> requires
+        literal integer arguments, and <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+        DATA</code></a> requires a literal string file name. You cannot
+        use subqueries to supply these values.
+      </p><p>
+        When you see examples in the following sections that contain the
+        rather spartan construct <code class="literal">(SELECT column1 FROM
+        t1)</code>, imagine that your own code contains much more
+        diverse and complex constructions.
+      </p><p>
+        Suppose that we make two tables:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (s1 INT);
+INSERT INTO t1 VALUES (1);
+CREATE TABLE t2 (s1 INT);
+INSERT INTO t2 VALUES (2);</code></pre><p>
+        Then perform a <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT (SELECT s1 FROM t2) FROM t1;</code></pre><p>
+        The result is <code class="literal">2</code> because there is a row in
+        <code class="literal">t2</code> containing a column <code class="literal">s1</code>
+        that has a value of <code class="literal">2</code>.
+      </p><p>
+        A scalar subquery can be part of an expression, but remember the
+        parentheses, even if the subquery is an operand that provides an
+        argument for a function. For example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT UPPER((SELECT s1 FROM t1)) FROM t2;</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

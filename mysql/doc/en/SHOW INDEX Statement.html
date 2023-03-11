@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW INDEX Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-index"></a>13.7.5.22&nbsp;SHOW INDEX Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570672944"></a><a class="indexterm" name="idm45852570671040"></a><a class="indexterm" name="idm45852570669968"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW {INDEX | INDEXES | KEYS}
+    {FROM | IN} <em class="replaceable">tbl_name</em>
+    [{FROM | IN} <em class="replaceable">db_name</em>]
+    [WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        <a class="link" href="show-index.html" title="13.7.5.22&nbsp;SHOW INDEX Statement"><code class="literal">SHOW INDEX</code></a> returns table index
+        information. The format resembles that of the
+        <code class="literal">SQLStatistics</code> call in ODBC. This statement
+        requires some privilege for any column in the table.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW INDEX FROM City\G
+*************************** 1. row ***************************
+        Table: city
+   Non_unique: 0
+     Key_name: PRIMARY
+ Seq_in_index: 1
+  Column_name: ID
+    Collation: A
+  Cardinality: 4188
+     Sub_part: NULL
+       Packed: NULL
+         Null:
+   Index_type: BTREE
+      Comment:
+Index_comment:
+*************************** 2. row ***************************
+        Table: city
+   Non_unique: 1
+     Key_name: CountryCode
+ Seq_in_index: 1
+  Column_name: CountryCode
+    Collation: A
+  Cardinality: 232
+     Sub_part: NULL
+       Packed: NULL
+         Null:
+   Index_type: BTREE
+      Comment:
+Index_comment:</code></pre><p>
+        An alternative to <code class="literal"><em class="replaceable"><code>tbl_name</code></em>
+        FROM <em class="replaceable"><code>db_name</code></em></code> syntax is
+        <em class="replaceable"><code>db_name</code></em>.<em class="replaceable"><code>tbl_name</code></em>.
+        These two statements are equivalent:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW INDEX FROM mytable FROM mydb;
+SHOW INDEX FROM mydb.mytable;</code></pre><p>
+        The <code class="literal">WHERE</code> clause can be given to select rows
+        using more general conditions, as discussed in
+        <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+      </p><p>
+        <a class="link" href="show-index.html" title="13.7.5.22&nbsp;SHOW INDEX Statement"><code class="literal">SHOW INDEX</code></a> returns the following
+        fields:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Table</code>
+          </p><p>
+            The name of the table.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Non_unique</code>
+          </p><p>
+            0 if the index cannot contain duplicates, 1 if it can.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Key_name</code>
+          </p><p>
+            The name of the index. If the index is the primary key, the
+            name is always <code class="literal">PRIMARY</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Seq_in_index</code>
+          </p><p>
+            The column sequence number in the index, starting with 1.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Column_name</code>
+          </p><p>
+            The name of the column.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Collation</code>
+          </p><a class="indexterm" name="idm45852570640256"></a><p>
+            How the column is sorted in the index. This can have values
+            <code class="literal">A</code> (ascending) or <code class="literal">NULL</code>
+            (not sorted).
+          </p></li><li class="listitem"><p>
+            <code class="literal">Cardinality</code>
+          </p><a class="indexterm" name="idm45852570634992"></a><a class="indexterm" name="idm45852570633088"></a><p>
+            An estimate of the number of unique values in the index. To
+            update this number, run <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE
+            TABLE</code></a> or (for <code class="literal">MyISAM</code> tables)
+            <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk -a</strong></span></a>.
+          </p><p>
+            <code class="literal">Cardinality</code> is counted based on
+            statistics stored as integers, so the value is not
+            necessarily exact even for small tables. The higher the
+            cardinality, the greater the chance that MySQL uses the
+            index when doing joins.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Sub_part</code>
+          </p><p>
+            The index prefix. That is, the number of indexed characters
+            if the column is only partly indexed,
+            <code class="literal">NULL</code> if the entire column is indexed.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              Prefix <span class="emphasis"><em>limits</em></span> are measured in bytes.
+              However, prefix <span class="emphasis"><em>lengths</em></span> for index
+              specifications in <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+              TABLE</code></a>, <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+              TABLE</code></a>, and <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE
+              INDEX</code></a> statements are interpreted as number of
+              characters for nonbinary string types
+              (<a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+              <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>,
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a>) and number of bytes
+              for binary string types
+              (<a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a>,
+              <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a>,
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>). Take this into
+              account when specifying a prefix length for a nonbinary
+              string column that uses a multibyte character set.
+</p>
+</div>
+<p>
+            For additional information about index prefixes, see
+            <a class="xref" href="column-indexes.html" title="8.3.4&nbsp;Column Indexes">Section&nbsp;8.3.4, “Column Indexes”</a>, and
+            <a class="xref" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement">Section&nbsp;13.1.14, “CREATE INDEX Statement”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Packed</code>
+          </p><p>
+            Indicates how the key is packed. <code class="literal">NULL</code> if
+            it is not.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Null</code>
+          </p><p>
+            Contains <code class="literal">YES</code> if the column may contain
+            <code class="literal">NULL</code> values and <code class="literal">''</code> if
+            not.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Index_type</code>
+          </p><p>
+            The index method used (<code class="literal">BTREE</code>,
+            <code class="literal">FULLTEXT</code>, <code class="literal">HASH</code>,
+            <code class="literal">RTREE</code>).
+          </p></li><li class="listitem"><p>
+            <code class="literal">Comment</code>
+          </p><p>
+            Information about the index not described in its own column,
+            such as <code class="literal">disabled</code> if the index is
+            disabled.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Index_comment</code>
+          </p><p>
+            Any comment provided for the index with a
+            <code class="literal">COMMENT</code> attribute when the index was
+            created.
+</p></li></ul>
+</div>
+<p>
+        Information about table indexes is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-statistics-table.html" title="24.3.24&nbsp;The INFORMATION_SCHEMA STATISTICS Table"><code class="literal">STATISTICS</code></a> table. See
+        <a class="xref" href="information-schema-statistics-table.html" title="24.3.24&nbsp;The INFORMATION_SCHEMA STATISTICS Table">Section&nbsp;24.3.24, “The INFORMATION_SCHEMA STATISTICS Table”</a>.
+      </p><p>
+        You can list a table's indexes with the <a class="link" href="mysqlshow.html" title="4.5.7&nbsp;mysqlshow — Display Database, Table, and Column Information"><span class="command"><strong>mysqlshow -k
+        <em class="replaceable"><code>db_name</code></em>
+        <em class="replaceable"><code>tbl_name</code></em></strong></span></a> command.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

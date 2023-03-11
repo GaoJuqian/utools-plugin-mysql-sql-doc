@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>JOIN Clause</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="join"></a>13.2.9.2&nbsp;JOIN Clause</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852578291264"></a><a class="indexterm" name="idm45852578290192"></a><a class="indexterm" name="idm45852578289120"></a><a class="indexterm" name="idm45852578288048"></a><a class="indexterm" name="idm45852578286976"></a><a class="indexterm" name="idm45852578285904"></a><a class="indexterm" name="idm45852578284832"></a><a class="indexterm" name="idm45852578283760"></a><a class="indexterm" name="idm45852578282688"></a><a class="indexterm" name="idm45852578281616"></a><a class="indexterm" name="idm45852578280544"></a><a class="indexterm" name="idm45852578279472"></a><a class="indexterm" name="idm45852578278384"></a><a class="indexterm" name="idm45852578277312"></a><p>
+        MySQL supports the following <code class="literal">JOIN</code> syntax for
+        the <em class="replaceable"><code>table_references</code></em> part of
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements and
+        multiple-table <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> and
+        <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statements:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql"><em class="replaceable">table_references:</em>
+    <em class="replaceable">escaped_table_reference</em> [, <em class="replaceable">escaped_table_reference</em>] ...
+
+<em class="replaceable">escaped_table_reference</em>: {
+    <em class="replaceable">table_reference</em>
+  | { OJ <em class="replaceable">table_reference</em> }
+}
+
+<em class="replaceable">table_reference</em>: {
+    <em class="replaceable">table_factor</em>
+  | <em class="replaceable">joined_table</em>
+}
+
+<em class="replaceable">table_factor</em>: {
+    <em class="replaceable">tbl_name</em> [PARTITION (<em class="replaceable">partition_names</em>)]
+        [[AS] <em class="replaceable">alias</em>] [<em class="replaceable">index_hint_list</em>]
+  | <em class="replaceable">table_subquery</em> [AS] <em class="replaceable">alias</em>
+  | ( <em class="replaceable">table_references</em> )
+}
+
+<em class="replaceable">joined_table</em>: {
+    <em class="replaceable">table_reference</em> [INNER | CROSS] JOIN <em class="replaceable">table_factor</em> [<em class="replaceable">join_specification</em>]
+  | <em class="replaceable">table_reference</em> STRAIGHT_JOIN <em class="replaceable">table_factor</em>
+  | <em class="replaceable">table_reference</em> STRAIGHT_JOIN <em class="replaceable">table_factor</em> ON <em class="replaceable">search_condition</em>
+  | <em class="replaceable">table_reference</em> {LEFT|RIGHT} [OUTER] JOIN <em class="replaceable">table_reference</em> <em class="replaceable">join_specification</em>
+  | <em class="replaceable">table_reference</em> NATURAL [{LEFT|RIGHT} [OUTER]] JOIN <em class="replaceable">table_factor</em>
+}
+
+<em class="replaceable">join_specification</em>: {
+    ON <em class="replaceable">search_condition</em>
+  | USING (<em class="replaceable">join_column_list</em>)
+}
+
+<em class="replaceable">join_column_list</em>:
+    <em class="replaceable">column_name</em> [, <em class="replaceable">column_name</em>] ...
+
+<em class="replaceable">index_hint_list</em>:
+    <em class="replaceable">index_hint</em> [, <em class="replaceable">index_hint</em>] ...
+
+<em class="replaceable">index_hint</em>: {
+    USE {INDEX|KEY}
+      [FOR {JOIN|ORDER BY|GROUP BY}] ([<em class="replaceable">index_list</em>])
+  | {IGNORE|FORCE} {INDEX|KEY}
+      [FOR {JOIN|ORDER BY|GROUP BY}] (<em class="replaceable">index_list</em>)
+}
+
+<em class="replaceable">index_list</em>:
+    <em class="replaceable">index_name</em> [, <em class="replaceable">index_name</em>] ...</code></pre><p>
+        A table reference is also known as a join expression.
+      </p><p>
+        A table reference (when it refers to a partitioned table) may
+        contain a <code class="literal">PARTITION</code> clause, including a list
+        of comma-separated partitions, subpartitions, or both. This
+        option follows the name of the table and precedes any alias
+        declaration. The effect of this option is that rows are selected
+        only from the listed partitions or subpartitions. Any partitions
+        or subpartitions not named in the list are ignored. For more
+        information and examples, see
+        <a class="xref" href="partitioning-selection.html" title="22.5&nbsp;Partition Selection">Section&nbsp;22.5, “Partition Selection”</a>.
+      </p><p>
+        The syntax of <em class="replaceable"><code>table_factor</code></em> is
+        extended in MySQL in comparison with standard SQL. The standard
+        accepts only <em class="replaceable"><code>table_reference</code></em>, not a
+        list of them inside a pair of parentheses.
+      </p><p>
+        This is a conservative extension if each comma in a list of
+        <em class="replaceable"><code>table_reference</code></em> items is considered
+        as equivalent to an inner join. For example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1 LEFT JOIN (t2, t3, t4)
+                 ON (t2.a = t1.a AND t3.b = t1.b AND t4.c = t1.c)</code></pre><p>
+        is equivalent to:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1 LEFT JOIN (t2 CROSS JOIN t3 CROSS JOIN t4)
+                 ON (t2.a = t1.a AND t3.b = t1.b AND t4.c = t1.c)</code></pre><p>
+        In MySQL, <code class="literal">JOIN</code>, <code class="literal">CROSS
+        JOIN</code>, and <code class="literal">INNER JOIN</code> are syntactic
+        equivalents (they can replace each other). In standard SQL, they
+        are not equivalent. <code class="literal">INNER JOIN</code> is used with
+        an <code class="literal">ON</code> clause, <code class="literal">CROSS JOIN</code>
+        is used otherwise.
+      </p><p>
+        In general, parentheses can be ignored in join expressions
+        containing only inner join operations. MySQL also supports
+        nested joins. See <a class="xref" href="nested-join-optimization.html" title="8.2.1.7&nbsp;Nested Join Optimization">Section&nbsp;8.2.1.7, “Nested Join Optimization”</a>.
+      </p><p>
+        Index hints can be specified to affect how the MySQL optimizer
+        makes use of indexes. For more information, see
+        <a class="xref" href="index-hints.html" title="8.9.4&nbsp;Index Hints">Section&nbsp;8.9.4, “Index Hints”</a>. Optimizer hints and the
+        <code class="literal">optimizer_switch</code> system variable are other
+        ways to influence optimizer use of indexes. See
+        <a class="xref" href="optimizer-hints.html" title="8.9.3&nbsp;Optimizer Hints">Section&nbsp;8.9.3, “Optimizer Hints”</a>, and
+        <a class="xref" href="switchable-optimizations.html" title="8.9.2&nbsp;Switchable Optimizations">Section&nbsp;8.9.2, “Switchable Optimizations”</a>.
+      </p><p>
+        The following list describes general factors to take into
+        account when writing joins:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            A table reference can be aliased using
+            <code class="literal"><em class="replaceable"><code>tbl_name</code></em> AS
+            <em class="replaceable"><code>alias_name</code></em></code> or
+            <em class="replaceable"><code>tbl_name alias_name</code></em>:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT t1.name, t2.salary
+  FROM employee AS t1 INNER JOIN info AS t2 ON t1.name = t2.name;
+
+SELECT t1.name, t2.salary
+  FROM employee t1 INNER JOIN info t2 ON t1.name = t2.name;</code></pre></li><li class="listitem"><p>
+            A <em class="replaceable"><code>table_subquery</code></em> is also known as
+            a derived table or subquery in the <code class="literal">FROM</code>
+            clause. See <a class="xref" href="derived-tables.html" title="13.2.10.8&nbsp;Derived Tables">Section&nbsp;13.2.10.8, “Derived Tables”</a>. Such
+            subqueries <span class="emphasis"><em>must</em></span> include an alias to
+            give the subquery result a table name. A trivial example
+            follows:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM (SELECT 1, 2, 3) AS t1;</code></pre></li><li class="listitem"><p>
+            The maximum number of tables that can be referenced in a
+            single join is 61. This includes a join handled by merging
+            derived tables and views in the <code class="literal">FROM</code>
+            clause into the outer query block (see
+            <a class="xref" href="derived-table-optimization.html" title="8.2.2.4&nbsp;Optimizing Derived Tables and View References with Merging or Materialization">Section&nbsp;8.2.2.4, “Optimizing Derived Tables and View References with Merging or
+          Materialization”</a>).
+          </p><a class="indexterm" name="idm45852578218576"></a><a class="indexterm" name="idm45852578217088"></a></li><li class="listitem"><p>
+            <code class="literal">INNER JOIN</code> and <code class="literal">,</code>
+            (comma) are semantically equivalent in the absence of a join
+            condition: both produce a Cartesian product between the
+            specified tables (that is, each and every row in the first
+            table is joined to each and every row in the second table).
+          </p><p>
+            However, the precedence of the comma operator is less than
+            that of <code class="literal">INNER JOIN</code>, <code class="literal">CROSS
+            JOIN</code>, <code class="literal">LEFT JOIN</code>, and so on. If
+            you mix comma joins with the other join types when there is
+            a join condition, an error of the form <code class="literal">Unknown
+            column '<em class="replaceable"><code>col_name</code></em>' in 'on
+            clause'</code> may occur. Information about dealing with
+            this problem is given later in this section.
+          </p></li><li class="listitem"><p>
+            The <em class="replaceable"><code>search_condition</code></em> used with
+            <code class="literal">ON</code> is any conditional expression of the
+            form that can be used in a <code class="literal">WHERE</code> clause.
+            Generally, the <code class="literal">ON</code> clause serves for
+            conditions that specify how to join tables, and the
+            <code class="literal">WHERE</code> clause restricts which rows to
+            include in the result set.
+          </p></li><li class="listitem"><p>
+            If there is no matching row for the right table in the
+            <code class="literal">ON</code> or <code class="literal">USING</code> part in a
+            <code class="literal">LEFT JOIN</code>, a row with all columns set to
+            <code class="literal">NULL</code> is used for the right table. You can
+            use this fact to find rows in a table that have no
+            counterpart in another table:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT left_tbl.*
+  FROM left_tbl LEFT JOIN right_tbl ON left_tbl.id = right_tbl.id
+  WHERE right_tbl.id IS NULL;</code></pre><p>
+            This example finds all rows in <code class="literal">left_tbl</code>
+            with an <code class="literal">id</code> value that is not present in
+            <code class="literal">right_tbl</code> (that is, all rows in
+            <code class="literal">left_tbl</code> with no corresponding row in
+            <code class="literal">right_tbl</code>). See
+            <a class="xref" href="outer-join-optimization.html" title="8.2.1.8&nbsp;Outer Join Optimization">Section&nbsp;8.2.1.8, “Outer Join Optimization”</a>.
+          </p></li><li class="listitem"><p>
+            The
+            <code class="literal">USING(<em class="replaceable"><code>join_column_list</code></em>)</code>
+            clause names a list of columns that must exist in both
+            tables. If tables <code class="literal">a</code> and
+            <code class="literal">b</code> both contain columns
+            <code class="literal">c1</code>, <code class="literal">c2</code>, and
+            <code class="literal">c3</code>, the following join compares
+            corresponding columns from the two tables:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">a LEFT JOIN b USING (c1, c2, c3)</code></pre></li><li class="listitem"><p>
+            The <code class="literal">NATURAL [LEFT] JOIN</code> of two tables is
+            defined to be semantically equivalent to an <code class="literal">INNER
+            JOIN</code> or a <code class="literal">LEFT JOIN</code> with a
+            <code class="literal">USING</code> clause that names all columns that
+            exist in both tables.
+          </p></li><li class="listitem"><p>
+            <code class="literal">RIGHT JOIN</code> works analogously to
+            <code class="literal">LEFT JOIN</code>. To keep code portable across
+            databases, it is recommended that you use <code class="literal">LEFT
+            JOIN</code> instead of <code class="literal">RIGHT JOIN</code>.
+          </p></li><li class="listitem"><p>
+            <a class="indexterm" name="idm45852578179904"></a>
+
+            <a class="indexterm" name="idm45852578178832"></a>
+
+            The <code class="literal">{ OJ ... }</code> syntax shown in the join
+            syntax description exists only for compatibility with ODBC.
+            The curly braces in the syntax should be written literally;
+            they are not metasyntax as used elsewhere in syntax
+            descriptions.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT left_tbl.*
+    FROM { OJ left_tbl LEFT OUTER JOIN right_tbl
+           ON left_tbl.id = right_tbl.id }
+    WHERE right_tbl.id IS NULL;</code></pre><p>
+            You can use other types of joins within <code class="literal">{ OJ ...
+            }</code>, such as <code class="literal">INNER JOIN</code> or
+            <code class="literal">RIGHT OUTER JOIN</code>. This helps with
+            compatibility with some third-party applications, but is not
+            official ODBC syntax.
+          </p></li><li class="listitem"><p>
+            <code class="literal">STRAIGHT_JOIN</code> is similar to
+            <code class="literal">JOIN</code>, except that the left table is
+            always read before the right table. This can be used for
+            those (few) cases for which the join optimizer processes the
+            tables in a suboptimal order.
+</p></li></ul>
+</div>
+<p>
+        Some join examples:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM table1, table2;
+
+SELECT * FROM table1 INNER JOIN table2 ON table1.id = table2.id;
+
+SELECT * FROM table1 LEFT JOIN table2 ON table1.id = table2.id;
+
+SELECT * FROM table1 LEFT JOIN table2 USING (id);
+
+SELECT * FROM table1 LEFT JOIN table2 ON table1.id = table2.id
+  LEFT JOIN table3 ON table2.id = table3.id;</code></pre><p>
+        Natural joins and joins with <code class="literal">USING</code>, including
+        outer join variants, are processed according to the SQL:2003
+        standard:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Redundant columns of a <code class="literal">NATURAL</code> join do
+            not appear. Consider this set of statements:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (i INT, j INT);
+CREATE TABLE t2 (k INT, j INT);
+INSERT INTO t1 VALUES(1, 1);
+INSERT INTO t2 VALUES(1, 1);
+SELECT * FROM t1 NATURAL JOIN t2;
+SELECT * FROM t1 JOIN t2 USING (j);</code></pre><p>
+            In the first <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+            statement, column <code class="literal">j</code> appears in both
+            tables and thus becomes a join column, so, according to
+            standard SQL, it should appear only once in the output, not
+            twice. Similarly, in the second SELECT statement, column
+            <code class="literal">j</code> is named in the
+            <code class="literal">USING</code> clause and should appear only once
+            in the output, not twice.
+          </p><p>
+            Thus, the statements produce this output:
+          </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">+------+------+------+
+| j    | i    | k    |
++------+------+------+
+|    1 |    1 |    1 |
++------+------+------+
++------+------+------+
+| j    | i    | k    |
++------+------+------+
+|    1 |    1 |    1 |
++------+------+------+</code></pre><p>
+            Redundant column elimination and column ordering occurs
+            according to standard SQL, producing this display order:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                First, coalesced common columns of the two joined
+                tables, in the order in which they occur in the first
+                table
+              </p></li><li class="listitem"><p>
+                Second, columns unique to the first table, in order in
+                which they occur in that table
+              </p></li><li class="listitem"><p>
+                Third, columns unique to the second table, in order in
+                which they occur in that table
+</p></li></ul>
+</div>
+<p>
+            The single result column that replaces two common columns is
+            defined using the coalesce operation. That is, for two
+            <code class="literal">t1.a</code> and <code class="literal">t2.a</code> the
+            resulting single join column <code class="literal">a</code> is defined
+            as <code class="literal">a = COALESCE(t1.a, t2.a)</code>, where:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">COALESCE(x, y) = (CASE WHEN x IS NOT NULL THEN x ELSE y END)</code></pre><p>
+            If the join operation is any other join, the result columns
+            of the join consist of the concatenation of all columns of
+            the joined tables.
+          </p><p>
+            A consequence of the definition of coalesced columns is
+            that, for outer joins, the coalesced column contains the
+            value of the non-<code class="literal">NULL</code> column if one of
+            the two columns is always <code class="literal">NULL</code>. If
+            neither or both columns are <code class="literal">NULL</code>, both
+            common columns have the same value, so it doesn't matter
+            which one is chosen as the value of the coalesced column. A
+            simple way to interpret this is to consider that a coalesced
+            column of an outer join is represented by the common column
+            of the inner table of a <code class="literal">JOIN</code>. Suppose
+            that the tables <code class="literal">t1(a, b)</code> and
+            <code class="literal">t2(a, c)</code> have the following contents:
+          </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">t1    t2
+----  ----
+1 x   2 z
+2 y   3 w</code></pre><p>
+            Then, for this join, column <code class="literal">a</code> contains
+            the values of <code class="literal">t1.a</code>:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM t1 NATURAL LEFT JOIN t2;
++------+------+------+
+| a    | b    | c    |
++------+------+------+
+|    1 | x    | NULL |
+|    2 | y    | z    |
++------+------+------+</code></pre><p>
+            By contrast, for this join, column <code class="literal">a</code>
+            contains the values of <code class="literal">t2.a</code>.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM t1 NATURAL RIGHT JOIN t2;
++------+------+------+
+| a    | c    | b    |
++------+------+------+
+|    2 | z    | y    |
+|    3 | w    | NULL |
++------+------+------+</code></pre><p>
+            Compare those results to the otherwise equivalent queries
+            with <code class="literal">JOIN ... ON</code>:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM t1 LEFT JOIN t2 ON (t1.a = t2.a);
++------+------+------+------+
+| a    | b    | a    | c    |
++------+------+------+------+
+|    1 | x    | NULL | NULL |
+|    2 | y    |    2 | z    |
++------+------+------+------+</code></pre><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM t1 RIGHT JOIN t2 ON (t1.a = t2.a);
++------+------+------+------+
+| a    | b    | a    | c    |
++------+------+------+------+
+|    2 | y    |    2 | z    |
+| NULL | NULL |    3 | w    |
++------+------+------+------+</code></pre></li><li class="listitem"><p>
+            A <code class="literal">USING</code> clause can be rewritten as an
+            <code class="literal">ON</code> clause that compares corresponding
+            columns. However, although <code class="literal">USING</code> and
+            <code class="literal">ON</code> are similar, they are not quite the
+            same. Consider the following two queries:
+          </p><a class="indexterm" name="idm45852578127200"></a><a class="indexterm" name="idm45852578125712"></a><a class="indexterm" name="idm45852578124224"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">a LEFT JOIN b USING (c1, c2, c3)
+a LEFT JOIN b ON a.c1 = b.c1 AND a.c2 = b.c2 AND a.c3 = b.c3</code></pre><p>
+            With respect to determining which rows satisfy the join
+            condition, both joins are semantically identical.
+          </p><p>
+            With respect to determining which columns to display for
+            <code class="literal">SELECT *</code> expansion, the two joins are not
+            semantically identical. The <code class="literal">USING</code> join
+            selects the coalesced value of corresponding columns,
+            whereas the <code class="literal">ON</code> join selects all columns
+            from all tables. For the <code class="literal">USING</code> join,
+            <code class="literal">SELECT *</code> selects these values:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">COALESCE(a.c1, b.c1), COALESCE(a.c2, b.c2), COALESCE(a.c3, b.c3)</code></pre><p>
+            For the <code class="literal">ON</code> join, <code class="literal">SELECT
+            *</code> selects these values:
+          </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">a.c1, a.c2, a.c3, b.c1, b.c2, b.c3</code></pre><p>
+            With an inner join, <a class="link" href="comparison-operators.html#function_coalesce"><code class="literal">COALESCE(a.c1,
+            b.c1)</code></a> is the same as either
+            <code class="literal">a.c1</code> or <code class="literal">b.c1</code> because
+            both columns have the same value. With an outer join (such
+            as <code class="literal">LEFT JOIN</code>), one of the two columns can
+            be <code class="literal">NULL</code>. That column is omitted from the
+            result.
+          </p></li><li class="listitem"><p>
+            An <code class="literal">ON</code> clause can refer only to its
+            operands.
+          </p><p>
+            Example:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (i1 INT);
+CREATE TABLE t2 (i2 INT);
+CREATE TABLE t3 (i3 INT);
+SELECT * FROM t1 JOIN t2 ON (i1 = i3) JOIN t3;</code></pre><p>
+            The statement fails with an <code class="literal">Unknown column 'i3' in
+            'on clause'</code> error because <code class="literal">i3</code> is
+            a column in <code class="literal">t3</code>, which is not an operand
+            of the <code class="literal">ON</code> clause. To enable the join to
+            be processed, rewrite the statement as follows:
+          </p><a class="indexterm" name="idm45852578102000"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 JOIN t2 JOIN t3 ON (i1 = i3);</code></pre></li><li class="listitem"><p>
+            <code class="literal">JOIN</code> has higher precedence than the comma
+            operator (<code class="literal">,</code>), so the join expression
+            <code class="literal">t1, t2 JOIN t3</code> is interpreted as
+            <code class="literal">(t1, (t2 JOIN t3))</code>, not as <code class="literal">((t1,
+            t2) JOIN t3)</code>. This affects statements that use an
+            <code class="literal">ON</code> clause because that clause can refer
+            only to columns in the operands of the join, and the
+            precedence affects interpretation of what those operands
+            are.
+          </p><p>
+            Example:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (i1 INT, j1 INT);
+CREATE TABLE t2 (i2 INT, j2 INT);
+CREATE TABLE t3 (i3 INT, j3 INT);
+INSERT INTO t1 VALUES(1, 1);
+INSERT INTO t2 VALUES(1, 1);
+INSERT INTO t3 VALUES(1, 1);
+SELECT * FROM t1, t2 JOIN t3 ON (t1.i1 = t3.i3);</code></pre><p>
+            The <code class="literal">JOIN</code> takes precedence over the comma
+            operator, so the operands for the <code class="literal">ON</code>
+            clause are <code class="literal">t2</code> and <code class="literal">t3</code>.
+            Because <code class="literal">t1.i1</code> is not a column in either
+            of the operands, the result is an <code class="literal">Unknown column
+            't1.i1' in 'on clause'</code> error.
+          </p><a class="indexterm" name="idm45852578088224"></a><p>
+            To enable the join to be processed, use either of these
+            strategies:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                Group the first two tables explicitly with parentheses
+                so that the operands for the <code class="literal">ON</code>
+                clause are <code class="literal">(t1, t2)</code> and
+                <code class="literal">t3</code>:
+              </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM (t1, t2) JOIN t3 ON (t1.i1 = t3.i3);</code></pre></li><li class="listitem"><p>
+                Avoid the use of the comma operator and use
+                <code class="literal">JOIN</code> instead:
+              </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 JOIN t2 JOIN t3 ON (t1.i1 = t3.i3);</code></pre></li></ul>
+</div>
+<p>
+            The same precedence interpretation also applies to
+            statements that mix the comma operator with <code class="literal">INNER
+            JOIN</code>, <code class="literal">CROSS JOIN</code>, <code class="literal">LEFT
+            JOIN</code>, and <code class="literal">RIGHT JOIN</code>, all of
+            which have higher precedence than the comma operator.
+          </p></li><li class="listitem"><p>
+            A MySQL extension compared to the SQL:2003 standard is that
+            MySQL permits you to qualify the common (coalesced) columns
+            of <code class="literal">NATURAL</code> or <code class="literal">USING</code>
+            joins, whereas the standard disallows that.
+</p></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP LOGFILE GROUP Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="drop-logfile-group"></a>13.1.26&nbsp;DROP LOGFILE GROUP Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580680208"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DROP LOGFILE GROUP <em class="replaceable">logfile_group</em>
+    ENGINE [=] <em class="replaceable">engine_name</em></code></pre><p>
+      This statement drops the log file group named
+      <em class="replaceable"><code>logfile_group</code></em>. The log file group must
+      already exist or an error results. (For information on creating
+      log file groups, see <a class="xref" href="create-logfile-group.html" title="13.1.15&nbsp;CREATE LOGFILE GROUP Statement">Section&nbsp;13.1.15, “CREATE LOGFILE GROUP Statement”</a>.)
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+        Before dropping a log file group, you must drop all tablespaces
+        that use that log file group for <code class="literal">UNDO</code>
+        logging.
+</p>
+</div>
+<p>
+      The required <code class="literal">ENGINE</code> clause provides the name of
+      the storage engine used by the log file group to be dropped.
+      Currently, the only permitted values for
+      <em class="replaceable"><code>engine_name</code></em> are
+      <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> and
+      <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDBCLUSTER</code></a>.
+    </p><p>
+      <a class="link" href="drop-logfile-group.html" title="13.1.26&nbsp;DROP LOGFILE GROUP Statement"><code class="literal">DROP LOGFILE GROUP</code></a> is useful only
+      with Disk Data storage for NDB Cluster. See
+      <a class="xref" href="mysql-cluster-disk-data.html" title="21.6.11&nbsp;NDB Cluster Disk Data Tables">Section&nbsp;21.6.11, “NDB Cluster Disk Data Tables”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>LOAD XML Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="load-xml"></a>13.2.7&nbsp;LOAD XML Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852579064576"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">LOAD XML
+    [LOW_PRIORITY | CONCURRENT] [LOCAL]
+    INFILE '<em class="replaceable">file_name</em>'
+    [REPLACE | IGNORE]
+    INTO TABLE [<em class="replaceable">db_name</em>.]<em class="replaceable">tbl_name</em>
+    [CHARACTER SET <em class="replaceable">charset_name</em>]
+    [ROWS IDENTIFIED BY '&lt;<em class="replaceable">tagname</em>&gt;']
+    [IGNORE <em class="replaceable">number</em> {LINES | ROWS}]
+    [(<em class="replaceable">field_name_or_user_var</em>
+        [, <em class="replaceable">field_name_or_user_var</em>] ...)]
+    [SET <em class="replaceable">col_name</em>={<em class="replaceable">expr</em> | DEFAULT}
+        [, <em class="replaceable">col_name</em>={<em class="replaceable">expr</em> | DEFAULT}] ...]</code></pre><p>
+      The <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML</code></a> statement reads data
+      from an XML file into a table. The
+      <em class="replaceable"><code>file_name</code></em> must be given as a literal
+      string. The <em class="replaceable"><code>tagname</code></em> in the optional
+      <code class="literal">ROWS IDENTIFIED BY</code> clause must also be given as
+      a literal string, and must be surrounded by angle brackets
+      (<code class="literal">&lt;</code> and <code class="literal">&gt;</code>).
+    </p><p>
+      <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML</code></a> acts as the complement of
+      running the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> client in XML output mode
+      (that is, starting the client with the
+      <a class="link" href="mysql-command-options.html#option_mysql_xml"><code class="option">--xml</code></a> option). To write data from a
+      table to an XML file, you can invoke the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a>
+      client with the <a class="link" href="mysql-command-options.html#option_mysql_xml"><code class="option">--xml</code></a> and
+      <a class="link" href="mysql-command-options.html#option_mysql_execute"><code class="option">-e</code></a> options from
+      the system shell, as shown here:
+    </p><pre class="programlisting copytoclipboard language-terminal one-line"><code class="language-terminal">$&gt; mysql --xml -e 'SELECT * FROM mydb.mytable' &gt; file.xml</code></pre><p>
+      To read the file back into a table, use <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD
+      XML</code></a>. By default, the <code class="literal">&lt;row&gt;</code>
+      element is considered to be the equivalent of a database table
+      row; this can be changed using the <code class="literal">ROWS IDENTIFIED
+      BY</code> clause.
+    </p><p>
+      This statement supports three different XML formats:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Column names as attributes and column values as attribute
+          values:
+        </p><pre class="programlisting copytoclipboard language-xml one-line"><code class="language-xml">&lt;<em class="replaceable">row</em> <em class="replaceable">column1</em>="<em class="replaceable">value1</em>" <em class="replaceable">column2</em>="<em class="replaceable">value2</em>" .../&gt;</code></pre></li><li class="listitem"><p>
+          Column names as tags and column values as the content of these
+          tags:
+        </p><pre class="programlisting copytoclipboard language-xml"><code class="language-xml">&lt;<em class="replaceable">row</em>&gt;
+  &lt;<em class="replaceable">column1</em>&gt;<em class="replaceable">value1</em>&lt;/<em class="replaceable">column1</em>&gt;
+  &lt;<em class="replaceable">column2</em>&gt;<em class="replaceable">value2</em>&lt;/<em class="replaceable">column2</em>&gt;
+&lt;/<em class="replaceable">row</em>&gt;</code></pre></li><li class="listitem"><p>
+          Column names are the <code class="literal">name</code> attributes of
+          <code class="literal">&lt;field&gt;</code> tags, and values are the
+          contents of these tags:
+        </p><pre class="programlisting copytoclipboard language-xml"><code class="language-xml">&lt;row&gt;
+  &lt;field name='<em class="replaceable">column1</em>'&gt;<em class="replaceable">value1</em>&lt;/field&gt;
+  &lt;field name='<em class="replaceable">column2</em>'&gt;<em class="replaceable">value2</em>&lt;/field&gt;
+&lt;/row&gt;</code></pre><p>
+          This is the format used by other MySQL tools, such as
+          <a class="link" href="mysqldump.html" title="4.5.4&nbsp;mysqldump — A Database Backup Program"><span class="command"><strong>mysqldump</strong></span></a>.
+</p></li></ul>
+</div>
+<p>
+      All three formats can be used in the same XML file; the import
+      routine automatically detects the format for each row and
+      interprets it correctly. Tags are matched based on the tag or
+      attribute name and the column name.
+    </p><p>
+      In MySQL 5.7, <code class="literal">LOAD XML</code> does not
+      support <code class="literal">CDATA</code> sections in the source XML. This
+      limitation is removed in MySQL 8.0. (Bug #30753708, Bug #98199)
+    </p><p>
+      The following clauses work essentially the same way for
+      <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML</code></a> as they do for
+      <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">LOW_PRIORITY</code> or
+          <code class="literal">CONCURRENT</code>
+        </p></li><li class="listitem"><p>
+          <code class="literal">LOCAL</code>
+        </p></li><li class="listitem"><p>
+          <code class="literal">REPLACE</code> or <code class="literal">IGNORE</code>
+        </p></li><li class="listitem"><p>
+          <code class="literal">CHARACTER SET</code>
+        </p></li><li class="listitem"><p>
+          <code class="literal">SET</code>
+</p></li></ul>
+</div>
+<p>
+      See <a class="xref" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement">Section&nbsp;13.2.6, “LOAD DATA Statement”</a>, for more information about these
+      clauses.
+    </p><p>
+      <code class="literal">(<em class="replaceable"><code>field_name_or_user_var</code></em>,
+      ...)</code> is a list of one or more comma-separated XML fields
+      or user variables. The name of a user variable used for this
+      purpose must match the name of a field from the XML file, prefixed
+      with <code class="literal">@</code>. You can use field names to select only
+      desired fields. User variables can be employed to store the
+      corresponding field values for subsequent re-use.
+    </p><p>
+      The <code class="literal">IGNORE <em class="replaceable"><code>number</code></em>
+      LINES</code> or <code class="literal">IGNORE
+      <em class="replaceable"><code>number</code></em> ROWS</code> clause causes the
+      first <em class="replaceable"><code>number</code></em> rows in the XML file to be
+      skipped. It is analogous to the <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+      DATA</code></a> statement's <code class="literal">IGNORE ... LINES</code>
+      clause.
+    </p><p>
+      Suppose that we have a table named <code class="literal">person</code>,
+      created as shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">USE test;
+
+CREATE TABLE person (
+    person_id INT NOT NULL PRIMARY KEY,
+    fname VARCHAR(40) NULL,
+    lname VARCHAR(40) NULL,
+    created TIMESTAMP
+);</code></pre><p>
+      Suppose further that this table is initially empty.
+    </p><p>
+      Now suppose that we have a simple XML file
+      <code class="filename">person.xml</code>, whose contents are as shown here:
+    </p><pre class="programlisting copytoclipboard language-xml"><code class="language-xml">&lt;list&gt;
+  &lt;person person_id="1" fname="Kapek" lname="Sainnouine"/&gt;
+  &lt;person person_id="2" fname="Sajon" lname="Rondela"/&gt;
+  &lt;person person_id="3"&gt;&lt;fname&gt;Likame&lt;/fname&gt;&lt;lname&gt;Örrtmons&lt;/lname&gt;&lt;/person&gt;
+  &lt;person person_id="4"&gt;&lt;fname&gt;Slar&lt;/fname&gt;&lt;lname&gt;Manlanth&lt;/lname&gt;&lt;/person&gt;
+  &lt;person&gt;&lt;field name="person_id"&gt;5&lt;/field&gt;&lt;field name="fname"&gt;Stoma&lt;/field&gt;
+    &lt;field name="lname"&gt;Milu&lt;/field&gt;&lt;/person&gt;
+  &lt;person&gt;&lt;field name="person_id"&gt;6&lt;/field&gt;&lt;field name="fname"&gt;Nirtam&lt;/field&gt;
+    &lt;field name="lname"&gt;Sklöd&lt;/field&gt;&lt;/person&gt;
+  &lt;person person_id="7"&gt;&lt;fname&gt;Sungam&lt;/fname&gt;&lt;lname&gt;Dulbåd&lt;/lname&gt;&lt;/person&gt;
+  &lt;person person_id="8" fname="Sraref" lname="Encmelt"/&gt;
+&lt;/list&gt;</code></pre><p>
+      Each of the permissible XML formats discussed previously is
+      represented in this example file.
+    </p><p>
+      To import the data in <code class="filename">person.xml</code> into the
+      <code class="literal">person</code> table, you can use this statement:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; LOAD XML LOCAL INFILE 'person.xml'
+    -&gt;   INTO TABLE person
+    -&gt;   ROWS IDENTIFIED BY '&lt;person&gt;';
+
+Query OK, 8 rows affected (0.00 sec)
+Records: 8  Deleted: 0  Skipped: 0  Warnings: 0</code></pre><p>
+      Here, we assume that <code class="filename">person.xml</code> is located in
+      the MySQL data directory. If the file cannot be found, the
+      following error results:
+    </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">ERROR 2 (HY000): File '/person.xml' not found (Errcode: 2)</code></pre><p>
+      The <code class="literal">ROWS IDENTIFIED BY '&lt;person&gt;'</code> clause
+      means that each <code class="literal">&lt;person&gt;</code> element in the
+      XML file is considered equivalent to a row in the table into which
+      the data is to be imported. In this case, this is the
+      <code class="literal">person</code> table in the <code class="literal">test</code>
+      database.
+    </p><p>
+      As can be seen by the response from the server, 8 rows were
+      imported into the <code class="literal">test.person</code> table. This can
+      be verified by a simple <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+      statement:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM person;
++-----------+--------+------------+---------------------+
+| person_id | fname  | lname      | created             |
++-----------+--------+------------+---------------------+
+|         1 | Kapek  | Sainnouine | 2007-07-13 16:18:47 |
+|         2 | Sajon  | Rondela    | 2007-07-13 16:18:47 |
+|         3 | Likame | Örrtmons   | 2007-07-13 16:18:47 |
+|         4 | Slar   | Manlanth   | 2007-07-13 16:18:47 |
+|         5 | Stoma  | Nilu       | 2007-07-13 16:18:47 |
+|         6 | Nirtam | Sklöd      | 2007-07-13 16:18:47 |
+|         7 | Sungam | Dulbåd     | 2007-07-13 16:18:47 |
+|         8 | Sreraf | Encmelt    | 2007-07-13 16:18:47 |
++-----------+--------+------------+---------------------+
+8 rows in set (0.00 sec)</code></pre><p>
+      This shows, as stated earlier in this section, that any or all of
+      the 3 permitted XML formats may appear in a single file and be
+      read using <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML</code></a>.
+    </p><p>
+      The inverse of the import operation just shown—that is,
+      dumping MySQL table data into an XML file—can be
+      accomplished using the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> client from the
+      system shell, as shown here:
+    </p><pre class="programlisting copytoclipboard language-terminal"><code class="language-terminal">$&gt; mysql --xml -e "SELECT * FROM test.person" &gt; person-dump.xml
+$&gt; cat person-dump.xml
+&lt;?xml version="1.0"?&gt;
+
+&lt;resultset statement="SELECT * FROM test.person" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;row&gt;
+	&lt;field name="person_id"&gt;1&lt;/field&gt;
+	&lt;field name="fname"&gt;Kapek&lt;/field&gt;
+	&lt;field name="lname"&gt;Sainnouine&lt;/field&gt;
+  &lt;/row&gt;
+
+  &lt;row&gt;
+	&lt;field name="person_id"&gt;2&lt;/field&gt;
+	&lt;field name="fname"&gt;Sajon&lt;/field&gt;
+	&lt;field name="lname"&gt;Rondela&lt;/field&gt;
+  &lt;/row&gt;
+
+  &lt;row&gt;
+	&lt;field name="person_id"&gt;3&lt;/field&gt;
+	&lt;field name="fname"&gt;Likema&lt;/field&gt;
+	&lt;field name="lname"&gt;Örrtmons&lt;/field&gt;
+  &lt;/row&gt;
+
+  &lt;row&gt;
+	&lt;field name="person_id"&gt;4&lt;/field&gt;
+	&lt;field name="fname"&gt;Slar&lt;/field&gt;
+	&lt;field name="lname"&gt;Manlanth&lt;/field&gt;
+  &lt;/row&gt;
+
+  &lt;row&gt;
+	&lt;field name="person_id"&gt;5&lt;/field&gt;
+	&lt;field name="fname"&gt;Stoma&lt;/field&gt;
+	&lt;field name="lname"&gt;Nilu&lt;/field&gt;
+  &lt;/row&gt;
+
+  &lt;row&gt;
+	&lt;field name="person_id"&gt;6&lt;/field&gt;
+	&lt;field name="fname"&gt;Nirtam&lt;/field&gt;
+	&lt;field name="lname"&gt;Sklöd&lt;/field&gt;
+  &lt;/row&gt;
+
+  &lt;row&gt;
+	&lt;field name="person_id"&gt;7&lt;/field&gt;
+	&lt;field name="fname"&gt;Sungam&lt;/field&gt;
+	&lt;field name="lname"&gt;Dulbåd&lt;/field&gt;
+  &lt;/row&gt;
+
+  &lt;row&gt;
+	&lt;field name="person_id"&gt;8&lt;/field&gt;
+	&lt;field name="fname"&gt;Sreraf&lt;/field&gt;
+	&lt;field name="lname"&gt;Encmelt&lt;/field&gt;
+  &lt;/row&gt;
+&lt;/resultset&gt;</code></pre>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        The <a class="link" href="mysql-command-options.html#option_mysql_xml"><code class="option">--xml</code></a> option causes the
+        <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> client to use XML formatting for its
+        output; the <a class="link" href="mysql-command-options.html#option_mysql_execute"><code class="option">-e</code></a>
+        option causes the client to execute the SQL statement
+        immediately following the option. See <a class="xref" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client">Section&nbsp;4.5.1, “mysql — The MySQL Command-Line Client”</a>.
+</p>
+</div>
+<p>
+      You can verify that the dump is valid by creating a copy of the
+      <code class="literal">person</code> table and importing the dump file into
+      the new table, like this:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; USE test;
+mysql&gt; CREATE TABLE person2 LIKE person;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; LOAD XML LOCAL INFILE 'person-dump.xml'
+    -&gt;   INTO TABLE person2;
+Query OK, 8 rows affected (0.01 sec)
+Records: 8  Deleted: 0  Skipped: 0  Warnings: 0
+
+mysql&gt; SELECT * FROM person2;
++-----------+--------+------------+---------------------+
+| person_id | fname  | lname      | created             |
++-----------+--------+------------+---------------------+
+|         1 | Kapek  | Sainnouine | 2007-07-13 16:18:47 |
+|         2 | Sajon  | Rondela    | 2007-07-13 16:18:47 |
+|         3 | Likema | Örrtmons   | 2007-07-13 16:18:47 |
+|         4 | Slar   | Manlanth   | 2007-07-13 16:18:47 |
+|         5 | Stoma  | Nilu       | 2007-07-13 16:18:47 |
+|         6 | Nirtam | Sklöd      | 2007-07-13 16:18:47 |
+|         7 | Sungam | Dulbåd     | 2007-07-13 16:18:47 |
+|         8 | Sreraf | Encmelt    | 2007-07-13 16:18:47 |
++-----------+--------+------------+---------------------+
+8 rows in set (0.00 sec)</code></pre><p>
+      There is no requirement that every field in the XML file be
+      matched with a column in the corresponding table. Fields which
+      have no corresponding columns are skipped. You can see this by
+      first emptying the <code class="literal">person2</code> table and dropping
+      the <code class="literal">created</code> column, then using the same
+      <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML</code></a> statement we just employed
+      previously, like this:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; TRUNCATE person2;
+Query OK, 8 rows affected (0.26 sec)
+
+mysql&gt; ALTER TABLE person2 DROP COLUMN created;
+Query OK, 0 rows affected (0.52 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql&gt; SHOW CREATE TABLE person2\G
+*************************** 1. row ***************************
+       Table: person2
+Create Table: CREATE TABLE `person2` (
+  `person_id` int(11) NOT NULL,
+  `fname` varchar(40) DEFAULT NULL,
+  `lname` varchar(40) DEFAULT NULL,
+  PRIMARY KEY (`person_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+1 row in set (0.00 sec)
+
+mysql&gt; LOAD XML LOCAL INFILE 'person-dump.xml'
+    -&gt;   INTO TABLE person2;
+Query OK, 8 rows affected (0.01 sec)
+Records: 8  Deleted: 0  Skipped: 0  Warnings: 0
+
+mysql&gt; SELECT * FROM person2;
++-----------+--------+------------+
+| person_id | fname  | lname      |
++-----------+--------+------------+
+|         1 | Kapek  | Sainnouine |
+|         2 | Sajon  | Rondela    |
+|         3 | Likema | Örrtmons   |
+|         4 | Slar   | Manlanth   |
+|         5 | Stoma  | Nilu       |
+|         6 | Nirtam | Sklöd      |
+|         7 | Sungam | Dulbåd     |
+|         8 | Sreraf | Encmelt    |
++-----------+--------+------------+
+8 rows in set (0.00 sec)</code></pre><p>
+      The order in which the fields are given within each row of the XML
+      file does not affect the operation of <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD
+      XML</code></a>; the field order can vary from row to row, and is
+      not required to be in the same order as the corresponding columns
+      in the table.
+    </p><p>
+      As mentioned previously, you can use a
+      <code class="literal">(<em class="replaceable"><code>field_name_or_user_var</code></em>,
+      ...)</code> list of one or more XML fields (to select desired
+      fields only) or user variables (to store the corresponding field
+      values for later use). User variables can be especially useful
+      when you want to insert data from an XML file into table columns
+      whose names do not match those of the XML fields. To see how this
+      works, we first create a table named <code class="literal">individual</code>
+      whose structure matches that of the <code class="literal">person</code>
+      table, but whose columns are named differently:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLE individual (
+    -&gt;     individual_id INT NOT NULL PRIMARY KEY,
+    -&gt;     name1 VARCHAR(40) NULL,
+    -&gt;     name2 VARCHAR(40) NULL,
+    -&gt;     made TIMESTAMP
+    -&gt; );
+Query OK, 0 rows affected (0.42 sec)</code></pre><p>
+      In this case, you cannot simply load the XML file directly into
+      the table, because the field and column names do not match:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; LOAD XML INFILE '../bin/person-dump.xml' INTO TABLE test.individual;
+ERROR 1263 (22004): Column set to default value; NULL supplied to NOT NULL column 'individual_id' at row 1</code></pre><p>
+      This happens because the MySQL server looks for field names
+      matching the column names of the target table. You can work around
+      this problem by selecting the field values into user variables,
+      then setting the target table's columns equal to the values
+      of those variables using <code class="literal">SET</code>. You can perform
+      both of these operations in a single statement, as shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; LOAD XML INFILE '../bin/person-dump.xml'
+    -&gt;     INTO TABLE test.individual (@person_id, @fname, @lname, @created)
+    -&gt;     SET individual_id=@person_id, name1=@fname, name2=@lname, made=@created;
+Query OK, 8 rows affected (0.05 sec)
+Records: 8  Deleted: 0  Skipped: 0  Warnings: 0
+
+mysql&gt; SELECT * FROM individual;
++---------------+--------+------------+---------------------+
+| individual_id | name1  | name2      | made                |
++---------------+--------+------------+---------------------+
+|             1 | Kapek  | Sainnouine | 2007-07-13 16:18:47 |
+|             2 | Sajon  | Rondela    | 2007-07-13 16:18:47 |
+|             3 | Likema | Örrtmons   | 2007-07-13 16:18:47 |
+|             4 | Slar   | Manlanth   | 2007-07-13 16:18:47 |
+|             5 | Stoma  | Nilu       | 2007-07-13 16:18:47 |
+|             6 | Nirtam | Sklöd      | 2007-07-13 16:18:47 |
+|             7 | Sungam | Dulbåd     | 2007-07-13 16:18:47 |
+|             8 | Srraf  | Encmelt    | 2007-07-13 16:18:47 |
++---------------+--------+------------+---------------------+
+8 rows in set (0.00 sec)</code></pre><p>
+      The names of the user variables <span class="emphasis"><em>must</em></span> match
+      those of the corresponding fields from the XML file, with the
+      addition of the required <code class="literal">@</code> prefix to indicate
+      that they are variables. The user variables need not be listed or
+      assigned in the same order as the corresponding fields.
+    </p><p>
+      Using a <code class="literal">ROWS IDENTIFIED BY
+      '&lt;<em class="replaceable"><code>tagname</code></em>&gt;'</code> clause, it
+      is possible to import data from the same XML file into database
+      tables with different definitions. For this example, suppose that
+      you have a file named <code class="filename">address.xml</code> which
+      contains the following XML:
+    </p><pre class="programlisting copytoclipboard language-xml"><code class="language-xml">&lt;?xml version="1.0"?&gt;
+
+&lt;list&gt;
+  &lt;person person_id="1"&gt;
+    &lt;fname&gt;Robert&lt;/fname&gt;
+    &lt;lname&gt;Jones&lt;/lname&gt;
+    &lt;address address_id="1" street="Mill Creek Road" zip="45365" city="Sidney"/&gt;
+    &lt;address address_id="2" street="Main Street" zip="28681" city="Taylorsville"/&gt;
+  &lt;/person&gt;
+
+  &lt;person person_id="2"&gt;
+    &lt;fname&gt;Mary&lt;/fname&gt;
+    &lt;lname&gt;Smith&lt;/lname&gt;
+    &lt;address address_id="3" street="River Road" zip="80239" city="Denver"/&gt;
+    &lt;!-- &lt;address address_id="4" street="North Street" zip="37920" city="Knoxville"/&gt; --&gt;
+  &lt;/person&gt;
+
+&lt;/list&gt;</code></pre><p>
+      You can again use the <code class="literal">test.person</code> table as
+      defined previously in this section, after clearing all the
+      existing records from the table and then showing its structure as
+      shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&lt; TRUNCATE person;
+Query OK, 0 rows affected (0.04 sec)
+
+mysql&lt; SHOW CREATE TABLE person\G
+*************************** 1. row ***************************
+       Table: person
+Create Table: CREATE TABLE `person` (
+  `person_id` int(11) NOT NULL,
+  `fname` varchar(40) DEFAULT NULL,
+  `lname` varchar(40) DEFAULT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`person_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1
+1 row in set (0.00 sec)</code></pre><p>
+      Now create an <code class="literal">address</code> table in the
+      <code class="literal">test</code> database using the following
+      <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE address (
+    address_id INT NOT NULL PRIMARY KEY,
+    person_id INT NULL,
+    street VARCHAR(40) NULL,
+    zip INT NULL,
+    city VARCHAR(40) NULL,
+    created TIMESTAMP
+);</code></pre><p>
+      To import the data from the XML file into the
+      <code class="literal">person</code> table, execute the following
+      <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML</code></a> statement, which specifies
+      that rows are to be specified by the
+      <code class="literal">&lt;person&gt;</code> element, as shown here;
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; LOAD XML LOCAL INFILE 'address.xml'
+    -&gt;   INTO TABLE person
+    -&gt;   ROWS IDENTIFIED BY '&lt;person&gt;';
+Query OK, 2 rows affected (0.00 sec)
+Records: 2  Deleted: 0  Skipped: 0  Warnings: 0</code></pre><p>
+      You can verify that the records were imported using a
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM person;
++-----------+--------+-------+---------------------+
+| person_id | fname  | lname | created             |
++-----------+--------+-------+---------------------+
+|         1 | Robert | Jones | 2007-07-24 17:37:06 |
+|         2 | Mary   | Smith | 2007-07-24 17:37:06 |
++-----------+--------+-------+---------------------+
+2 rows in set (0.00 sec)</code></pre><p>
+      Since the <code class="literal">&lt;address&gt;</code> elements in the XML
+      file have no corresponding columns in the
+      <code class="literal">person</code> table, they are skipped.
+    </p><p>
+      To import the data from the <code class="literal">&lt;address&gt;</code>
+      elements into the <code class="literal">address</code> table, use the
+      <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML</code></a> statement shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; LOAD XML LOCAL INFILE 'address.xml'
+    -&gt;   INTO TABLE address
+    -&gt;   ROWS IDENTIFIED BY '&lt;address&gt;';
+Query OK, 3 rows affected (0.00 sec)
+Records: 3  Deleted: 0  Skipped: 0  Warnings: 0</code></pre><p>
+      You can see that the data was imported using a
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement such as this one:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM address;
++------------+-----------+-----------------+-------+--------------+---------------------+
+| address_id | person_id | street          | zip   | city         | created             |
++------------+-----------+-----------------+-------+--------------+---------------------+
+|          1 |         1 | Mill Creek Road | 45365 | Sidney       | 2007-07-24 17:37:37 |
+|          2 |         1 | Main Street     | 28681 | Taylorsville | 2007-07-24 17:37:37 |
+|          3 |         2 | River Road      | 80239 | Denver       | 2007-07-24 17:37:37 |
++------------+-----------+-----------------+-------+--------------+---------------------+
+3 rows in set (0.00 sec)</code></pre><p>
+      The data from the <code class="literal">&lt;address&gt;</code> element that
+      is enclosed in XML comments is not imported. However, since there
+      is a <code class="literal">person_id</code> column in the
+      <code class="literal">address</code> table, the value of the
+      <code class="literal">person_id</code> attribute from the parent
+      <code class="literal">&lt;person&gt;</code> element for each
+      <code class="literal">&lt;address&gt;</code> <span class="emphasis"><em>is</em></span>
+      imported into the <code class="literal">address</code> table.
+    </p><p><b>Security Considerations.&nbsp;</b>
+        As with the <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> statement,
+        the transfer of the XML file from the client host to the server
+        host is initiated by the MySQL server. In theory, a patched
+        server could be built that would tell the client program to
+        transfer a file of the server's choosing rather than the file
+        named by the client in the <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD
+        XML</code></a> statement. Such a server could access any file on
+        the client host to which the client user has read access.
+      </p><p>
+      In a Web environment, clients usually connect to MySQL from a Web
+      server. A user that can run any command against the MySQL server
+      can use <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML
+      LOCAL</code></a> to read any files to which the Web server process
+      has read access. In this environment, the client with respect to
+      the MySQL server is actually the Web server, not the remote
+      program being run by the user who connects to the Web server.
+    </p><p>
+      You can disable loading of XML files from clients by starting the
+      server with <a class="link" href="server-system-variables.html#sysvar_local_infile"><code class="literal">--local-infile=0</code></a> or
+      <a class="link" href="server-system-variables.html#sysvar_local_infile"><code class="literal">--local-infile=OFF</code></a>. This option
+      can also be used when starting the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> client
+      to disable <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML</code></a> for the
+      duration of the client session.
+    </p><p>
+      To prevent a client from loading XML files from the server, do not
+      grant the <a class="link" href="privileges-provided.html#priv_file"><code class="literal">FILE</code></a> privilege to the
+      corresponding MySQL user account, or revoke this privilege if the
+      client user account already has it.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+        Revoking the <a class="link" href="privileges-provided.html#priv_file"><code class="literal">FILE</code></a> privilege (or
+        not granting it in the first place) keeps the user only from
+        executing the <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML</code></a> statement
+        (as well as the <a class="link" href="string-functions.html#function_load-file"><code class="literal">LOAD_FILE()</code></a>
+        function; it does <span class="emphasis"><em>not</em></span> prevent the user from
+        executing <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML
+        LOCAL</code></a>. To disallow this statement, you must start the
+        server or the client with <code class="option">--local-infile=OFF</code>.
+      </p><p>
+        In other words, the <a class="link" href="privileges-provided.html#priv_file"><code class="literal">FILE</code></a>
+        privilege affects only whether the client can read files on the
+        server; it has no bearing on whether the client can read files
+        on the local file system.
+</p>
+</div>
+<p>
+      For partitioned tables using storage engines that employ table
+      locks, such as <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a>, any locks
+      caused by <a class="link" href="load-xml.html" title="13.2.7&nbsp;LOAD XML Statement"><code class="literal">LOAD XML</code></a> perform locks on
+      all partitions of the table. This does not apply to tables using
+      storage engines which employ row-level locking, such as
+      <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a>. For more information, see
+      <a class="xref" href="partitioning-limitations-locking.html" title="22.6.4&nbsp;Partitioning and Locking">Section&nbsp;22.6.4, “Partitioning and Locking”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

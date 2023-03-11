@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Restrictions on Subqueries</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="subquery-restrictions"></a>13.2.10.12&nbsp;Restrictions on Subqueries</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577522048"></a><a class="indexterm" name="idm45852577520592"></a>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            In general, you cannot modify a table and select from the
+            same table in a subquery. For example, this limitation
+            applies to statements of the following forms:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELETE FROM t WHERE ... (SELECT ... FROM t ...);
+UPDATE t ... WHERE col = (SELECT ... FROM t ...);
+{INSERT|REPLACE} INTO t (SELECT ... FROM t ...);</code></pre><p>
+            Exception: The preceding prohibition does not apply if for
+            the modified table you are using a derived table and that
+            derived table is materialized rather than merged into the
+            outer query. (See
+            <a class="xref" href="derived-table-optimization.html" title="8.2.2.4&nbsp;Optimizing Derived Tables and View References with Merging or Materialization">Section&nbsp;8.2.2.4, “Optimizing Derived Tables and View References with Merging or
+          Materialization”</a>.) Example:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">UPDATE t ... WHERE col = (SELECT * FROM (SELECT ... FROM t...) AS dt ...);</code></pre><p>
+            Here the result from the derived table is materialized as a
+            temporary table, so the relevant rows in
+            <code class="literal">t</code> have already been selected by the time
+            the update to <code class="literal">t</code> takes place.
+          </p></li><li class="listitem"><p>
+            Row comparison operations are only partially supported:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                For <code class="literal"><em class="replaceable"><code>expr</code></em> [NOT] IN
+                <em class="replaceable"><code>subquery</code></em></code>,
+                <em class="replaceable"><code>expr</code></em> can be an
+                <em class="replaceable"><code>n</code></em>-tuple (specified using row
+                constructor syntax) and the subquery can return rows of
+                <em class="replaceable"><code>n</code></em>-tuples. The permitted
+                syntax is therefore more specifically expressed as
+                <code class="literal"><em class="replaceable"><code>row_constructor</code></em>
+                [NOT] IN
+                <em class="replaceable"><code>table_subquery</code></em></code>
+              </p></li><li class="listitem"><p>
+                For <code class="literal"><em class="replaceable"><code>expr</code></em>
+                <em class="replaceable"><code>op</code></em> {ALL|ANY|SOME}
+                <em class="replaceable"><code>subquery</code></em></code>,
+                <em class="replaceable"><code>expr</code></em> must be a scalar value
+                and the subquery must be a column subquery; it cannot
+                return multiple-column rows.
+</p></li></ul>
+</div>
+<p>
+            In other words, for a subquery that returns rows of
+            <em class="replaceable"><code>n</code></em>-tuples, this is supported:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">(<em class="replaceable">expr_1</em>, ..., <em class="replaceable">expr_n</em>) [NOT] IN <em class="replaceable">table_subquery</em></code></pre><p>
+            But this is not supported:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">(<em class="replaceable">expr_1</em>, ..., <em class="replaceable">expr_n</em>) <em class="replaceable">op</em> {ALL|ANY|SOME} <em class="replaceable">subquery</em></code></pre><p>
+            The reason for supporting row comparisons for
+            <code class="literal">IN</code> but not for the others is that
+            <code class="literal">IN</code> is implemented by rewriting it as a
+            sequence of <a class="link" href="comparison-operators.html#operator_equal"><code class="literal">=</code></a>
+            comparisons and <a class="link" href="logical-operators.html#operator_and"><code class="literal">AND</code></a> operations.
+            This approach cannot be used for <code class="literal">ALL</code>,
+            <code class="literal">ANY</code>, or <code class="literal">SOME</code>.
+          </p></li><li class="listitem"><p>
+            Subqueries in the <code class="literal">FROM</code> clause cannot be
+            correlated subqueries. They are materialized in whole
+            (evaluated to produce a result set) during query execution,
+            so they cannot be evaluated per row of the outer query. The
+            optimizer delays materialization until the result is needed,
+            which may permit materialization to be avoided. See
+            <a class="xref" href="derived-table-optimization.html" title="8.2.2.4&nbsp;Optimizing Derived Tables and View References with Merging or Materialization">Section&nbsp;8.2.2.4, “Optimizing Derived Tables and View References with Merging or
+          Materialization”</a>.
+          </p></li><li class="listitem"><p>
+            MySQL does not support <code class="literal">LIMIT</code> in
+            subqueries for certain subquery operators:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM t1
+       WHERE s1 IN (SELECT s2 FROM t2 ORDER BY s1 LIMIT 1);
+ERROR 1235 (42000): This version of MySQL doesn't yet support
+ 'LIMIT &amp; IN/ALL/ANY/SOME subquery'</code></pre></li><li class="listitem"><p>
+            MySQL permits a subquery to refer to a stored function that
+            has data-modifying side effects such as inserting rows into
+            a table. For example, if <code class="literal">f()</code> inserts
+            rows, the following query can modify data:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT ... WHERE x IN (SELECT f() ...);</code></pre><p>
+            This behavior is an extension to the SQL standard. In MySQL,
+            it can produce nondeterministic results because
+            <code class="literal">f()</code> might be executed a different number
+            of times for different executions of a given query depending
+            on how the optimizer chooses to handle it.
+          </p><p>
+            For statement-based or mixed-format replication, one
+            implication of this indeterminism is that such a query can
+            produce different results on the source and its replicas.
+</p></li></ul>
+</div>
+
+</div>
+
+<br>
+        
+</body>
+</html>

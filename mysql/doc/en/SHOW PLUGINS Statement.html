@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW PLUGINS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-plugins"></a>13.7.5.25&nbsp;SHOW PLUGINS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570533520"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW PLUGINS</code></pre><p>
+        <a class="link" href="show-plugins.html" title="13.7.5.25&nbsp;SHOW PLUGINS Statement"><code class="literal">SHOW PLUGINS</code></a> displays information
+        about server plugins.
+      </p><p>
+        Example of <a class="link" href="show-plugins.html" title="13.7.5.25&nbsp;SHOW PLUGINS Statement"><code class="literal">SHOW PLUGINS</code></a> output:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW PLUGINS\G
+*************************** 1. row ***************************
+   Name: binlog
+ Status: ACTIVE
+   Type: STORAGE ENGINE
+Library: NULL
+License: GPL
+*************************** 2. row ***************************
+   Name: CSV
+ Status: ACTIVE
+   Type: STORAGE ENGINE
+Library: NULL
+License: GPL
+*************************** 3. row ***************************
+   Name: MEMORY
+ Status: ACTIVE
+   Type: STORAGE ENGINE
+Library: NULL
+License: GPL
+*************************** 4. row ***************************
+   Name: MyISAM
+ Status: ACTIVE
+   Type: STORAGE ENGINE
+Library: NULL
+License: GPL
+...</code></pre><p>
+        <a class="link" href="show-plugins.html" title="13.7.5.25&nbsp;SHOW PLUGINS Statement"><code class="literal">SHOW PLUGINS</code></a> output has these
+        columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Name</code>
+          </p><p>
+            The name used to refer to the plugin in statements such as
+            <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a> and
+            <a class="link" href="uninstall-plugin.html" title="13.7.3.4&nbsp;UNINSTALL PLUGIN Statement"><code class="literal">UNINSTALL PLUGIN</code></a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Status</code>
+          </p><p>
+            The plugin status, one of <code class="literal">ACTIVE</code>,
+            <code class="literal">INACTIVE</code>, <code class="literal">DISABLED</code>, or
+            <code class="literal">DELETED</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Type</code>
+          </p><p>
+            The type of plugin, such as <code class="literal">STORAGE
+            ENGINE</code>, <code class="literal">INFORMATION_SCHEMA</code>, or
+            <code class="literal">AUTHENTICATION</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Library</code>
+          </p><p>
+            The name of the plugin shared library file. This is the name
+            used to refer to the plugin file in statements such as
+            <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a> and
+            <a class="link" href="uninstall-plugin.html" title="13.7.3.4&nbsp;UNINSTALL PLUGIN Statement"><code class="literal">UNINSTALL PLUGIN</code></a>. This file
+            is located in the directory named by the
+            <a class="link" href="server-system-variables.html#sysvar_plugin_dir"><code class="literal">plugin_dir</code></a> system variable.
+            If the library name is <code class="literal">NULL</code>, the plugin
+            is compiled in and cannot be uninstalled with
+            <a class="link" href="uninstall-plugin.html" title="13.7.3.4&nbsp;UNINSTALL PLUGIN Statement"><code class="literal">UNINSTALL PLUGIN</code></a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">License</code>
+          </p><p>
+            How the plugin is licensed (for example,
+            <code class="literal">GPL</code>).
+</p></li></ul>
+</div>
+<p>
+        For plugins installed with <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL
+        PLUGIN</code></a>, the <code class="literal">Name</code> and
+        <code class="literal">Library</code> values are also registered in the
+        <code class="literal">mysql.plugin</code> system table.
+      </p><p>
+        For information about plugin data structures that form the basis
+        of the information displayed by <a class="link" href="show-plugins.html" title="13.7.5.25&nbsp;SHOW PLUGINS Statement"><code class="literal">SHOW
+        PLUGINS</code></a>, see <a class="ulink" href="https://dev.mysql.com/doc/extending-mysql/5.7/en/plugin-api.html" target="_top">The MySQL Plugin API</a>.
+      </p><p>
+        Plugin information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <code class="literal">.PLUGINS</code> table. See
+        <a class="xref" href="information-schema-plugins-table.html" title="24.3.17&nbsp;The INFORMATION_SCHEMA PLUGINS Table">Section&nbsp;24.3.17, “The INFORMATION_SCHEMA PLUGINS Table”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

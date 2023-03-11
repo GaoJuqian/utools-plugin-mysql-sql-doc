@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Setting NDB Comment Options</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="create-table-ndb-comment-options"></a>13.1.18.9&nbsp;Setting NDB Comment Options</h4>
+
+</div>
+
+</div>
+
+</div>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="create-table-ndb-comment-options.html#create-table-ndb-comment-column-options" title="NDB_COLUMN Options">NDB_COLUMN Options</a></p></li><li class="listitem"><p><a class="xref" href="create-table-ndb-comment-options.html#create-table-ndb-comment-table-options" title="NDB_TABLE Options">NDB_TABLE Options</a></p></li></ul>
+</div>
+<p>
+        <a class="indexterm" name="idm45852581561632"></a>
+
+        <a class="indexterm" name="idm45852581560560"></a>
+
+        <a class="indexterm" name="idm45852581559520"></a>
+
+        It is possible to set a number of options specific to NDB
+        Cluster in the table comment or column comments of an
+        <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> table. Table-level options for
+        controlling read from any replica and partition balance can be
+        embedded in a table comment using <code class="literal">NDB_TABLE</code>.
+      </p><p>
+        <code class="literal">NDB_COLUMN</code> can be used in a column comment to
+        set the size of the blob parts table column used for storing
+        parts of blob values by <code class="literal">NDB</code> to its maximum.
+        This works for <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>,
+        <code class="literal">MEDIUMBLOB</code>, <code class="literal">LONGBLOB</code>,
+        <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a>,
+        <code class="literal">MEDIUMTEXT</code>, <code class="literal">LONGTEXT</code>, and
+        <a class="link" href="json.html" title="11.5&nbsp;The JSON Data Type"><code class="literal">JSON</code></a> columns.
+      </p><p>
+        <code class="literal">NDB_TABLE</code> can be used in a table comment to
+        set options relating to partition balance and whether the table
+        is fully replicated, among others.
+      </p><p>
+        The remainder of this section describes these options and their
+        use.
+</p>
+<h5><a name="create-table-ndb-comment-column-options"></a>NDB_COLUMN Options</h5>
+<p>
+        <a class="indexterm" name="idm45852581544432"></a>
+
+        <a class="indexterm" name="idm45852581543360"></a>
+
+        <a class="indexterm" name="idm45852581541872"></a>
+
+        In NDB Cluster, a column comment in a <code class="literal">CREATE
+        TABLE</code> or <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+        statement can also be used to specify an
+        <code class="literal">NDB_COLUMN</code> option. NDB 7.5 and 7.6 support a
+        single column comment option
+        <code class="literal">MAX_BLOB_PART_SIZE</code>; syntax for this option is
+        shown here:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">COMMENT 'NDB_COLUMN=MAX_BLOB_PART_SIZE[={0|1}]'</code></pre><p>
+        The <code class="literal">=</code> sign and the value following it are
+        optional. Using any value other than 0 or 1 results in a syntax
+        error.
+      </p><p>
+        The effect of using <code class="literal">MAX_BLOB_PART_SIZE</code> in a
+        column comment is to set the blob part size of a
+        <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> or
+        <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> column to the maximum number
+        of bytes supported for this by <code class="literal">NDB</code> (13948).
+        This option can be applied to any blob column type supported by
+        MySQL except <code class="literal">TINYBLOB</code> or
+        <code class="literal">TINYTEXT</code> (<code class="literal">BLOB</code>,
+        <code class="literal">MEDIUMBLOB</code>, <code class="literal">LONGBLOB</code>,
+        <code class="literal">TEXT</code>, <code class="literal">MEDIUMTEXT</code>,
+        <code class="literal">LONGTEXT</code>).
+        <code class="literal">MAX_BLOB_PART_SIZE</code> has no effect on
+        <code class="literal">JSON</code> columns.
+      </p><p>
+        You should also keep in mind, especially when working with
+        <code class="literal">TEXT</code> columns, that the value set by
+        <code class="literal">MAX_BLOB_PART_SIZE</code> represents column size in
+        bytes. It does not indicate the number of characters, which
+        varies according to the character set and collation used by the
+        column.
+      </p><p>
+        To see the effects of this option, we first run the following
+        SQL statement in the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> client to create a
+        table with two <code class="literal">BLOB</code> columns, one
+        (<code class="literal">c1</code>) with no extra options, and another
+        (<code class="literal">c2</code>) with
+        <code class="literal">MAX_BLOB_PART_SIZE</code>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLE test.t (
+    -&gt;   p INT PRIMARY KEY, 
+    -&gt;   c1 BLOB, 
+    -&gt;   c2 BLOB COMMENT 'NDB_COLUMN=MAX_BLOB_PART_SIZE'
+    -&gt; ) ENGINE NDB;
+Query OK, 0 rows affected (0.32 sec)</code></pre><p>
+        From the system shell, run the <a class="link" href="mysql-cluster-programs-ndb-desc.html" title="21.5.10&nbsp;ndb_desc — Describe NDB Tables"><span class="command"><strong>ndb_desc</strong></span></a>
+        utility to obtain information about the table just created, as
+        shown in this example:
+      </p><pre class="programlisting copytoclipboard language-terminal"><code class="language-terminal">$&gt; ndb_desc -d test t
+-- t --
+Version: 1
+Fragment type: HashMapPartition
+K Value: 6
+Min load factor: 78
+Max load factor: 80
+Temporary table: no
+Number of attributes: 3
+Number of primary keys: 1
+Length of frm data: 324
+Row Checksum: 1
+Row GCI: 1
+SingleUserMode: 0
+ForceVarPart: 1
+FragmentCount: 2
+ExtraRowGciBits: 0
+ExtraRowAuthorBits: 0
+TableStatus: Retrieved
+HashMap: DEFAULT-HASHMAP-3840-2
+-- Attributes --
+p Int PRIMARY KEY DISTRIBUTION KEY AT=FIXED ST=MEMORY
+<em>c1 Blob(256,2000,0) NULL AT=MEDIUM_VAR ST=MEMORY BV=2 BT=NDB$BLOB_22_1
+c2 Blob(256,13948,0) NULL AT=MEDIUM_VAR ST=MEMORY BV=2 BT=NDB$BLOB_22_2</em>
+-- Indexes -- 
+PRIMARY KEY(p) - UniqueHashIndex
+PRIMARY(p) - OrderedIndex</code></pre><p>
+        Column information in the output is listed under
+        <code class="literal">Attributes</code>; for columns <code class="literal">c1</code>
+        and <code class="literal">c2</code> it is displayed here in emphasized
+        text. For <code class="literal">c1</code>, the blob part size is 2000, the
+        default value; for <code class="literal">c2</code>, it is 13948, as set by
+        <code class="literal">MAX_BLOB_PART_SIZE</code>.
+      </p><p>
+        You can change the blob part size for a given blob column of an
+        <code class="literal">NDB</code> table using an <code class="literal">ALTER
+        TABLE</code> statement such as this one, and verifying the
+        changes afterwards using <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE
+        TABLE</code></a>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; ALTER TABLE test.t 
+    -&gt;    DROP COLUMN c1, 
+    -&gt;     ADD COLUMN c1 BLOB COMMENT 'NDB_COLUMN=MAX_BLOB_PART_SIZE',
+    -&gt;     CHANGE COLUMN c2 c2 BLOB AFTER c1;
+Query OK, 0 rows affected (0.47 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql&gt; SHOW CREATE TABLE test.t\G
+*************************** 1. row ***************************
+       Table: t
+Create Table: CREATE TABLE `t` (
+  `p` int(11) NOT NULL,
+  `c1` blob COMMENT 'NDB_COLUMN=MAX_BLOB_PART_SIZE',
+  `c2` blob,
+  PRIMARY KEY (`p`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+1 row in set (0.00 sec)
+
+mysql&gt; EXIT
+Bye</code></pre><p>
+        The output of <a class="link" href="mysql-cluster-programs-ndb-desc.html" title="21.5.10&nbsp;ndb_desc — Describe NDB Tables"><span class="command"><strong>ndb_desc</strong></span></a> shows that the blob
+        part sizes of the columns have been changed as expected:
+      </p><pre class="programlisting copytoclipboard language-terminal"><code class="language-terminal">$&gt; ndb_desc -d test t
+-- t --
+Version: 16777220
+Fragment type: HashMapPartition
+K Value: 6
+Min load factor: 78
+Max load factor: 80
+Temporary table: no
+Number of attributes: 3
+Number of primary keys: 1
+Length of frm data: 324
+Row Checksum: 1
+Row GCI: 1
+SingleUserMode: 0
+ForceVarPart: 1
+FragmentCount: 2
+ExtraRowGciBits: 0
+ExtraRowAuthorBits: 0
+TableStatus: Retrieved
+HashMap: DEFAULT-HASHMAP-3840-2
+-- Attributes --
+p Int PRIMARY KEY DISTRIBUTION KEY AT=FIXED ST=MEMORY
+<em>c1 Blob(256,13948,0) NULL AT=MEDIUM_VAR ST=MEMORY BV=2 BT=NDB$BLOB_26_1
+c2 Blob(256,2000,0) NULL AT=MEDIUM_VAR ST=MEMORY BV=2 BT=NDB$BLOB_26_2</em>
+-- Indexes -- 
+PRIMARY KEY(p) - UniqueHashIndex
+PRIMARY(p) - OrderedIndex
+
+NDBT_ProgramExit: 0 - OK</code></pre><p>
+        Changing a column's blob part size must be done using a
+        copying <code class="literal">ALTER TABLE</code>; this operation cannot be
+        performed online (see
+        <a class="xref" href="mysql-cluster-online-operations.html" title="21.6.12&nbsp;Online Operations with ALTER TABLE in NDB Cluster">Section&nbsp;21.6.12, “Online Operations with ALTER TABLE in NDB Cluster”</a>).
+      </p><p>
+        For more information about how <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a>
+        stores columns of blob types, see
+        <a class="xref" href="storage-requirements.html#data-types-storage-reqs-strings" title="String Type Storage Requirements">String Type Storage Requirements</a>.
+</p>
+<h5><a name="create-table-ndb-comment-table-options"></a>NDB_TABLE Options</h5>
+<p>
+        <a class="indexterm" name="idm45852581486560"></a>
+
+        <a class="indexterm" name="idm45852581485488"></a>
+
+        <a class="indexterm" name="idm45852581484000"></a>
+
+        <a class="indexterm" name="idm45852581482928"></a>
+
+        <a class="indexterm" name="idm45852581481856"></a>
+
+        In MySQL NDB Cluster 7.5 and later, the table comment in a
+        <code class="literal">CREATE TABLE</code> or <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+        TABLE</code></a> statement can also be used to specify an
+        <code class="literal">NDB_TABLE</code> option, which consists of one or
+        more name-value pairs, separated by commas if need be, following
+        the string <code class="literal">NDB_TABLE=</code>. Complete syntax for
+        names and values syntax is shown here:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">COMMENT="NDB_TABLE=<em class="replaceable">ndb_table_option</em>[,<em class="replaceable">ndb_table_option</em>[,...]]"
+
+<em class="replaceable">ndb_table_option</em>: {
+    NOLOGGING={1 | 0}
+  | READ_BACKUP={1 | 0}
+  | PARTITION_BALANCE={FOR_RP_BY_NODE | FOR_RA_BY_NODE | FOR_RP_BY_LDM
+                      | FOR_RA_BY_LDM | FOR_RA_BY_LDM_X_2
+                      | FOR_RA_BY_LDM_X_3 | FOR_RA_BY_LDM_X_4}
+  | FULLY_REPLICATED={1 | 0}
+}</code></pre><p>
+        Spaces are not permitted within the quoted string. The string is
+        case-insensitive.
+      </p><p>
+        The four <code class="literal">NDB</code> table options that can be set as
+        part of a comment in this way are described in more detail in
+        the next few paragraphs.
+      </p><p>
+        <a class="indexterm" name="idm45852581472512"></a>
+
+        <a class="indexterm" name="idm45852581471024"></a>
+
+        <code class="literal">NOLOGGING</code>: Using 1 corresponds to having
+        <a class="link" href="mysql-cluster-options-variables.html#sysvar_ndb_table_no_logging"><code class="literal">ndb_table_no_logging</code></a> enabled,
+        but has no actual effect. Provided as a placeholder, mostly for
+        completeness of <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+        statements.
+      </p><p>
+        <a class="indexterm" name="idm45852581465792"></a>
+
+        <a class="indexterm" name="idm45852581464304"></a>
+
+        <a class="indexterm" name="idm45852581462816"></a>
+
+        <code class="literal">READ_BACKUP</code>: Setting this option to 1 has the
+        same effect as though
+        <a class="link" href="mysql-cluster-options-variables.html#sysvar_ndb_read_backup"><code class="literal">ndb_read_backup</code></a> were enabled;
+        enables reading from any replica. Doing so greatly improves the
+        performance of reads from the table at a relatively small cost
+        to write performance.
+      </p><p>
+        Starting with MySQL NDB Cluster 7.5.3, you can set
+        <code class="literal">READ_BACKUP</code> for an existing table online (Bug
+        #80858, Bug #23001617), using an <code class="literal">ALTER TABLE</code>
+        statement similar to one of those shown here:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER TABLE ... ALGORITHM=INPLACE, COMMENT="NDB_TABLE=READ_BACKUP=1";
+
+ALTER TABLE ... ALGORITHM=INPLACE, COMMENT="NDB_TABLE=READ_BACKUP=0";</code></pre><p>
+        Prior to MySQL NDB Cluster 7.5.4, setting
+        <code class="literal">READ_BACKUP</code> to 1 also caused
+        <code class="literal">FRAGMENT_COUNT_TYPE</code> to be set to
+        <code class="literal">ONE_PER_LDM_PER_NODE_GROUP</code>.
+      </p><p>
+        For more information about the <code class="literal">ALGORITHM</code>
+        option for <code class="literal">ALTER TABLE</code>, see
+        <a class="xref" href="mysql-cluster-online-operations.html" title="21.6.12&nbsp;Online Operations with ALTER TABLE in NDB Cluster">Section&nbsp;21.6.12, “Online Operations with ALTER TABLE in NDB Cluster”</a>.
+      </p><p>
+        <a class="indexterm" name="idm45852581450384"></a>
+
+        <a class="indexterm" name="idm45852581448928"></a>
+
+        <a class="indexterm" name="idm45852581447424"></a>
+
+        <code class="literal">PARTITION_BALANCE</code>: Provides additional
+        control over assignment and placement of partitions. The
+        following four schemes are supported:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+            <code class="literal">FOR_RP_BY_NODE</code>: One partition per node.
+          </p><p>
+            Only one LDM on each node stores a primary partition. Each
+            partition is stored in the same LDM (same ID) on all nodes.
+          </p></li><li class="listitem"><p>
+            <code class="literal">FOR_RA_BY_NODE</code>: One partition per node
+            group.
+          </p><p>
+            Each node stores a single partition, which can be either a
+            primary replica or a backup replica. Each partition is
+            stored in the same LDM on all nodes.
+          </p></li><li class="listitem"><p>
+            <code class="literal">FOR_RP_BY_LDM</code>: One partition for each LDM
+            on each node; the default.
+          </p><p>
+            This is the same behavior as prior to MySQL NDB Cluster
+            7.5.2, except for a slightly different mapping of partitions
+            to LDMs, starting with LDM 0 and placing one partition per
+            node group, then moving on to the next LDM.
+          </p><p>
+            In MySQL NDB Cluster 7.5.4 and later, this is the setting
+            used if <code class="literal">READ_BACKUP</code> is set to 1. (Bug
+            #82634, Bug #24482114)
+          </p></li><li class="listitem"><p>
+            <code class="literal">FOR_RA_BY_LDM</code>: One partition per LDM in
+            each node group.
+          </p><p>
+            These partitions can be primary or backup partitions.
+          </p><p>
+            Prior to MySQL NDB Cluster 7.5.4, this was the setting used
+            if <code class="literal">READ_BACKUP</code> was set to 1.
+          </p></li><li class="listitem"><p>
+            <code class="literal">FOR_RA_BY_LDM_X_2</code>: Two partitions per LDM
+            in each node group.
+          </p><p>
+            These partitions can be primary or backup partitions.
+          </p><p>
+            This setting was added in NDB 7.5.4.
+          </p></li><li class="listitem"><p>
+            <code class="literal">FOR_RA_BY_LDM_X_3</code>: Three partitions per
+            LDM in each node group.
+          </p><p>
+            These partitions can be primary or backup partitions.
+          </p><p>
+            This setting was added in NDB 7.5.4.
+          </p></li><li class="listitem"><p>
+            <code class="literal">FOR_RA_BY_LDM_X_4</code>: Four partitions per
+            LDM in each node group.
+          </p><p>
+            These partitions can be primary or backup partitions.
+          </p><p>
+            This setting was added in NDB 7.5.4.
+</p></li></ol>
+</div>
+<p>
+        Beginning with NDB 7.5.4, <code class="literal">PARTITION_BALANCE</code>
+        is the preferred interface for setting the number of partitions
+        per table. Using <code class="literal">MAX_ROWS</code> to force the number
+        of partitions is deprecated as of NDB 7.5.4, continues to be
+        supported in NDB 7.6 for backward compatibility, but is subject
+        to removal in a future release of MySQL NDB Cluster. (Bug
+        #81759, Bug #23544301)
+      </p><p>
+        Prior to MySQL NDB Cluster 7.5.4,
+        <code class="literal">PARTITION_BALANCE</code> was named
+        <code class="literal">FRAGMENT_COUNT_TYPE</code>, and accepted as its
+        value one of (in the same order as that of the listing just
+        shown) <code class="literal">ONE_PER_NODE</code>,
+        <code class="literal">ONE_PER_NODE_GROUP</code>,
+        <code class="literal">ONE_PER_LDM_PER_NODE</code>, or
+        <code class="literal">ONE_PER_LDM_PER_NODE_GROUP</code>. (Bug #81761, Bug
+        #23547525)
+      </p><p>
+        <a class="indexterm" name="idm45852581418272"></a>
+
+        <a class="indexterm" name="idm45852581416768"></a>
+
+        <code class="literal">FULLY_REPLICATED</code> controls whether the table
+        is fully replicated, that is, whether each data node has a
+        complete copy of the table. To enable full replication of the
+        table, use <code class="literal">FULLY_REPLICATED=1</code>.
+      </p><p>
+        This setting can also be controlled using the
+        <code class="literal">ndb_fully_replicated</code> system variable. Setting
+        it to <code class="literal">ON</code> enables the option by default for
+        all new <code class="literal">NDB</code> tables; the default is
+        <code class="literal">OFF</code>, which maintains the previous behavior
+        (as in MySQL NDB Cluster 7.5.1 and earlier, before support for
+        fully replicated tables was introduced). The
+        <a class="link" href="mysql-cluster-options-variables.html#sysvar_ndb_data_node_neighbour"><code class="literal">ndb_data_node_neighbour</code></a> system
+        variable is also used for fully replicated tables, to ensure
+        that when a fully replicated table is accessed, we access the
+        data node which is local to this MySQL Server.
+      </p><p>
+        An example of a <code class="literal">CREATE TABLE</code> statement using
+        such a comment when creating an <code class="literal">NDB</code> table is
+        shown here:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLE t1 (
+     &gt;     c1 INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     &gt;     c2 VARCHAR(100),
+     &gt;     c3 VARCHAR(100) )
+     &gt; ENGINE=NDB
+     &gt;
+COMMENT="NDB_TABLE=READ_BACKUP=0,PARTITION_BALANCE=FOR_RP_BY_NODE";</code></pre><p>
+        The comment is displayed as part of the ouput of
+        <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE TABLE</code></a>. The text of
+        the comment is also available from querying the MySQL
+        Information Schema <a class="link" href="information-schema-tables-table.html" title="24.3.25&nbsp;The INFORMATION_SCHEMA TABLES Table"><code class="literal">TABLES</code></a> table, as
+        in this example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT TABLE_NAME, TABLE_SCHEMA, TABLE_COMMENT
+     &gt; FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME="t1"\G
+*************************** 1. row ***************************
+   TABLE_NAME: t1
+ TABLE_SCHEMA: test
+TABLE_COMMENT: NDB_TABLE=READ_BACKUP=0,PARTITION_BALANCE=FOR_RP_BY_NODE
+1 row in set (0.01 sec)</code></pre><p>
+        This comment syntax is also supported with
+        <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statements for
+        <code class="literal">NDB</code> tables, as shown here:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; ALTER TABLE t1 COMMENT="NDB_TABLE=PARTITION_BALANCE=FOR_RA_BY_NODE";
+Query OK, 0 rows affected (0.40 sec)
+Records: 0  Duplicates: 0  Warnings: 0</code></pre><p>
+        Beginning with NDB 7.6.15, the <code class="literal">TABLE_COMMENT</code>
+        column displays the comment that is required to re-create the
+        table as it is following the <code class="literal">ALTER TABLE</code>
+        statement, like this:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT TABLE_NAME, TABLE_SCHEMA, TABLE_COMMENT
+    -&gt;     FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME="t1"\G
+*************************** 1. row ***************************
+   TABLE_NAME: t1
+ TABLE_SCHEMA: test
+TABLE_COMMENT: NDB_TABLE=READ_BACKUP=0,PARTITION_BALANCE=FOR_RP_BY_NODE
+1 row in set (0.01 sec)</code></pre><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT TABLE_NAME, TABLE_SCHEMA, TABLE_COMMENT
+     &gt; FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME="t1";
++------------+--------------+--------------------------------------------------+
+| TABLE_NAME | TABLE_SCHEMA | TABLE_COMMENT                                    |
++------------+--------------+--------------------------------------------------+
+| t1         | c            | NDB_TABLE=PARTITION_BALANCE=FOR_RA_BY_NODE       |
+| t1         | d            |                                                  |
++------------+--------------+--------------------------------------------------+
+2 rows in set (0.01 sec)</code></pre><p>
+        Keep in mind that a table comment used with <code class="literal">ALTER
+        TABLE</code> replaces any existing comment which the table
+        might have.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; ALTER TABLE t1 COMMENT="NDB_TABLE=PARTITION_BALANCE=FOR_RA_BY_NODE";
+Query OK, 0 rows affected (0.40 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql&gt; SELECT TABLE_NAME, TABLE_SCHEMA, TABLE_COMMENT
+     &gt; FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME="t1";
++------------+--------------+--------------------------------------------------+
+| TABLE_NAME | TABLE_SCHEMA | TABLE_COMMENT                                    |
++------------+--------------+--------------------------------------------------+
+| t1         | c            | NDB_TABLE=PARTITION_BALANCE=FOR_RA_BY_NODE       |
+| t1         | d            |                                                  |
++------------+--------------+--------------------------------------------------+
+2 rows in set (0.01 sec)</code></pre><p>
+        Prior to NDB 7.6.15, the table comment used with <code class="literal">ALTER
+        TABLE</code> replaced any existing comment which the table
+        might have had. This meant that (for example) the
+        <code class="literal">READ_BACKUP</code> value was not carried over to the
+        new comment set by the <code class="literal">ALTER TABLE</code> statement,
+        and that any unspecified values reverted to their defaults.
+        (BUG#30428829) There was thus no longer any way using SQL to
+        retrieve the value previously set for the comment. To keep
+        comment values from reverting to their defaults, it was necessry
+        to preserve any such values from the existing comment string and
+        include them in the comment passed to <code class="literal">ALTER
+        TABLE</code>.
+      </p><p>
+        You can also see the value of the
+        <code class="literal">PARTITION_BALANCE</code> option in the output of
+        <a class="link" href="mysql-cluster-programs-ndb-desc.html" title="21.5.10&nbsp;ndb_desc — Describe NDB Tables"><span class="command"><strong>ndb_desc</strong></span></a>. <a class="link" href="mysql-cluster-programs-ndb-desc.html" title="21.5.10&nbsp;ndb_desc — Describe NDB Tables"><span class="command"><strong>ndb_desc</strong></span></a> also
+        shows whether the <code class="literal">READ_BACKUP</code> and
+        <code class="literal">FULLY_REPLICATED</code> options are set for the
+        table. See the description of this program for more information.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>INSTALL PLUGIN Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="install-plugin"></a>13.7.3.3&nbsp;INSTALL PLUGIN Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571958960"></a><a class="indexterm" name="idm45852571957872"></a><a class="indexterm" name="idm45852571956800"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">INSTALL PLUGIN <em class="replaceable">plugin_name</em> SONAME '<em class="replaceable">shared_library_name</em>'</code></pre><p>
+        This statement installs a server plugin. It requires the
+        <a class="link" href="privileges-provided.html#priv_insert"><code class="literal">INSERT</code></a> privilege for the
+        <code class="literal">mysql.plugin</code> system table because it adds a
+        row to that table to register the plugin.
+      </p><p>
+        <em class="replaceable"><code>plugin_name</code></em> is the name of the plugin
+        as defined in the plugin descriptor structure contained in the
+        library file (see <a class="ulink" href="https://dev.mysql.com/doc/extending-mysql/5.7/en/plugin-data-structures.html" target="_top">Plugin Data Structures</a>).
+        Plugin names are not case-sensitive. For maximal compatibility,
+        plugin names should be limited to ASCII letters, digits, and
+        underscore because they are used in C source files, shell
+        command lines, M4 and Bourne shell scripts, and SQL
+        environments.
+      </p><p>
+        <em class="replaceable"><code>shared_library_name</code></em> is the name of
+        the shared library that contains the plugin code. The name
+        includes the file name extension (for example,
+        <code class="filename">libmyplugin.so</code>,
+        <code class="filename">libmyplugin.dll</code>, or
+        <code class="filename">libmyplugin.dylib</code>).
+      </p><p>
+        The shared library must be located in the plugin directory (the
+        directory named by the
+        <a class="link" href="server-system-variables.html#sysvar_plugin_dir"><code class="literal">plugin_dir</code></a> system variable).
+        The library must be in the plugin directory itself, not in a
+        subdirectory. By default,
+        <a class="link" href="server-system-variables.html#sysvar_plugin_dir"><code class="literal">plugin_dir</code></a> is the
+        <code class="filename">plugin</code> directory under the directory named
+        by the <code class="literal">pkglibdir</code> configuration variable, but
+        it can be changed by setting the value of
+        <a class="link" href="server-system-variables.html#sysvar_plugin_dir"><code class="literal">plugin_dir</code></a> at server startup.
+        For example, set its value in a <code class="filename">my.cnf</code>
+        file:
+      </p><pre class="programlisting copytoclipboard language-ini"><code class="language-ini">[mysqld]
+plugin_dir=<em class="replaceable">/path/to/plugin/directory</em></code></pre><p>
+        If the value of <a class="link" href="server-system-variables.html#sysvar_plugin_dir"><code class="literal">plugin_dir</code></a> is a
+        relative path name, it is taken to be relative to the MySQL base
+        directory (the value of the
+        <a class="link" href="server-system-variables.html#sysvar_basedir"><code class="literal">basedir</code></a> system variable).
+      </p><p>
+        <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a> loads and
+        initializes the plugin code to make the plugin available for
+        use. A plugin is initialized by executing its initialization
+        function, which handles any setup that the plugin must perform
+        before it can be used. When the server shuts down, it executes
+        the deinitialization function for each plugin that is loaded so
+        that the plugin has a chance to perform any final cleanup.
+      </p><p>
+        <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a> also registers the
+        plugin by adding a line that indicates the plugin name and
+        library file name to the <code class="literal">mysql.plugin</code> system
+        table. During the normal startup sequence, the server loads and
+        initializes plugins registered in
+        <code class="literal">mysql.plugin</code>. This means that a plugin is
+        installed with <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a>
+        only once, not every time the server starts. If the server is
+        started with the
+        <a class="link" href="server-options.html#option_mysqld_skip-grant-tables"><code class="option">--skip-grant-tables</code></a> option,
+        plugins registered in the <code class="literal">mysql.plugin</code> table
+        are not loaded and are unavailable.
+      </p><p>
+        A plugin library can contain multiple plugins. For each of them
+        to be installed, use a separate <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL
+        PLUGIN</code></a> statement. Each statement names a different
+        plugin, but all of them specify the same library name.
+      </p><p>
+        <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a> causes the server
+        to read option (<code class="filename">my.cnf</code>) files just as
+        during server startup. This enables the plugin to pick up any
+        relevant options from those files. It is possible to add plugin
+        options to an option file even before loading a plugin (if the
+        <code class="literal">loose</code> prefix is used). It is also possible to
+        uninstall a plugin, edit <code class="filename">my.cnf</code>, and
+        install the plugin again. Restarting the plugin this way enables
+        it to the new option values without a server restart.
+      </p><p>
+        For options that control individual plugin loading at server
+        startup, see <a class="xref" href="plugin-loading.html" title="5.5.1&nbsp;Installing and Uninstalling Plugins">Section&nbsp;5.5.1, “Installing and Uninstalling Plugins”</a>. If you need to
+        load plugins for a single server startup when the
+        <a class="link" href="server-options.html#option_mysqld_skip-grant-tables"><code class="option">--skip-grant-tables</code></a> option is
+        given (which tells the server not to read system tables), use
+        the <a class="link" href="server-options.html#option_mysqld_plugin-load"><code class="option">--plugin-load</code></a> option. See
+        <a class="xref" href="server-options.html" title="5.1.6&nbsp;Server Command Options">Section&nbsp;5.1.6, “Server Command Options”</a>.
+      </p><p>
+        To remove a plugin, use the <a class="link" href="uninstall-plugin.html" title="13.7.3.4&nbsp;UNINSTALL PLUGIN Statement"><code class="literal">UNINSTALL
+        PLUGIN</code></a> statement.
+      </p><p>
+        For additional information about plugin loading, see
+        <a class="xref" href="plugin-loading.html" title="5.5.1&nbsp;Installing and Uninstalling Plugins">Section&nbsp;5.5.1, “Installing and Uninstalling Plugins”</a>.
+      </p><p>
+        To see what plugins are installed, use the
+        <a class="link" href="show-plugins.html" title="13.7.5.25&nbsp;SHOW PLUGINS Statement"><code class="literal">SHOW PLUGINS</code></a> statement or query
+        the <code class="literal">INFORMATION_SCHEMA</code> the
+        <a class="link" href="information-schema-plugins-table.html" title="24.3.17&nbsp;The INFORMATION_SCHEMA PLUGINS Table"><code class="literal">PLUGINS</code></a> table.
+      </p><p>
+        If you recompile a plugin library and need to reinstall it, you
+        can use either of the following methods:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Use <a class="link" href="uninstall-plugin.html" title="13.7.3.4&nbsp;UNINSTALL PLUGIN Statement"><code class="literal">UNINSTALL PLUGIN</code></a> to
+            uninstall all plugins in the library, install the new plugin
+            library file in the plugin directory, and then use
+            <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a> to install all
+            plugins in the library. This procedure has the advantage
+            that it can be used without stopping the server. However, if
+            the plugin library contains many plugins, you must issue
+            many <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a> and
+            <a class="link" href="uninstall-plugin.html" title="13.7.3.4&nbsp;UNINSTALL PLUGIN Statement"><code class="literal">UNINSTALL PLUGIN</code></a> statements.
+          </p></li><li class="listitem"><p>
+            Stop the server, install the new plugin library file in the
+            plugin directory, and restart the server.
+</p></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

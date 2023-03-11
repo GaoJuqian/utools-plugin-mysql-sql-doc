@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHUTDOWN Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="shutdown"></a>13.7.6.7&nbsp;SHUTDOWN Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852568890752"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHUTDOWN</code></pre><p>
+        This statement stops the MySQL server. It requires the
+        <a class="link" href="privileges-provided.html#priv_shutdown"><code class="literal">SHUTDOWN</code></a> privilege.
+      </p><p>
+        <a class="link" href="shutdown.html" title="13.7.6.7&nbsp;SHUTDOWN Statement"><code class="literal">SHUTDOWN</code></a> provides an SQL-level
+        interface to the same functionality available using the
+        <a class="link" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program"><span class="command"><strong>mysqladmin shutdown</strong></span></a> command or the
+        <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-shutdown.html" target="_top"><code class="literal">mysql_shutdown()</code></a> C API function.
+        A successful <a class="link" href="shutdown.html" title="13.7.6.7&nbsp;SHUTDOWN Statement"><code class="literal">SHUTDOWN</code></a> sequence
+        consists of checking the privileges, validating the arguments,
+        and sending an OK packet to the client. Then the server is shut
+        down.
+      </p><p>
+        The
+        <a class="link" href="server-status-variables.html#statvar_Com_xxx"><code class="literal">Com_shutdown</code></a>
+        status variable tracks the number of
+        <a class="link" href="shutdown.html" title="13.7.6.7&nbsp;SHUTDOWN Statement"><code class="literal">SHUTDOWN</code></a> statements. Because
+        status variables are initialized for each server startup and do
+        not persist across restarts, <code class="literal">Com_shutdown</code>
+        normally has a value of zero, but can be nonzero if
+        <a class="link" href="shutdown.html" title="13.7.6.7&nbsp;SHUTDOWN Statement"><code class="literal">SHUTDOWN</code></a> statements were executed
+        but failed.
+      </p><a class="indexterm" name="idm45852568873376"></a><p>
+        Another way to stop the server is to send it a
+        <code class="literal">SIGTERM</code> signal, which can be done by
+        <code class="literal">root</code> or the account that owns the server
+        process. <code class="literal">SIGTERM</code> enables server shutdown to
+        be performed without having to connect to the server. See
+        <a class="xref" href="unix-signal-response.html" title="4.10&nbsp;Unix Signal Handling in MySQL">Section&nbsp;4.10, “Unix Signal Handling in MySQL”</a>.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

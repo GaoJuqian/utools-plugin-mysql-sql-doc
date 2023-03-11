@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Variables in Stored Programs</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="stored-program-variables"></a>13.6.4&nbsp;Variables in Stored Programs</h3>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="declare-local-variable.html">13.6.4.1 Local Variable DECLARE Statement</a></span></dt><dt><span class="section"><a href="local-variable-scope.html">13.6.4.2 Local Variable Scope and Resolution</a></span></dt></dl>
+</div>
+<p>
+      System variables and user-defined variables can be used in stored
+      programs, just as they can be used outside stored-program context.
+      In addition, stored programs can use <code class="literal">DECLARE</code> to
+      define local variables, and stored routines (procedures and
+      functions) can be declared to take parameters that communicate
+      values between the routine and its caller.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          To declare local variables, use the
+          <a class="link" href="declare-local-variable.html" title="13.6.4.1&nbsp;Local Variable DECLARE Statement"><code class="literal">DECLARE</code></a>
+          statement, as described in
+          <a class="xref" href="declare-local-variable.html" title="13.6.4.1&nbsp;Local Variable DECLARE Statement">Section&nbsp;13.6.4.1, “Local Variable DECLARE Statement”</a>.
+        </p></li><li class="listitem"><p>
+          Variables can be set directly with the
+          <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+          statement. See <a class="xref" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment">Section&nbsp;13.7.4.1, “SET Syntax for Variable Assignment”</a>.
+        </p></li><li class="listitem"><p>
+          Results from queries can be retrieved into local variables
+          using <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ...
+          INTO <em class="replaceable"><code>var_list</code></em></code></a> or by
+          opening a cursor and using
+          <a class="link" href="fetch.html" title="13.6.6.3&nbsp;Cursor FETCH Statement"><code class="literal">FETCH ... INTO
+          <em class="replaceable"><code>var_list</code></em></code></a>. See
+          <a class="xref" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement">Section&nbsp;13.2.9.1, “SELECT ... INTO Statement”</a>, and <a class="xref" href="cursors.html" title="13.6.6&nbsp;Cursors">Section&nbsp;13.6.6, “Cursors”</a>.
+</p></li></ul>
+</div>
+<p>
+      For information about the scope of local variables and how MySQL
+      resolves ambiguous names, see
+      <a class="xref" href="local-variable-scope.html" title="13.6.4.2&nbsp;Local Variable Scope and Resolution">Section&nbsp;13.6.4.2, “Local Variable Scope and Resolution”</a>.
+    </p><p>
+      It is not permitted to assign the value <code class="literal">DEFAULT</code>
+      to stored procedure or function parameters or stored program local
+      variables (for example with a <code class="literal">SET
+      <em class="replaceable"><code>var_name</code></em> = DEFAULT</code>
+      statement). In MySQL 5.7, this results in a syntax
+      error.
+</p>
+</div><br>
+        
+</body>
+</html>

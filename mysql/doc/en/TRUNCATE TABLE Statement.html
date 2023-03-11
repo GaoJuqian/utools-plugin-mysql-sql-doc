@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>TRUNCATE TABLE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="truncate-table"></a>13.1.34&nbsp;TRUNCATE TABLE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580438896"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">TRUNCATE [TABLE] <em class="replaceable">tbl_name</em></code></pre><p>
+      <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> empties a table
+      completely. It requires the <a class="link" href="privileges-provided.html#priv_drop"><code class="literal">DROP</code></a>
+      privilege.
+    </p><p>
+      Logically, <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> is
+      similar to a <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> statement that
+      deletes all rows, or a sequence of <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP
+      TABLE</code></a> and <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>
+      statements. To achieve high performance, it bypasses the DML
+      method of deleting data. Thus, it cannot be rolled back, it does
+      not cause <code class="literal">ON DELETE</code> triggers to fire, and it
+      cannot be performed for <code class="literal">InnoDB</code> tables with
+      parent-child foreign key relationships.
+    </p><p>
+      Although <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> is similar
+      to <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>, it is classified as a
+      DDL statement rather than a DML statement. It differs from
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> in the following ways:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Truncate operations drop and re-create the table, which is
+          much faster than deleting rows one by one, particularly for
+          large tables.
+        </p></li><li class="listitem"><p>
+          Truncate operations cause an implicit commit, and so cannot be
+          rolled back. See <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+        </p></li><li class="listitem"><p>
+          Truncation operations cannot be performed if the session holds
+          an active table lock.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> fails for an
+          <code class="literal">InnoDB</code> table or
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> table if there are any
+          <code class="literal">FOREIGN KEY</code> constraints from other tables
+          that reference the table. Foreign key constraints between
+          columns of the same table are permitted.
+        </p></li><li class="listitem"><p>
+          Truncation operations do not return a meaningful value for the
+          number of deleted rows. The usual result is <span class="quote">“<span class="quote">0 rows
+          affected,</span>”</span> which should be interpreted as <span class="quote">“<span class="quote">no
+          information.</span>”</span>
+        </p></li><li class="listitem"><p>
+          As long as the table format file
+          <code class="filename"><em class="replaceable"><code>tbl_name</code></em>.frm</code>
+          is valid, the table can be re-created as an empty table with
+          <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a>, even if the
+          data or index files have become corrupted.
+        </p></li><li class="listitem"><p>
+          Any <code class="literal">AUTO_INCREMENT</code> value is reset to its
+          start value. This is true even for <code class="literal">MyISAM</code>
+          and <code class="literal">InnoDB</code>, which normally do not reuse
+          sequence values.
+        </p></li><li class="listitem"><p>
+          When used with partitioned tables,
+          <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> preserves the
+          partitioning; that is, the data and index files are dropped
+          and re-created, while the partition definitions
+          (<code class="filename">.par</code>) file is unaffected.
+        </p></li><li class="listitem"><p>
+          The <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> statement
+          does not invoke <code class="literal">ON DELETE</code> triggers.
+</p></li></ul>
+</div>
+<p>
+      <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> is treated for
+      purposes of binary logging and replication as DDL rather than DML,
+      and is always logged as a statement.
+    </p><p>
+      <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> for a table closes
+      all handlers for the table that were opened with
+      <a class="link" href="handler.html" title="13.2.4&nbsp;HANDLER Statement"><code class="literal">HANDLER OPEN</code></a>.
+    </p><p>
+      On a system with a large <code class="literal">InnoDB</code> buffer pool and
+      <a class="link" href="innodb-parameters.html#sysvar_innodb_adaptive_hash_index"><code class="literal">innodb_adaptive_hash_index</code></a>
+      enabled, <code class="literal">TRUNCATE TABLE</code> operations may cause a
+      temporary drop in system performance due to an LRU scan that
+      occurs when removing an <code class="literal">InnoDB</code> table's adaptive
+      hash index entries. The problem was addressed for
+      <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> in MySQL 5.5.23 (Bug
+      #13704145, Bug #64284) but remains a known issue for
+      <code class="literal">TRUNCATE TABLE</code> (Bug #68184).
+    </p><p>
+      <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> can be used with
+      Performance Schema summary tables, but the effect is to reset the
+      summary columns to 0 or <code class="literal">NULL</code>, not to remove
+      rows. See <a class="xref" href="performance-schema-summary-tables.html" title="25.12.15&nbsp;Performance Schema Summary Tables">Section&nbsp;25.12.15, “Performance Schema Summary Tables”</a>.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

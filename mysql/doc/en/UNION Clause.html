@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>UNION Clause</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="union"></a>13.2.9.3&nbsp;UNION Clause</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852578072400"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT ...
+UNION [ALL | DISTINCT] SELECT ...
+[UNION [ALL | DISTINCT] SELECT ...]</code></pre><p>
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> combines the result from
+        multiple <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements into a
+        single result set. Example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT 1, 2;
++---+---+
+| 1 | 2 |
++---+---+
+| 1 | 2 |
++---+---+
+mysql&gt; SELECT 'a', 'b';
++---+---+
+| a | b |
++---+---+
+| a | b |
++---+---+
+mysql&gt; SELECT 1, 2 UNION SELECT 'a', 'b';
++---+---+
+| 1 | 2 |
++---+---+
+| 1 | 2 |
+| a | b |
++---+---+</code></pre>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="union.html#union-result-set" title="Result Set Column Names and Data Types">Result Set Column Names and Data Types</a></p></li><li class="listitem"><p><a class="xref" href="union.html#union-distinct-all" title="UNION DISTINCT and UNION ALL">UNION DISTINCT and UNION ALL</a></p></li><li class="listitem"><p><a class="xref" href="union.html#union-order-by-limit" title="ORDER BY and LIMIT in Unions">ORDER BY and LIMIT in Unions</a></p></li><li class="listitem"><p><a class="xref" href="union.html#union-restrictions" title="UNION Restrictions">UNION Restrictions</a></p></li></ul>
+</div>
+<h5><a name="union-result-set"></a>Result Set Column Names and Data Types</h5>
+<p>
+        The column names for a <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a>
+        result set are taken from the column names of the first
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement.
+      </p><p>
+        Selected columns listed in corresponding positions of each
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement should have the
+        same data type. For example, the first column selected by the
+        first statement should have the same type as the first column
+        selected by the other statements. If the data types of
+        corresponding <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> columns do
+        not match, the types and lengths of the columns in the
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> result take into account
+        the values retrieved by all the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements. For example,
+        consider the following, where the column length is not
+        constrained to the length of the value from the first
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT REPEAT('a',1) UNION SELECT REPEAT('b',20);
++----------------------+
+| REPEAT('a',1)        |
++----------------------+
+| a                    |
+| bbbbbbbbbbbbbbbbbbbb |
++----------------------+</code></pre>
+<h5><a name="union-distinct-all"></a>UNION DISTINCT and UNION ALL</h5>
+<p>
+        By default, duplicate rows are removed from
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> results. The optional
+        <code class="literal">DISTINCT</code> keyword has the same effect but
+        makes it explicit. With the optional <code class="literal">ALL</code>
+        keyword, duplicate-row removal does not occur and the result
+        includes all matching rows from all the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements.
+      </p><p>
+        You can mix <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION
+        ALL</code></a> and <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION
+        DISTINCT</code></a> in the same query. Mixed
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> types are treated such that
+        a <code class="literal">DISTINCT</code> union overrides any
+        <code class="literal">ALL</code> union to its left. A
+        <code class="literal">DISTINCT</code> union can be produced explicitly by
+        using <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION
+        DISTINCT</code></a> or implicitly by using
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> with no following
+        <code class="literal">DISTINCT</code> or <code class="literal">ALL</code> keyword.
+</p>
+<h5><a name="union-order-by-limit"></a>ORDER BY and LIMIT in Unions</h5>
+<p>
+        To apply an <code class="literal">ORDER BY</code> or
+        <code class="literal">LIMIT</code> clause to an individual
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>, parenthesize the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> and place the clause
+        inside the parentheses:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">(SELECT a FROM t1 WHERE a=10 AND B=1 ORDER BY a LIMIT 10)
+UNION
+(SELECT a FROM t2 WHERE a=11 AND B=2 ORDER BY a LIMIT 10);</code></pre>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          Previous versions of MySQL may permit such statements without
+          parentheses. In MySQL 5.7, the requirement for
+          parentheses is enforced.
+</p>
+</div>
+<p>
+        Use of <code class="literal">ORDER BY</code> for individual
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements implies nothing
+        about the order in which the rows appear in the final result
+        because <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> by default produces
+        an unordered set of rows. Therefore, <code class="literal">ORDER BY</code>
+        in this context typically is used in conjunction with
+        <code class="literal">LIMIT</code>, to determine the subset of the
+        selected rows to retrieve for the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>, even though it does not
+        necessarily affect the order of those rows in the final
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> result. If <code class="literal">ORDER
+        BY</code> appears without <code class="literal">LIMIT</code> in a
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>, it is optimized away
+        because it has no effect.
+      </p><p>
+        To use an <code class="literal">ORDER BY</code> or
+        <code class="literal">LIMIT</code> clause to sort or limit the entire
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> result, parenthesize the
+        individual <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements and
+        place the <code class="literal">ORDER BY</code> or
+        <code class="literal">LIMIT</code> after the last one:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">(SELECT a FROM t1 WHERE a=10 AND B=1)
+UNION
+(SELECT a FROM t2 WHERE a=11 AND B=2)
+ORDER BY a LIMIT 10;</code></pre><p>
+        A statement without parentheses is equivalent to one
+        parenthesized as just shown.
+      </p><p>
+        This kind of <code class="literal">ORDER BY</code> cannot use column
+        references that include a table name (that is, names in
+        <em class="replaceable"><code>tbl_name</code></em>.<em class="replaceable"><code>col_name</code></em>
+        format). Instead, provide a column alias in the first
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement and refer to the
+        alias in the <code class="literal">ORDER BY</code>. (Alternatively, refer
+        to the column in the <code class="literal">ORDER BY</code> using its
+        column position. However, use of column positions is
+        deprecated.)
+      </p><p>
+        Also, if a column to be sorted is aliased, the <code class="literal">ORDER
+        BY</code> clause <span class="emphasis"><em>must</em></span> refer to the
+        alias, not the column name. The first of the following
+        statements is permitted, but the second fails with an
+        <code class="literal">Unknown column 'a' in 'order clause'</code> error:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">(SELECT a AS b FROM t) UNION (SELECT ...) ORDER BY b;
+(SELECT a AS b FROM t) UNION (SELECT ...) ORDER BY a;</code></pre><p>
+        To cause rows in a <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> result
+        to consist of the sets of rows retrieved by each
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> one after the other,
+        select an additional column in each
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> to use as a sort column
+        and add an <code class="literal">ORDER BY</code> that sorts on that column
+        following the last <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">(SELECT 1 AS sort_col, col1a, col1b, ... FROM t1)
+UNION
+(SELECT 2, col2a, col2b, ... FROM t2) ORDER BY sort_col;</code></pre><p>
+        To additionally maintain sort order within individual
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> results, add a secondary
+        column to the <code class="literal">ORDER BY</code> clause:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">(SELECT 1 AS sort_col, col1a, col1b, ... FROM t1)
+UNION
+(SELECT 2, col2a, col2b, ... FROM t2) ORDER BY sort_col, col1a;</code></pre><p>
+        Use of an additional column also enables you to determine which
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> each row comes from. Extra
+        columns can provide other identifying information as well, such
+        as a string that indicates a table name.
+      </p><p>
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> queries with an aggregate
+        function in an <code class="literal">ORDER BY</code> clause are rejected
+        with an
+        <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_aggregate_order_for_union" target="_top"><code class="literal">ER_AGGREGATE_ORDER_FOR_UNION</code></a>
+        error. Example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT 1 AS foo UNION SELECT 2 ORDER BY MAX(1);</code></pre>
+<h5><a name="union-restrictions"></a>UNION Restrictions</h5>
+<p>
+        In a <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a>, the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements are normal
+        select statements, but with the following restrictions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">HIGH_PRIORITY</code> in the first
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> has no effect.
+            <code class="literal">HIGH_PRIORITY</code> in any subsequent
+            <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> produces a syntax
+            error.
+          </p></li><li class="listitem"><p>
+            Only the last <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+            statement can use an <code class="literal">INTO</code> clause.
+            However, the entire <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a>
+            result is written to the <code class="literal">INTO</code> output
+            destination.
+</p></li></ul>
+</div>
+
+</div>
+
+<br>
+        
+</body>
+</html>

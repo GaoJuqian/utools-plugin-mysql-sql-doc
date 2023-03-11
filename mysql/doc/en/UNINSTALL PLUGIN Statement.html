@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>UNINSTALL PLUGIN Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="uninstall-plugin"></a>13.7.3.4&nbsp;UNINSTALL PLUGIN Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571897008"></a><a class="indexterm" name="idm45852571895952"></a><a class="indexterm" name="idm45852571894880"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">UNINSTALL PLUGIN <em class="replaceable">plugin_name</em></code></pre><p>
+        This statement removes an installed server plugin.
+        <a class="link" href="uninstall-plugin.html" title="13.7.3.4&nbsp;UNINSTALL PLUGIN Statement"><code class="literal">UNINSTALL PLUGIN</code></a> is the
+        complement of <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a>. It
+        requires the <a class="link" href="privileges-provided.html#priv_delete"><code class="literal">DELETE</code></a> privilege for
+        the <code class="literal">mysql.plugin</code> system table because it
+        removes the row from that table that registers the plugin.
+      </p><p>
+        <em class="replaceable"><code>plugin_name</code></em> must be the name of some
+        plugin that is listed in the <code class="literal">mysql.plugin</code>
+        table. The server executes the plugin's deinitialization
+        function and removes the row for the plugin from the
+        <code class="literal">mysql.plugin</code> system table, so that subsequent
+        server restarts do not load and initialize the plugin.
+        <a class="link" href="uninstall-plugin.html" title="13.7.3.4&nbsp;UNINSTALL PLUGIN Statement"><code class="literal">UNINSTALL PLUGIN</code></a> does not remove
+        the plugin's shared library file.
+      </p><p>
+        You cannot uninstall a plugin if any table that uses it is open.
+      </p><p>
+        Plugin removal has implications for the use of associated
+        tables. For example, if a full-text parser plugin is associated
+        with a <code class="literal">FULLTEXT</code> index on the table,
+        uninstalling the plugin makes the table unusable. Any attempt to
+        access the table results in an error. The table cannot even be
+        opened, so you cannot drop an index for which the plugin is
+        used. This means that uninstalling a plugin is something to do
+        with care unless you do not care about the table contents. If
+        you are uninstalling a plugin with no intention of reinstalling
+        it later and you care about the table contents, you should dump
+        the table with <a class="link" href="mysqldump.html" title="4.5.4&nbsp;mysqldump — A Database Backup Program"><span class="command"><strong>mysqldump</strong></span></a> and remove the
+        <code class="literal">WITH PARSER</code> clause from the dumped
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement so that
+        you can reload the table later. If you do not care about the
+        table, <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> can be used
+        even if any plugins associated with the table are missing.
+      </p><p>
+        For additional information about plugin loading, see
+        <a class="xref" href="plugin-loading.html" title="5.5.1&nbsp;Installing and Uninstalling Plugins">Section&nbsp;5.5.1, “Installing and Uninstalling Plugins”</a>.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

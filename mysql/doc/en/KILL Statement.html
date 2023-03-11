@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>KILL Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="kill"></a>13.7.6.4&nbsp;KILL Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852569029568"></a><a class="indexterm" name="idm45852569028496"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">KILL [CONNECTION | QUERY] <em class="replaceable">processlist_id</em></code></pre><p>
+        Each connection to <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> runs in a separate
+        thread. You can kill a thread with the <code class="literal">KILL
+        <em class="replaceable"><code>processlist_id</code></em></code> statement.
+      </p><p>
+        Thread processlist identifiers can be determined from the
+        <code class="literal">ID</code> column of the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-processlist-table.html" title="24.3.18&nbsp;The INFORMATION_SCHEMA PROCESSLIST Table"><code class="literal">PROCESSLIST</code></a> table, the
+        <code class="literal">Id</code> column of <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW
+        PROCESSLIST</code></a> output, and the
+        <code class="literal">PROCESSLIST_ID</code> column of the Performance
+        Schema <a class="link" href="performance-schema-threads-table.html" title="25.12.16.4&nbsp;The threads Table"><code class="literal">threads</code></a> table. The value for
+        the current thread is returned by the
+        <a class="link" href="information-functions.html#function_connection-id"><code class="literal">CONNECTION_ID()</code></a> function.
+      </p><p>
+        <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL</code></a> permits an optional
+        <code class="literal">CONNECTION</code> or <code class="literal">QUERY</code>
+        modifier:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL
+            CONNECTION</code></a> is the same as
+            <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL</code></a> with no modifier: It
+            terminates the connection associated with the given
+            <em class="replaceable"><code>processlist_id</code></em>, after terminating
+            any statement the connection is executing.
+          </p></li><li class="listitem"><p>
+            <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL QUERY</code></a>
+            terminates the statement the connection is currently
+            executing, but leaves the connection itself intact.
+</p></li></ul>
+</div>
+<p>
+        The ability to see which threads are available to be killed
+        depends on the <a class="link" href="privileges-provided.html#priv_process"><code class="literal">PROCESS</code></a> privilege:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Without <a class="link" href="privileges-provided.html#priv_process"><code class="literal">PROCESS</code></a>, you can see
+            only your own threads.
+          </p></li><li class="listitem"><p>
+            With <a class="link" href="privileges-provided.html#priv_process"><code class="literal">PROCESS</code></a>, you can see all
+            threads.
+</p></li></ul>
+</div>
+<p>
+        The ability to kill threads and statements depends on the
+        <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Without <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a>, you can kill
+            only your own threads and statements.
+          </p></li><li class="listitem"><p>
+            With <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a>, you can kill all
+            threads and statements.
+</p></li></ul>
+</div>
+<p>
+        You can also use the <a class="link" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program"><span class="command"><strong>mysqladmin processlist</strong></span></a>
+        and <a class="link" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program"><span class="command"><strong>mysqladmin kill</strong></span></a> commands to examine and
+        kill threads.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          You cannot use <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL</code></a> with the
+          Embedded MySQL Server library because the embedded server
+          merely runs inside the threads of the host application. It
+          does not create any connection threads of its own.
+</p>
+</div>
+<p>
+        When you use <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL</code></a>, a
+        thread-specific kill flag is set for the thread. In most cases,
+        it might take some time for the thread to die because the kill
+        flag is checked only at specific intervals:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            During <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> operations, for
+            <code class="literal">ORDER BY</code> and <code class="literal">GROUP BY</code>
+            loops, the flag is checked after reading a block of rows. If
+            the kill flag is set, the statement is aborted.
+          </p></li><li class="listitem"><p>
+            <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operations that
+            make a table copy check the kill flag periodically for each
+            few copied rows read from the original table. If the kill
+            flag was set, the statement is aborted and the temporary
+            table is deleted.
+          </p><p>
+            The <a class="link" href="kill.html" title="13.7.6.4&nbsp;KILL Statement"><code class="literal">KILL</code></a> statement returns
+            without waiting for confirmation, but the kill flag check
+            aborts the operation within a reasonably small amount of
+            time. Aborting the operation to perform any necessary
+            cleanup also takes some time.
+          </p></li><li class="listitem"><p>
+            During <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> or
+            <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> operations, the kill
+            flag is checked after each block read and after each updated
+            or deleted row. If the kill flag is set, the statement is
+            aborted. If you are not using transactions, the changes are
+            not rolled back.
+          </p></li><li class="listitem"><p>
+            <a class="link" href="locking-functions.html#function_get-lock"><code class="literal">GET_LOCK()</code></a> aborts and returns
+            <code class="literal">NULL</code>.
+          </p></li><li class="listitem"><p>
+            If the thread is in the table lock handler (state:
+            <code class="literal">Locked</code>), the table lock is quickly
+            aborted.
+          </p></li><li class="listitem"><p>
+            If the thread is waiting for free disk space in a write
+            call, the write is aborted with a <span class="quote">“<span class="quote">disk full</span>”</span>
+            error message.
+</p></li></ul>
+</div>
+<div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Warning
+</div>
+<p>
+          Killing a <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a> or
+          <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> operation on a
+          <code class="literal">MyISAM</code> table results in a table that is
+          corrupted and unusable. Any reads or writes to such a table
+          fail until you optimize or repair it again (without
+          interruption).
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

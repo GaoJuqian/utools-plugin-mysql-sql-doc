@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW PROCEDURE STATUS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-procedure-status"></a>13.7.5.28&nbsp;SHOW PROCEDURE STATUS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570438208"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW PROCEDURE STATUS
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        This statement is a MySQL extension. It returns characteristics
+        of a stored procedure, such as the database, name, type,
+        creator, creation and modification dates, and character set
+        information. A similar statement, <a class="link" href="show-function-status.html" title="13.7.5.20&nbsp;SHOW FUNCTION STATUS Statement"><code class="literal">SHOW
+        FUNCTION STATUS</code></a>, displays information about stored
+        functions (see <a class="xref" href="show-function-status.html" title="13.7.5.20&nbsp;SHOW FUNCTION STATUS Statement">Section&nbsp;13.7.5.20, “SHOW FUNCTION STATUS Statement”</a>).
+      </p><p>
+        To use either statement, you must be the owner of the routine or
+        have <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> access to the
+        <code class="literal">mysql.proc</code> table.
+      </p><p>
+        The <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, if present,
+        indicates which procedure or function names to match. The
+        <code class="literal">WHERE</code> clause can be given to select rows
+        using more general conditions, as discussed in
+        <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW PROCEDURE STATUS LIKE 'sp1'\G
+*************************** 1. row ***************************
+                  Db: test
+                Name: sp1
+                Type: PROCEDURE
+             Definer: testuser@localhost
+            Modified: 2018-08-08 13:54:11
+             Created: 2018-08-08 13:54:11
+       Security_type: DEFINER
+             Comment:
+character_set_client: utf8
+collation_connection: utf8_general_ci
+  Database Collation: latin1_swedish_ci
+
+mysql&gt; SHOW FUNCTION STATUS LIKE 'hello'\G
+*************************** 1. row ***************************
+                  Db: test
+                Name: hello
+                Type: FUNCTION
+             Definer: testuser@localhost
+            Modified: 2020-03-10 11:09:33
+             Created: 2020-03-10 11:09:33
+       Security_type: DEFINER
+             Comment:
+character_set_client: utf8
+collation_connection: utf8_general_ci
+  Database Collation: latin1_swedish_ci</code></pre><p>
+        <code class="literal">character_set_client</code> is the session value of
+        the <a class="link" href="server-system-variables.html#sysvar_character_set_client"><code class="literal">character_set_client</code></a> system
+        variable when the routine was created.
+        <code class="literal">collation_connection</code> is the session value of
+        the <a class="link" href="server-system-variables.html#sysvar_collation_connection"><code class="literal">collation_connection</code></a> system
+        variable when the routine was created. <code class="literal">Database
+        Collation</code> is the collation of the database with which
+        the routine is associated.
+      </p><p>
+        Stored routine information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-parameters-table.html" title="24.3.15&nbsp;The INFORMATION_SCHEMA PARAMETERS Table"><code class="literal">PARAMETERS</code></a> and
+        <a class="link" href="information-schema-routines-table.html" title="24.3.21&nbsp;The INFORMATION_SCHEMA ROUTINES Table"><code class="literal">ROUTINES</code></a> tables. See
+        <a class="xref" href="information-schema-parameters-table.html" title="24.3.15&nbsp;The INFORMATION_SCHEMA PARAMETERS Table">Section&nbsp;24.3.15, “The INFORMATION_SCHEMA PARAMETERS Table”</a>, and
+        <a class="xref" href="information-schema-routines-table.html" title="24.3.21&nbsp;The INFORMATION_SCHEMA ROUTINES Table">Section&nbsp;24.3.21, “The INFORMATION_SCHEMA ROUTINES Table”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

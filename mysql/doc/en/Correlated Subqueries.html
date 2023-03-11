@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Correlated Subqueries</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="correlated-subqueries"></a>13.2.10.7&nbsp;Correlated Subqueries</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577719168"></a><a class="indexterm" name="idm45852577718096"></a><p>
+        A <span class="emphasis"><em>correlated subquery</em></span> is a subquery that
+        contains a reference to a table that also appears in the outer
+        query. For example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1
+  WHERE column1 = ANY (SELECT column1 FROM t2
+                       WHERE t2.column2 = t1.column2);</code></pre><p>
+        Notice that the subquery contains a reference to a column of
+        <code class="literal">t1</code>, even though the subquery's
+        <code class="literal">FROM</code> clause does not mention a table
+        <code class="literal">t1</code>. So, MySQL looks outside the subquery, and
+        finds <code class="literal">t1</code> in the outer query.
+      </p><p>
+        Suppose that table <code class="literal">t1</code> contains a row where
+        <code class="literal">column1 = 5</code> and <code class="literal">column2 =
+        6</code>; meanwhile, table <code class="literal">t2</code> contains a
+        row where <code class="literal">column1 = 5</code> and <code class="literal">column2 =
+        7</code>. The simple expression <code class="literal">... WHERE column1 =
+        ANY (SELECT column1 FROM t2)</code> would be
+        <code class="literal">TRUE</code>, but in this example, the
+        <code class="literal">WHERE</code> clause within the subquery is
+        <code class="literal">FALSE</code> (because <code class="literal">(5,6)</code> is
+        not equal to <code class="literal">(5,7)</code>), so the expression as a
+        whole is <code class="literal">FALSE</code>.
+      </p><p>
+        <span class="bold"><strong>Scoping rule:</strong></span> MySQL evaluates
+        from inside to outside. For example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT column1 FROM t1 AS x
+  WHERE x.column1 = (SELECT column1 FROM t2 AS x
+    WHERE x.column1 = (SELECT column1 FROM t3
+      WHERE x.column2 = t3.column1));</code></pre><p>
+        In this statement, <code class="literal">x.column2</code> must be a column
+        in table <code class="literal">t2</code> because <code class="literal">SELECT column1
+        FROM t2 AS x ...</code> renames <code class="literal">t2</code>. It is
+        not a column in table <code class="literal">t1</code> because
+        <code class="literal">SELECT column1 FROM t1 ...</code> is an outer query
+        that is <span class="emphasis"><em>farther out</em></span>.
+      </p><p>
+        For subqueries in <code class="literal">HAVING</code> or <code class="literal">ORDER
+        BY</code> clauses, MySQL also looks for column names in the
+        outer select list.
+      </p><p>
+        For certain cases, a correlated subquery is optimized. For
+        example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql"><em class="replaceable">val</em> IN (SELECT <em class="replaceable">key_val</em> FROM <em class="replaceable">tbl_name</em> WHERE <em class="replaceable">correlated_condition</em>)</code></pre><p>
+        Otherwise, they are inefficient and likely to be slow. Rewriting
+        the query as a join might improve performance.
+      </p><p>
+        Aggregate functions in correlated subqueries may contain outer
+        references, provided the function contains nothing but outer
+        references, and provided the function is not contained in
+        another function or expression.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

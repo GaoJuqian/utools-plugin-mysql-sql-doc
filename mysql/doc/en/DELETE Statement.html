@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DELETE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="delete"></a>13.2.2&nbsp;DELETE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580309088"></a><a class="indexterm" name="idm45852580308016"></a><p>
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> is a DML statement that
+      removes rows from a table.
+</p>
+<h4><a name="idm45852580302816"></a>Single-Table Syntax</h4>
+<pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELETE [LOW_PRIORITY] [QUICK] [IGNORE] FROM <em class="replaceable">tbl_name</em>
+    [PARTITION (<em class="replaceable">partition_name</em> [, <em class="replaceable">partition_name</em>] ...)]
+    [WHERE <em class="replaceable">where_condition</em>]
+    [ORDER BY ...]
+    [LIMIT <em class="replaceable">row_count</em>]</code></pre><p>
+      The <code class="literal">DELETE</code> statement deletes rows from
+      <em class="replaceable"><code>tbl_name</code></em> and returns the number of
+      deleted rows. To check the number of deleted rows, call the
+      <a class="link" href="information-functions.html#function_row-count"><code class="literal">ROW_COUNT()</code></a> function described in
+      <a class="xref" href="information-functions.html" title="12.16&nbsp;Information Functions">Section&nbsp;12.16, “Information Functions”</a>.
+</p>
+<h4><a name="idm45852580295344"></a>Main Clauses</h4>
+<p>
+      The conditions in the optional <code class="literal">WHERE</code> clause
+      identify which rows to delete. With no <code class="literal">WHERE</code>
+      clause, all rows are deleted.
+    </p><p>
+      <em class="replaceable"><code>where_condition</code></em> is an expression that
+      evaluates to true for each row to be deleted. It is specified as
+      described in <a class="xref" href="select.html" title="13.2.9&nbsp;SELECT Statement">Section&nbsp;13.2.9, “SELECT Statement”</a>.
+    </p><p>
+      If the <code class="literal">ORDER BY</code> clause is specified, the rows
+      are deleted in the order that is specified. The
+      <code class="literal">LIMIT</code> clause places a limit on the number of
+      rows that can be deleted. These clauses apply to single-table
+      deletes, but not multi-table deletes.
+</p>
+<h4><a name="idm45852580289040"></a>Multiple-Table Syntax</h4>
+<pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELETE [LOW_PRIORITY] [QUICK] [IGNORE]
+    <em class="replaceable">tbl_name</em>[.*] [, <em class="replaceable">tbl_name</em>[.*]] ...
+    FROM <em class="replaceable">table_references</em>
+    [WHERE <em class="replaceable">where_condition</em>]
+
+DELETE [LOW_PRIORITY] [QUICK] [IGNORE]
+    FROM <em class="replaceable">tbl_name</em>[.*] [, <em class="replaceable">tbl_name</em>[.*]] ...
+    USING <em class="replaceable">table_references</em>
+    [WHERE <em class="replaceable">where_condition</em>]</code></pre>
+<h4><a name="idm45852580282752"></a>Privileges</h4>
+<p>
+      You need the <a class="link" href="privileges-provided.html#priv_delete"><code class="literal">DELETE</code></a> privilege on a
+      table to delete rows from it. You need only the
+      <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for any columns
+      that are only read, such as those named in the
+      <code class="literal">WHERE</code> clause.
+</p>
+<h4><a name="idm45852580278336"></a>Performance</h4>
+<p>
+      When you do not need to know the number of deleted rows, the
+      <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> statement is a
+      faster way to empty a table than a
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> statement with no
+      <code class="literal">WHERE</code> clause. Unlike
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>,
+      <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a> cannot be used
+      within a transaction or if you have a lock on the table. See
+      <a class="xref" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement">Section&nbsp;13.1.34, “TRUNCATE TABLE Statement”</a> and
+      <a class="xref" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements">Section&nbsp;13.3.5, “LOCK TABLES and UNLOCK TABLES Statements”</a>.
+    </p><p>
+      The speed of delete operations may also be affected by factors
+      discussed in <a class="xref" href="delete-optimization.html" title="8.2.4.3&nbsp;Optimizing DELETE Statements">Section&nbsp;8.2.4.3, “Optimizing DELETE Statements”</a>.
+    </p><p>
+      To ensure that a given <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>
+      statement does not take too much time, the MySQL-specific
+      <code class="literal">LIMIT <em class="replaceable"><code>row_count</code></em></code>
+      clause for <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> specifies the
+      maximum number of rows to be deleted. If the number of rows to
+      delete is larger than the limit, repeat the
+      <code class="literal">DELETE</code> statement until the number of affected
+      rows is less than the <code class="literal">LIMIT</code> value.
+</p>
+<h4><a name="idm45852580263168"></a>Subqueries</h4>
+<p>
+      You cannot delete from a table and select from the same table in a
+      subquery.
+</p>
+<h4><a name="idm45852580261984"></a>Partitioned Table Support</h4>
+<p>
+      <code class="literal">DELETE</code> supports explicit partition selection
+      using the <code class="literal">PARTITION</code> clause, which takes a list
+      of the comma-separated names of one or more partitions or
+      subpartitions (or both) from which to select rows to be dropped.
+      Partitions not included in the list are ignored. Given a
+      partitioned table <code class="literal">t</code> with a partition named
+      <code class="literal">p0</code>, executing the statement <code class="literal">DELETE
+      FROM t PARTITION (p0)</code> has the same effect on the table
+      as executing <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+      TABLE t TRUNCATE PARTITION (p0)</code></a>; in both cases, all rows
+      in partition <code class="literal">p0</code> are dropped.
+    </p><p>
+      <code class="literal">PARTITION</code> can be used along with a
+      <code class="literal">WHERE</code> condition, in which case the condition is
+      tested only on rows in the listed partitions. For example,
+      <code class="literal">DELETE FROM t PARTITION (p0) WHERE c &lt; 5</code>
+      deletes rows only from partition <code class="literal">p0</code> for which
+      the condition <code class="literal">c &lt; 5</code> is true; rows in any
+      other partitions are not checked and thus not affected by the
+      <code class="literal">DELETE</code>.
+    </p><p>
+      The <code class="literal">PARTITION</code> clause can also be used in
+      multiple-table <code class="literal">DELETE</code> statements. You can use
+      up to one such option per table named in the
+      <code class="literal">FROM</code> option.
+    </p><p>
+      For more information and examples, see
+      <a class="xref" href="partitioning-selection.html" title="22.5&nbsp;Partition Selection">Section&nbsp;22.5, “Partition Selection”</a>.
+</p>
+<h4><a name="idm45852580245600"></a>Auto-Increment Columns</h4>
+<p>
+      If you delete the row containing the maximum value for an
+      <code class="literal">AUTO_INCREMENT</code> column, the value is not reused
+      for a <code class="literal">MyISAM</code> or <code class="literal">InnoDB</code>
+      table. If you delete all rows in the table with <code class="literal">DELETE
+      FROM <em class="replaceable"><code>tbl_name</code></em></code> (without a
+      <code class="literal">WHERE</code> clause) in
+      <a class="link" href="server-system-variables.html#sysvar_autocommit"><code class="literal">autocommit</code></a> mode, the sequence
+      starts over for all storage engines except
+      <code class="literal">InnoDB</code> and <code class="literal">MyISAM</code>. There are
+      some exceptions to this behavior for <code class="literal">InnoDB</code>
+      tables, as discussed in
+      <a class="xref" href="innodb-auto-increment-handling.html" title="14.6.1.6&nbsp;AUTO_INCREMENT Handling in InnoDB">Section&nbsp;14.6.1.6, “AUTO_INCREMENT Handling in InnoDB”</a>.
+    </p><p>
+      For <code class="literal">MyISAM</code> tables, you can specify an
+      <code class="literal">AUTO_INCREMENT</code> secondary column in a
+      multiple-column key. In this case, reuse of values deleted from
+      the top of the sequence occurs even for <code class="literal">MyISAM</code>
+      tables. See <a class="xref" href="example-auto-increment.html" title="3.6.9&nbsp;Using AUTO_INCREMENT">Section&nbsp;3.6.9, “Using AUTO_INCREMENT”</a>.
+</p>
+<h4><a name="idm45852580232896"></a>Modifiers</h4>
+<p>
+      The <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> statement supports the
+      following modifiers:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          If you specify the <code class="literal">LOW_PRIORITY</code> modifier,
+          the server delays execution of the
+          <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> until no other clients
+          are reading from the table. This affects only storage engines
+          that use only table-level locking (such as
+          <code class="literal">MyISAM</code>, <code class="literal">MEMORY</code>, and
+          <code class="literal">MERGE</code>).
+        </p><a class="indexterm" name="idm45852580225312"></a></li><li class="listitem"><p>
+          For <code class="literal">MyISAM</code> tables, if you use the
+          <code class="literal">QUICK</code> modifier, the storage engine does not
+          merge index leaves during delete, which may speed up some
+          kinds of delete operations.
+        </p><a class="indexterm" name="idm45852580221424"></a></li><li class="listitem"><p>
+          The <code class="literal">IGNORE</code> modifier causes MySQL to ignore
+          ignorable errors during the process of deleting rows. (Errors
+          encountered during the parsing stage are processed in the
+          usual manner.) Errors that are ignored due to the use of
+          <code class="literal">IGNORE</code> are returned as warnings. For more
+          information, see <a class="xref" href="sql-mode.html#ignore-effect-on-execution" title="The Effect of IGNORE on Statement Execution">The Effect of IGNORE on Statement Execution</a>.
+</p><a class="indexterm" name="idm45852580216656"></a></li></ul>
+</div>
+<h4><a name="idm45852580214912"></a>Order of Deletion</h4>
+<p>
+      If the <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> statement includes an
+      <code class="literal">ORDER BY</code> clause, rows are deleted in the order
+      specified by the clause. This is useful primarily in conjunction
+      with <code class="literal">LIMIT</code>. For example, the following
+      statement finds rows matching the <code class="literal">WHERE</code> clause,
+      sorts them by <code class="literal">timestamp_column</code>, and deletes the
+      first (oldest) one:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELETE FROM somelog WHERE user = 'jcole'
+ORDER BY timestamp_column LIMIT 1;</code></pre><p>
+      <code class="literal">ORDER BY</code> also helps to delete rows in an order
+      required to avoid referential integrity violations.
+</p>
+<h4><a name="idm45852580207344"></a>InnoDB Tables</h4>
+<p>
+      If you are deleting many rows from a large table, you may exceed
+      the lock table size for an <code class="literal">InnoDB</code> table. To
+      avoid this problem, or simply to minimize the time that the table
+      remains locked, the following strategy (which does not use
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> at all) might be helpful:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+          Select the rows <span class="emphasis"><em>not</em></span> to be deleted into an
+          empty table that has the same structure as the original table:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">INSERT INTO t_copy SELECT * FROM t WHERE ... ;</code></pre></li><li class="listitem"><p>
+          Use <a class="link" href="rename-table.html" title="13.1.33&nbsp;RENAME TABLE Statement"><code class="literal">RENAME TABLE</code></a> to atomically
+          move the original table out of the way and rename the copy to
+          the original name:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">RENAME TABLE t TO t_old, t_copy TO t;</code></pre></li><li class="listitem"><p>
+          Drop the original table:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DROP TABLE t_old;</code></pre></li></ol>
+</div>
+<p>
+      No other sessions can access the tables involved while
+      <a class="link" href="rename-table.html" title="13.1.33&nbsp;RENAME TABLE Statement"><code class="literal">RENAME TABLE</code></a> executes, so the
+      rename operation is not subject to concurrency problems. See
+      <a class="xref" href="rename-table.html" title="13.1.33&nbsp;RENAME TABLE Statement">Section&nbsp;13.1.33, “RENAME TABLE Statement”</a>.
+</p>
+<h4><a name="idm45852580193472"></a>MyISAM Tables</h4>
+<p>
+      In <code class="literal">MyISAM</code> tables, deleted rows are maintained
+      in a linked list and subsequent
+      <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> operations reuse old row
+      positions. To reclaim unused space and reduce file sizes, use the
+      <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> statement or the
+      <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk</strong></span></a> utility to reorganize tables.
+      <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a> is easier to use,
+      but <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk</strong></span></a> is faster. See
+      <a class="xref" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement">Section&nbsp;13.7.2.4, “OPTIMIZE TABLE Statement”</a>, and <a class="xref" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility">Section&nbsp;4.6.3, “myisamchk — MyISAM Table-Maintenance Utility”</a>.
+    </p><p>
+      The <code class="literal">QUICK</code> modifier affects whether index leaves
+      are merged for delete operations. <code class="literal">DELETE QUICK</code>
+      is most useful for applications where index values for deleted
+      rows are replaced by similar index values from rows inserted
+      later. In this case, the holes left by deleted values are reused.
+    </p><p>
+      <code class="literal">DELETE QUICK</code> is not useful when deleted values
+      lead to underfilled index blocks spanning a range of index values
+      for which new inserts occur again. In this case, use of
+      <code class="literal">QUICK</code> can lead to wasted space in the index
+      that remains unreclaimed. Here is an example of such a scenario:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+          Create a table that contains an indexed
+          <code class="literal">AUTO_INCREMENT</code> column.
+        </p><a class="indexterm" name="idm45852580177504"></a></li><li class="listitem"><p>
+          Insert many rows into the table. Each insert results in an
+          index value that is added to the high end of the index.
+        </p><a class="indexterm" name="idm45852580175088"></a></li><li class="listitem"><p>
+          Delete a block of rows at the low end of the column range
+          using <code class="literal">DELETE QUICK</code>.
+</p></li></ol>
+</div>
+<p>
+      In this scenario, the index blocks associated with the deleted
+      index values become underfilled but are not merged with other
+      index blocks due to the use of <code class="literal">QUICK</code>. They
+      remain underfilled when new inserts occur, because new rows do not
+      have index values in the deleted range. Furthermore, they remain
+      underfilled even if you later use
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> without
+      <code class="literal">QUICK</code>, unless some of the deleted index values
+      happen to lie in index blocks within or adjacent to the
+      underfilled blocks. To reclaim unused index space under these
+      circumstances, use <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a>.
+    </p><p>
+      If you are going to delete many rows from a table, it might be
+      faster to use <code class="literal">DELETE QUICK</code> followed by
+      <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE TABLE</code></a>. This rebuilds the
+      index rather than performing many index block merge operations.
+</p>
+<h4><a name="idm45852580164400"></a>Multi-Table Deletes</h4>
+<p>
+      You can specify multiple tables in a
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> statement to delete rows
+      from one or more tables depending on the condition in the
+      <code class="literal">WHERE</code> clause. You cannot use <code class="literal">ORDER
+      BY</code> or <code class="literal">LIMIT</code> in a multiple-table
+      <code class="literal">DELETE</code>. The
+      <em class="replaceable"><code>table_references</code></em> clause lists the
+      tables involved in the join, as described in
+      <a class="xref" href="join.html" title="13.2.9.2&nbsp;JOIN Clause">Section&nbsp;13.2.9.2, “JOIN Clause”</a>.
+    </p><p>
+      For the first multiple-table syntax, only matching rows from the
+      tables listed before the <code class="literal">FROM</code> clause are
+      deleted. For the second multiple-table syntax, only matching rows
+      from the tables listed in the <code class="literal">FROM</code> clause
+      (before the <code class="literal">USING</code> clause) are deleted. The
+      effect is that you can delete rows from many tables at the same
+      time and have additional tables that are used only for searching:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELETE t1, t2 FROM t1 INNER JOIN t2 INNER JOIN t3
+WHERE t1.id=t2.id AND t2.id=t3.id;</code></pre><p>
+      Or:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELETE FROM t1, t2 USING t1 INNER JOIN t2 INNER JOIN t3
+WHERE t1.id=t2.id AND t2.id=t3.id;</code></pre><p>
+      These statements use all three tables when searching for rows to
+      delete, but delete matching rows only from tables
+      <code class="literal">t1</code> and <code class="literal">t2</code>.
+    </p><p>
+      The preceding examples use <code class="literal">INNER JOIN</code>, but
+      multiple-table <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> statements
+      can use other types of join permitted in
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements, such as
+      <code class="literal">LEFT JOIN</code>. For example, to delete rows that
+      exist in <code class="literal">t1</code> that have no match in
+      <code class="literal">t2</code>, use a <code class="literal">LEFT JOIN</code>:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DELETE t1 FROM t1 LEFT JOIN t2 ON t1.id=t2.id WHERE t2.id IS NULL;</code></pre><p>
+      The syntax permits <code class="literal">.*</code> after each
+      <em class="replaceable"><code>tbl_name</code></em> for compatibility with
+      <span class="command"><strong>Access</strong></span>.
+    </p><p>
+      If you use a multiple-table <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>
+      statement involving <code class="literal">InnoDB</code> tables for which
+      there are foreign key constraints, the MySQL optimizer might
+      process tables in an order that differs from that of their
+      parent/child relationship. In this case, the statement fails and
+      rolls back. Instead, you should delete from a single table and
+      rely on the <code class="literal">ON DELETE</code> capabilities that
+      <code class="literal">InnoDB</code> provides to cause the other tables to be
+      modified accordingly.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        If you declare an alias for a table, you must use the alias when
+        referring to the table:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DELETE t1 FROM test AS t1, test2 WHERE ...</code></pre>
+</div>
+<p>
+      Table aliases in a multiple-table
+      <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> should be declared only in
+      the <em class="replaceable"><code>table_references</code></em> part of the
+      statement. Elsewhere, alias references are permitted but not alias
+      declarations.
+    </p><p>
+      Correct:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELETE a1, a2 FROM t1 AS a1 INNER JOIN t2 AS a2
+WHERE a1.id=a2.id;
+
+DELETE FROM a1, a2 USING t1 AS a1 INNER JOIN t2 AS a2
+WHERE a1.id=a2.id;</code></pre><p>
+      Incorrect:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELETE t1 AS a1, t2 AS a2 FROM t1 INNER JOIN t2
+WHERE a1.id=a2.id;
+
+DELETE FROM t1 AS a1, t2 AS a2 USING t1 INNER JOIN t2
+WHERE a1.id=a2.id;</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

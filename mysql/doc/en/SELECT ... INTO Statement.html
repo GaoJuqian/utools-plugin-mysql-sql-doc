@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SELECT ... INTO Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="select-into"></a>13.2.9.1&nbsp;SELECT ... INTO Statement</h4>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852578391616"></a><a class="indexterm" name="idm45852578390160"></a><p>
+        The <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ...
+        INTO</code></a> form of <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>
+        enables a query result to be stored in variables or written to a
+        file:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">SELECT ... INTO
+            <em class="replaceable"><code>var_list</code></em></code> selects column
+            values and stores them into variables.
+          </p></li><li class="listitem"><p>
+            <code class="literal">SELECT ... INTO OUTFILE</code> writes the
+            selected rows to a file. Column and line terminators can be
+            specified to produce a specific output format.
+          </p></li><li class="listitem"><p>
+            <code class="literal">SELECT ... INTO DUMPFILE</code> writes a single
+            row to a file without any formatting.
+</p></li></ul>
+</div>
+<p>
+        A given <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement can
+        contain at most one <code class="literal">INTO</code> clause, although as
+        shown by the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> syntax
+        description (see <a class="xref" href="select.html" title="13.2.9&nbsp;SELECT Statement">Section&nbsp;13.2.9, “SELECT Statement”</a>), the
+        <code class="literal">INTO</code> can appear in different positions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Before <code class="literal">FROM</code>. Example:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * INTO @myvar FROM t1;</code></pre></li><li class="listitem"><p>
+            Before a trailing locking clause. Example:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 INTO @myvar FOR UPDATE;</code></pre></li></ul>
+</div>
+<p>
+        An <code class="literal">INTO</code> clause should not be used in a nested
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> because such a
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> must return its result to
+        the outer context. There are also constraints on the use of
+        <code class="literal">INTO</code> within
+        <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a> statements; see
+        <a class="xref" href="union.html" title="13.2.9.3&nbsp;UNION Clause">Section&nbsp;13.2.9.3, “UNION Clause”</a>.
+      </p><p>
+        For the <code class="literal">INTO
+        <em class="replaceable"><code>var_list</code></em></code> variant:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <em class="replaceable"><code>var_list</code></em> names a list of one or
+            more variables, each of which can be a user-defined
+            variable, stored procedure or function parameter, or stored
+            program local variable. (Within a prepared <code class="literal">SELECT
+            ... INTO <em class="replaceable"><code>var_list</code></em></code>
+            statement, only user-defined variables are permitted; see
+            <a class="xref" href="local-variable-scope.html" title="13.6.4.2&nbsp;Local Variable Scope and Resolution">Section&nbsp;13.6.4.2, “Local Variable Scope and Resolution”</a>.)
+          </p></li><li class="listitem"><p>
+            The selected values are assigned to the variables. The
+            number of variables must match the number of columns. The
+            query should return a single row. If the query returns no
+            rows, a warning with error code 1329 occurs (<code class="literal">No
+            data</code>), and the variable values remain unchanged.
+            If the query returns multiple rows, error 1172 occurs
+            (<code class="literal">Result consisted of more than one row</code>).
+            If it is possible that the statement may retrieve multiple
+            rows, you can use <code class="literal">LIMIT 1</code> to limit the
+            result set to a single row.
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT id, data INTO @x, @y FROM test.t1 LIMIT 1;</code></pre></li></ul>
+</div>
+<p>
+        User variable names are not case-sensitive. See
+        <a class="xref" href="user-variables.html" title="9.4&nbsp;User-Defined Variables">Section&nbsp;9.4, “User-Defined Variables”</a>.
+      </p><a class="indexterm" name="idm45852578353408"></a><a class="indexterm" name="idm45852578352336"></a><p>
+        The <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ... INTO
+        OUTFILE '<em class="replaceable"><code>file_name</code></em>'</code></a> form of
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> writes the selected rows
+        to a file. The file is created on the server host, so you must
+        have the <a class="link" href="privileges-provided.html#priv_file"><code class="literal">FILE</code></a> privilege to use
+        this syntax. <em class="replaceable"><code>file_name</code></em> cannot be an
+        existing file, which among other things prevents files such as
+        <code class="filename">/etc/passwd</code> and database tables from being
+        modified. The
+        <a class="link" href="server-system-variables.html#sysvar_character_set_filesystem"><code class="literal">character_set_filesystem</code></a> system
+        variable controls the interpretation of the file name.
+      </p><p>
+        The <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ... INTO
+        OUTFILE</code></a> statement is intended to enable dumping a
+        table to a text file on the server host. To create the resulting
+        file on some other host,
+        <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ... INTO
+        OUTFILE</code></a> normally is unsuitable because there is no way
+        to write a path to the file relative to the server host file
+        system, unless the location of the file on the remote host can
+        be accessed using a network-mapped path on the server host file
+        system.
+      </p><p>
+        Alternatively, if the MySQL client software is installed on the
+        remote host, you can use a client command such as <code class="literal">mysql
+        -e "SELECT ..." &gt;
+        <em class="replaceable"><code>file_name</code></em></code> to generate the
+        file on that host.
+      </p><p>
+        <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ... INTO
+        OUTFILE</code></a> is the complement of <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD
+        DATA</code></a>. Column values are written converted to the
+        character set specified in the <code class="literal">CHARACTER SET</code>
+        clause. If no such clause is present, values are dumped using
+        the <code class="literal">binary</code> character set. In effect, there is
+        no character set conversion. If a result set contains columns in
+        several character sets, so does the output data file and it may
+        not be possible to reload the file correctly.
+      </p><p>
+        The syntax for the <em class="replaceable"><code>export_options</code></em>
+        part of the statement consists of the same
+        <code class="literal">FIELDS</code> and <code class="literal">LINES</code> clauses
+        that are used with the <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>
+        statement. For information about the <code class="literal">FIELDS</code>
+        and <code class="literal">LINES</code> clauses, including their default
+        values and permissible values, see <a class="xref" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement">Section&nbsp;13.2.6, “LOAD DATA Statement”</a>.
+      </p><p>
+        <code class="literal">FIELDS ESCAPED BY</code> controls how to write
+        special characters. If the <code class="literal">FIELDS ESCAPED BY</code>
+        character is not empty, it is used when necessary to avoid
+        ambiguity as a prefix that precedes following characters on
+        output:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            The <code class="literal">FIELDS ESCAPED BY</code> character
+          </p></li><li class="listitem"><p>
+            The <code class="literal">FIELDS [OPTIONALLY] ENCLOSED BY</code>
+            character
+          </p></li><li class="listitem"><p>
+            The first character of the <code class="literal">FIELDS TERMINATED
+            BY</code> and <code class="literal">LINES TERMINATED BY</code>
+            values
+          </p></li><li class="listitem"><p>
+            ASCII <code class="literal">NUL</code> (the zero-valued byte; what is
+            actually written following the escape character is ASCII
+            <code class="literal">0</code>, not a zero-valued byte)
+</p></li></ul>
+</div>
+<p>
+        The <code class="literal">FIELDS TERMINATED BY</code>, <code class="literal">ENCLOSED
+        BY</code>, <code class="literal">ESCAPED BY</code>, or <code class="literal">LINES
+        TERMINATED BY</code> characters <span class="emphasis"><em>must</em></span> be
+        escaped so that you can read the file back in reliably. ASCII
+        <code class="literal">NUL</code> is escaped to make it easier to view with
+        some pagers.
+      </p><p>
+        The resulting file need not conform to SQL syntax, so nothing
+        else need be escaped.
+      </p><p>
+        If the <code class="literal">FIELDS ESCAPED BY</code> character is empty,
+        no characters are escaped and <code class="literal">NULL</code> is output
+        as <code class="literal">NULL</code>, not <code class="literal">\N</code>. It is
+        probably not a good idea to specify an empty escape character,
+        particularly if field values in your data contain any of the
+        characters in the list just given.
+      </p><a class="indexterm" name="idm45852578309968"></a><a class="indexterm" name="idm45852578308896"></a><p>
+        Here is an example that produces a file in the comma-separated
+        values (CSV) format used by many programs:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT a,b,a+b INTO OUTFILE '/tmp/result.txt'
+  FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
+  LINES TERMINATED BY '\n'
+  FROM test_table;</code></pre><a class="indexterm" name="idm45852578306224"></a><p>
+        If you use <code class="literal">INTO DUMPFILE</code> instead of
+        <code class="literal">INTO OUTFILE</code>, MySQL writes only one row into
+        the file, without any column or line termination and without
+        performing any escape processing. This is useful for selecting a
+        <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> value and storing it in a
+        file.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          Any file created by <code class="literal">INTO OUTFILE</code> or
+          <code class="literal">INTO DUMPFILE</code> is writable by all users on
+          the server host. The reason for this is that the MySQL server
+          cannot create a file that is owned by anyone other than the
+          user under whose account it is running. (You should
+          <span class="emphasis"><em>never</em></span> run <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> as
+          <code class="literal">root</code> for this and other reasons.) The file
+          thus must be world-writable so that you can manipulate its
+          contents.
+        </p><p>
+          If the <a class="link" href="server-system-variables.html#sysvar_secure_file_priv"><code class="literal">secure_file_priv</code></a>
+          system variable is set to a nonempty directory name, the file
+          to be written must be located in that directory.
+</p>
+</div>
+<p>
+        In the context of
+        <a class="link" href="select-into.html" title="13.2.9.1&nbsp;SELECT ... INTO Statement"><code class="literal">SELECT ...
+        INTO</code></a> statements that occur as part of events executed
+        by the Event Scheduler, diagnostics messages (not only errors,
+        but also warnings) are written to the error log, and, on
+        Windows, to the application event log. For additional
+        information, see <a class="xref" href="events-status-info.html" title="23.4.5&nbsp;Event Scheduler Status">Section&nbsp;23.4.5, “Event Scheduler Status”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE TABLE ... SELECT Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="create-table-select"></a>13.1.18.4&nbsp;CREATE TABLE ... SELECT Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852582121616"></a><a class="indexterm" name="idm45852582120576"></a><p>
+        You can create one table from another by adding a
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement at the end of
+        the <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE <em class="replaceable">new_tbl</em> [AS] SELECT * FROM <em class="replaceable">orig_tbl</em>;</code></pre><p>
+        MySQL creates new columns for all elements in the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>. For example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLE test (a INT NOT NULL AUTO_INCREMENT,
+    -&gt;        PRIMARY KEY (a), KEY(b))
+    -&gt;        ENGINE=InnoDB SELECT b,c FROM test2;</code></pre><p>
+        This creates an <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> table with
+        three columns, <code class="literal">a</code>, <code class="literal">b</code>, and
+        <code class="literal">c</code>. The <code class="literal">ENGINE</code> option is
+        part of the <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>
+        statement, and should not be used following the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>; this would result in a
+        syntax error. The same is true for other
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> options such as
+        <code class="literal">CHARSET</code>.
+      </p><p>
+        Notice that the columns from the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement are appended to
+        the right side of the table, not overlapped onto it. Take the
+        following example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM foo;
++---+
+| n |
++---+
+| 1 |
++---+
+
+mysql&gt; CREATE TABLE bar (m INT) SELECT n FROM foo;
+Query OK, 1 row affected (0.02 sec)
+Records: 1  Duplicates: 0  Warnings: 0
+
+mysql&gt; SELECT * FROM bar;
++------+---+
+| m    | n |
++------+---+
+| NULL | 1 |
++------+---+
+1 row in set (0.00 sec)</code></pre><p>
+        For each row in table <code class="literal">foo</code>, a row is inserted
+        in <code class="literal">bar</code> with the values from
+        <code class="literal">foo</code> and default values for the new columns.
+      </p><p>
+        In a table resulting from
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE ...
+        SELECT</code></a>, columns named only in the
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> part come first.
+        Columns named in both parts or only in the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> part come after that. The
+        data type of <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> columns can
+        be overridden by also specifying the column in the
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> part.
+      </p><p>
+        If any errors occur while copying the data to the table, it is
+        automatically dropped and not created.
+      </p><p>
+        You can precede the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> by
+        <code class="literal">IGNORE</code> or <code class="literal">REPLACE</code> to
+        indicate how to handle rows that duplicate unique key values.
+        With <code class="literal">IGNORE</code>, rows that duplicate an existing
+        row on a unique key value are discarded. With
+        <code class="literal">REPLACE</code>, new rows replace rows that have the
+        same unique key value. If neither <code class="literal">IGNORE</code> nor
+        <code class="literal">REPLACE</code> is specified, duplicate unique key
+        values result in an error. For more information, see
+        <a class="xref" href="sql-mode.html#ignore-effect-on-execution" title="The Effect of IGNORE on Statement Execution">The Effect of IGNORE on Statement Execution</a>.
+      </p><p>
+        Because the ordering of the rows in the underlying
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements cannot always
+        be determined, <code class="literal">CREATE TABLE ... IGNORE SELECT</code>
+        and <code class="literal">CREATE TABLE ... REPLACE SELECT</code>
+        statements are flagged as unsafe for statement-based
+        replication. Such statements produce a warning in the error log
+        when using statement-based mode and are written to the binary
+        log using the row-based format when using
+        <code class="literal">MIXED</code> mode. See also
+        <a class="xref" href="replication-sbr-rbr.html" title="16.2.1.1&nbsp;Advantages and Disadvantages of Statement-Based and Row-Based Replication">Section&nbsp;16.2.1.1, “Advantages and Disadvantages of Statement-Based and Row-Based
+        Replication”</a>.
+      </p><p>
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE ...
+        SELECT</code></a> does not automatically create any indexes for
+        you. This is done intentionally to make the statement as
+        flexible as possible. If you want to have indexes in the created
+        table, you should specify these before the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">mysql&gt; CREATE TABLE bar (UNIQUE (n)) SELECT n FROM foo;</code></pre><p>
+        For <code class="literal">CREATE TABLE ... SELECT</code>, the destination
+        table does not preserve information about whether columns in the
+        selected-from table are generated columns. The
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> part of the statement
+        cannot assign values to generated columns in the destination
+        table.
+      </p><p>
+        Some conversion of data types might occur. For example, the
+        <code class="literal">AUTO_INCREMENT</code> attribute is not preserved,
+        and <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a> columns can become
+        <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a> columns. Retrained
+        attributes are <code class="literal">NULL</code> (or <code class="literal">NOT
+        NULL</code>) and, for those columns that have them,
+        <code class="literal">CHARACTER SET</code>, <code class="literal">COLLATION</code>,
+        <code class="literal">COMMENT</code>, and the <code class="literal">DEFAULT</code>
+        clause.
+      </p><p>
+        When creating a table with
+        <a class="link" href="create-table-select.html" title="13.1.18.4&nbsp;CREATE TABLE ... SELECT Statement"><code class="literal">CREATE
+        TABLE ... SELECT</code></a>, make sure to alias any function
+        calls or expressions in the query. If you do not, the
+        <code class="literal">CREATE</code> statement might fail or result in
+        undesirable column names.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE artists_and_works
+  SELECT artist.name, COUNT(work.artist_id) AS number_of_works
+  FROM artist LEFT JOIN work ON artist.id = work.artist_id
+  GROUP BY artist.id;</code></pre><p>
+        You can also explicitly specify the data type for a column in
+        the created table:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE foo (a TINYINT NOT NULL) SELECT b+1 AS a FROM bar;</code></pre><p>
+        For <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE
+        ... SELECT</code></a>, if <code class="literal">IF NOT EXISTS</code> is
+        given and the target table exists, nothing is inserted into the
+        destination table, and the statement is not logged.
+      </p><p>
+        To ensure that the binary log can be used to re-create the
+        original tables, MySQL does not permit concurrent inserts during
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE ...
+        SELECT</code></a>.
+      </p><p>
+        You cannot use <code class="literal">FOR UPDATE</code> as part of the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> in a statement such as
+        <a class="link" href="create-table-select.html" title="13.1.18.4&nbsp;CREATE TABLE ... SELECT Statement"><code class="literal">CREATE
+        TABLE <em class="replaceable"><code>new_table</code></em> SELECT ... FROM
+        <em class="replaceable"><code>old_table</code></em> ...</code></a>. If you
+        attempt to do so, the statement fails.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW ERRORS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-errors"></a>13.7.5.17&nbsp;SHOW ERRORS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570863696"></a><a class="indexterm" name="idm45852570862624"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW ERRORS [LIMIT [<em class="replaceable">offset</em>,] <em class="replaceable">row_count</em>]
+SHOW COUNT(*) ERRORS</code></pre><p>
+        <a class="link" href="show-errors.html" title="13.7.5.17&nbsp;SHOW ERRORS Statement"><code class="literal">SHOW ERRORS</code></a> is a diagnostic
+        statement that is similar to <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW
+        WARNINGS</code></a>, except that it displays information only for
+        errors, rather than for errors, warnings, and notes.
+      </p><p>
+        The <code class="literal">LIMIT</code> clause has the same syntax as for
+        the <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement. See
+        <a class="xref" href="select.html" title="13.2.9&nbsp;SELECT Statement">Section&nbsp;13.2.9, “SELECT Statement”</a>.
+      </p><p>
+        The <a class="link" href="show-errors.html" title="13.7.5.17&nbsp;SHOW ERRORS Statement"><code class="literal">SHOW COUNT(*)
+        ERRORS</code></a> statement displays the number of errors. You
+        can also retrieve this number from the
+        <a class="link" href="server-system-variables.html#sysvar_error_count"><code class="literal">error_count</code></a> variable:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW COUNT(*) ERRORS;
+SELECT @@error_count;</code></pre><p>
+        <a class="link" href="show-errors.html" title="13.7.5.17&nbsp;SHOW ERRORS Statement"><code class="literal">SHOW ERRORS</code></a> and
+        <a class="link" href="server-system-variables.html#sysvar_error_count"><code class="literal">error_count</code></a> apply only to
+        errors, not warnings or notes. In other respects, they are
+        similar to <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW WARNINGS</code></a> and
+        <a class="link" href="server-system-variables.html#sysvar_warning_count"><code class="literal">warning_count</code></a>. In particular,
+        <a class="link" href="show-errors.html" title="13.7.5.17&nbsp;SHOW ERRORS Statement"><code class="literal">SHOW ERRORS</code></a> cannot display
+        information for more than
+        <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a> messages, and
+        <a class="link" href="server-system-variables.html#sysvar_error_count"><code class="literal">error_count</code></a> can exceed the
+        value of <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a> if the
+        number of errors exceeds
+        <a class="link" href="server-system-variables.html#sysvar_max_error_count"><code class="literal">max_error_count</code></a>.
+      </p><p>
+        For more information, see <a class="xref" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement">Section&nbsp;13.7.5.40, “SHOW WARNINGS Statement”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

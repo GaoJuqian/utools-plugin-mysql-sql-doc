@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW CHARACTER SET Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-character-set"></a>13.7.5.3&nbsp;SHOW CHARACTER SET Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571515456"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW {CHARACTER SET | CHARSET}
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        The <a class="link" href="show-character-set.html" title="13.7.5.3&nbsp;SHOW CHARACTER SET Statement"><code class="literal">SHOW CHARACTER SET</code></a> statement
+        shows all available character sets. The
+        <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, if present, indicates
+        which character set names to match. The <code class="literal">WHERE</code>
+        clause can be given to select rows using more general
+        conditions, as discussed in <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>. For
+        example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW CHARACTER SET LIKE 'latin%';
++---------+-----------------------------+-------------------+--------+
+| Charset | Description                 | Default collation | Maxlen |
++---------+-----------------------------+-------------------+--------+
+| latin1  | cp1252 West European        | latin1_swedish_ci |      1 |
+| latin2  | ISO 8859-2 Central European | latin2_general_ci |      1 |
+| latin5  | ISO 8859-9 Turkish          | latin5_turkish_ci |      1 |
+| latin7  | ISO 8859-13 Baltic          | latin7_general_ci |      1 |
++---------+-----------------------------+-------------------+--------+</code></pre><p>
+        <a class="link" href="show-character-set.html" title="13.7.5.3&nbsp;SHOW CHARACTER SET Statement"><code class="literal">SHOW CHARACTER SET</code></a> output has
+        these columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Charset</code>
+          </p><p>
+            The character set name.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Description</code>
+          </p><p>
+            A description of the character set.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Default collation</code>
+          </p><p>
+            The default collation for the character set.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Maxlen</code>
+          </p><p>
+            The maximum number of bytes required to store one character.
+</p></li></ul>
+</div>
+<p>
+        The <code class="literal">filename</code> character set is for internal
+        use only; consequently, <a class="link" href="show-character-set.html" title="13.7.5.3&nbsp;SHOW CHARACTER SET Statement"><code class="literal">SHOW CHARACTER
+        SET</code></a> does not display it.
+      </p><p>
+        Character set information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-character-sets-table.html" title="24.3.2&nbsp;The INFORMATION_SCHEMA CHARACTER_SETS Table"><code class="literal">CHARACTER_SETS</code></a> table.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

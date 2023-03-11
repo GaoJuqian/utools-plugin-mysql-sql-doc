@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>PREPARE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="prepare"></a>13.5.1&nbsp;PREPARE Statement</h3>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852575455456"></a><a class="indexterm" name="idm45852575454384"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">PREPARE <em class="replaceable">stmt_name</em> FROM <em class="replaceable">preparable_stmt</em></code></pre><p>
+      The <a class="link" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement"><code class="literal">PREPARE</code></a> statement prepares a
+      SQL statement and assigns it a name,
+      <em class="replaceable"><code>stmt_name</code></em>, by which to refer to the
+      statement later. The prepared statement is executed with
+      <a class="link" href="execute.html" title="13.5.2&nbsp;EXECUTE Statement"><code class="literal">EXECUTE</code></a> and released with
+      <a class="link" href="deallocate-prepare.html" title="13.5.3&nbsp;DEALLOCATE PREPARE Statement"><code class="literal">DEALLOCATE PREPARE</code></a>. For examples,
+      see <a class="xref" href="sql-prepared-statements.html" title="13.5&nbsp;Prepared Statements">Section&nbsp;13.5, “Prepared Statements”</a>.
+    </p><p>
+      Statement names are not case-sensitive.
+      <em class="replaceable"><code>preparable_stmt</code></em> is either a string
+      literal or a user variable that contains the text of the SQL
+      statement. The text must represent a single statement, not
+      multiple statements. Within the statement, <code class="literal">?</code>
+      characters can be used as parameter markers to indicate where data
+      values are to be bound to the query later when you execute it. The
+      <code class="literal">?</code> characters should not be enclosed within
+      quotation marks, even if you intend to bind them to string values.
+      Parameter markers can be used only where data values should
+      appear, not for SQL keywords, identifiers, and so forth.
+    </p><p>
+      If a prepared statement with the given name already exists, it is
+      deallocated implicitly before the new statement is prepared. This
+      means that if the new statement contains an error and cannot be
+      prepared, an error is returned and no statement with the given
+      name exists.
+    </p><p>
+      The scope of a prepared statement is the session within which it
+      is created, which as several implications:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          A prepared statement created in one session is not available
+          to other sessions.
+        </p></li><li class="listitem"><p>
+          When a session ends, whether normally or abnormally, its
+          prepared statements no longer exist. If auto-reconnect is
+          enabled, the client is not notified that the connection was
+          lost. For this reason, clients may wish to disable
+          auto-reconnect. See <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/c-api-auto-reconnect.html" target="_top">Automatic Reconnection Control</a>.
+        </p></li><li class="listitem"><p>
+          A prepared statement created within a stored program continues
+          to exist after the program finishes executing and can be
+          executed outside the program later.
+        </p></li><li class="listitem"><p>
+          A statement prepared in stored program context cannot refer to
+          stored procedure or function parameters or local variables
+          because they go out of scope when the program ends and would
+          be unavailable were the statement to be executed later outside
+          the program. As a workaround, refer instead to user-defined
+          variables, which also have session scope; see
+          <a class="xref" href="user-variables.html" title="9.4&nbsp;User-Defined Variables">Section&nbsp;9.4, “User-Defined Variables”</a>.
+</p></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

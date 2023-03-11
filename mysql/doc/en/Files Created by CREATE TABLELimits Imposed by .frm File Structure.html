@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Files Created by CREATE TABLELimits Imposed by .frm File Structure</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="create-table-files"></a>13.1.18.1&nbsp;Files Created by CREATE TABLE</h4>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852582251152"></a><a class="indexterm" name="idm45852582249696"></a><a class="indexterm" name="idm45852582248624"></a><a class="indexterm" name="idm45852582247552"></a><a class="indexterm" name="idm45852582246480"></a><a class="indexterm" name="idm45852582245408"></a><p>
+        MySQL represents each table by an <code class="filename">.frm</code>
+        table format (definition) file in the database directory. The
+        storage engine for the table might create other files as well.
+      </p><p>
+        For an <code class="literal">InnoDB</code> table created in a
+        file-per-table tablespace or general tablespace, table data and
+        associated indexes are stored in a
+        <a class="link" href="glossary.html#glos_ibd_file" title=".ibd file">.ibd file</a> in the database
+        directory. When an <code class="literal">InnoDB</code> table is created in
+        the system tablespace, table data and indexes are stored in the
+        <a class="link" href="glossary.html#glos_ibdata_file" title="ibdata file">ibdata* files</a> that
+        represent the system tablespace. The
+        <a class="link" href="innodb-parameters.html#sysvar_innodb_file_per_table"><code class="literal">innodb_file_per_table</code></a> option
+        controls whether tables are created in file-per-table
+        tablespaces or the system tablespace, by default. The
+        <code class="literal">TABLESPACE</code> option can be used to place a
+        table in a file-per-table tablespace, general tablespace, or the
+        system tablespace, regardless of the
+        <a class="link" href="innodb-parameters.html#sysvar_innodb_file_per_table"><code class="literal">innodb_file_per_table</code></a> setting.
+      </p><p>
+        For <code class="literal">MyISAM</code> tables, the storage engine creates
+        data and index files. Thus, for each <code class="literal">MyISAM</code>
+        table <em class="replaceable"><code>tbl_name</code></em>, there are three disk
+        files.
+</p>
+<div class="informaltable">
+<table summary="The purpose of MyISAM table tbl_name disk files."><colgroup><col style="width: 30%"><col style="width: 70%"></colgroup><thead><tr>
+            <th>File</th>
+            <th>Purpose</th>
+          </tr></thead><tbody><tr>
+            <td><code class="filename"><em class="replaceable"><code>tbl_name</code></em>.frm</code></td>
+            <td>Table format (definition) file</td>
+          </tr><tr>
+            <td><code class="filename"><em class="replaceable"><code>tbl_name</code></em>.MYD</code></td>
+            <td>Data file</td>
+          </tr><tr>
+            <td><code class="filename"><em class="replaceable"><code>tbl_name</code></em>.MYI</code></td>
+            <td>Index file</td>
+</tr></tbody></table>
+</div>
+<p>
+        <a class="xref" href="storage-engines.html" title="Chapter&nbsp;15&nbsp;Alternative Storage Engines">Chapter&nbsp;15, <i>Alternative Storage Engines</i></a>, describes what files each
+        storage engine creates to represent tables. If a table name
+        contains special characters, the names for the table files
+        contain encoded versions of those characters as described in
+        <a class="xref" href="identifier-mapping.html" title="9.2.4&nbsp;Mapping of Identifiers to File Names">Section&nbsp;9.2.4, “Mapping of Identifiers to File Names”</a>.
+</p>
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="limits-frm-file"></a>Limits Imposed by .frm File Structure</h5>
+</div>
+</div>
+</div>
+<p>
+          As described previously, each table has an
+          <code class="filename">.frm</code> file that contains the table
+          definition. The server uses the following expression to check
+          some of the table information stored in the file against an
+          upper limit of 64KB:
+        </p><pre class="programlisting copytoclipboard language-clike"><code class="language-clike">if (info_length+(ulong) create_fields.elements*FCOMP+288+
+    n_length+int_length+com_length &gt; 65535L || int_count &gt; 255)</code></pre><p>
+          The portion of the information stored in the
+          <code class="filename">.frm</code> file that is checked against the
+          expression cannot grow beyond the 64KB limit, so if the table
+          definition reaches this size, no more columns can be added.
+        </p><p>
+          The relevant factors in the expression are:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              <code class="literal">info_length</code> is space needed for
+              <span class="quote">“<span class="quote">screens.</span>”</span> This is related to MySQL's Unireg
+              heritage.
+            </p></li><li class="listitem"><p>
+              <code class="literal">create_fields.elements</code> is the number of
+              columns.
+            </p></li><li class="listitem"><p>
+              <code class="literal">FCOMP</code> is 17.
+            </p></li><li class="listitem"><p>
+              <code class="literal">n_length</code> is the total length of all
+              column names, including one byte per name as a separator.
+            </p></li><li class="listitem"><p>
+              <code class="literal">int_length</code> is related to the list of
+              values for <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> and
+              <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> columns. In this
+              context, <span class="quote">“<span class="quote">int</span>”</span> does not mean
+              <span class="quote">“<span class="quote">integer.</span>”</span> It means <span class="quote">“<span class="quote">interval,</span>”</span>
+              a term that refers collectively to
+              <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> and
+              <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> columns.
+            </p></li><li class="listitem"><p>
+              <code class="literal">int_count</code> is the number of unique
+              <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> and
+              <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> definitions.
+            </p></li><li class="listitem"><p>
+              <code class="literal">com_length</code> is the total length of
+              column comments.
+</p></li></ul>
+</div>
+<p>
+          The expression just described has several implications for
+          permitted table definitions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Using long column names can reduce the maximum number of
+              columns, as can the inclusion of
+              <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> or
+              <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> columns, or use of
+              column comments.
+            </p></li><li class="listitem"><p>
+              A table can have no more than 255 unique
+              <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> and
+              <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> definitions. Columns
+              with identical element lists are considered the same
+              against this limt. For example, if a table contains these
+              two columns, they count as one (not two) toward this limit
+              because the definitions are identical:
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">e1 ENUM('a','b','c')
+e2 ENUM('a','b','c')</code></pre></li><li class="listitem"><p>
+              The sum of the length of element names in the unique
+              <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> and
+              <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> definitions counts
+              toward the 64KB limit, so although the theoretical limit
+              on number of elements in a given
+              <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> column is 65,535, the
+              practical limit is less than 3000.
+</p></li></ul>
+</div>
+
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

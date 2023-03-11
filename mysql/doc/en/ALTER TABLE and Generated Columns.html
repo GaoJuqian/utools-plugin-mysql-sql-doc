@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>ALTER TABLE and Generated Columns</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="alter-table-generated-columns"></a>13.1.8.2&nbsp;ALTER TABLE and Generated Columns</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852584636288"></a><p>
+        <code class="literal">ALTER TABLE</code> operations permitted for
+        generated columns are <code class="literal">ADD</code>,
+        <code class="literal">MODIFY</code>, and <code class="literal">CHANGE</code>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Generated columns can be added.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (c1 INT);
+ALTER TABLE t1 ADD COLUMN c2 INT GENERATED ALWAYS AS (c1 + 1) STORED;</code></pre></li><li class="listitem"><p>
+            The data type and expression of generated columns can be
+            modified.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (c1 INT, c2 INT GENERATED ALWAYS AS (c1 + 1) STORED);
+ALTER TABLE t1 MODIFY COLUMN c2 TINYINT GENERATED ALWAYS AS (c1 + 5) STORED;</code></pre></li><li class="listitem"><p>
+            Generated columns can be renamed or dropped, if no other
+            column refers to them.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (c1 INT, c2 INT GENERATED ALWAYS AS (c1 + 1) STORED);
+ALTER TABLE t1 CHANGE c2 c3 INT GENERATED ALWAYS AS (c1 + 1) STORED;
+ALTER TABLE t1 DROP COLUMN c3;</code></pre></li><li class="listitem"><p>
+            Virtual generated columns cannot be altered to stored
+            generated columns, or vice versa. To work around this, drop
+            the column, then add it with the new definition.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (c1 INT, c2 INT GENERATED ALWAYS AS (c1 + 1) VIRTUAL);
+ALTER TABLE t1 DROP COLUMN c2;
+ALTER TABLE t1 ADD COLUMN c2 INT GENERATED ALWAYS AS (c1 + 1) STORED;</code></pre></li><li class="listitem"><p>
+            Nongenerated columns can be altered to stored but not
+            virtual generated columns.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (c1 INT, c2 INT);
+ALTER TABLE t1 MODIFY COLUMN c2 INT GENERATED ALWAYS AS (c1 + 1) STORED;</code></pre></li><li class="listitem"><p>
+            Stored but not virtual generated columns can be altered to
+            nongenerated columns. The stored generated values become the
+            values of the nongenerated column.
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (c1 INT, c2 INT GENERATED ALWAYS AS (c1 + 1) STORED);
+ALTER TABLE t1 MODIFY COLUMN c2 INT;</code></pre></li><li class="listitem"><p>
+            <code class="literal">ADD COLUMN</code> is not an in-place operation
+            for stored columns (done without using a temporary table)
+            because the expression must be evaluated by the server. For
+            stored columns, indexing changes are done in place, and
+            expression changes are not done in place. Changes to column
+            comments are done in place.
+          </p></li><li class="listitem"><p>
+            For non-partitioned tables, <code class="literal">ADD COLUMN</code>
+            and <code class="literal">DROP COLUMN</code> are in-place operations
+            for virtual columns. However, adding or dropping a virtual
+            column cannot be performed in place in combination with
+            other <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operations.
+          </p><p>
+            For partitioned tables, <code class="literal">ADD COLUMN</code> and
+            <code class="literal">DROP COLUMN</code> are not in-place operations
+            for virtual columns.
+          </p></li><li class="listitem"><p>
+            <code class="literal">InnoDB</code> supports secondary indexes on
+            virtual generated columns. Adding or dropping a secondary
+            index on a virtual generated column is an in-place
+            operation. For more information, see
+            <a class="xref" href="create-table-secondary-indexes.html" title="13.1.18.8&nbsp;Secondary Indexes and Generated Columns">Section&nbsp;13.1.18.8, “Secondary Indexes and Generated Columns”</a>.
+          </p></li><li class="listitem"><p>
+            When a <code class="literal">VIRTUAL</code> generated column is added
+            to a table or modified, it is not ensured that values being
+            calculated by the generated column expression are not out of
+            range for the column. This can lead to inconsistent data
+            being returned and unexpectedly failed statements. To permit
+            control over whether validation occurs for such columns,
+            <code class="literal">ALTER TABLE</code> supports <code class="literal">WITHOUT
+            VALIDATION</code> and <code class="literal">WITH VALIDATION</code>
+            clauses:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                With <code class="literal">WITHOUT VALIDATION</code> (the default
+                if neither clause is specified), an in-place operation
+                is performed (if possible), data integrity is not
+                checked, and the statement finishes more quickly.
+                However, later reads from the table might report
+                warnings or errors for the column if values are out of
+                range.
+              </p></li><li class="listitem"><p>
+                With <code class="literal">WITH VALIDATION</code>, <code class="literal">ALTER
+                TABLE</code> copies the table. If an out-of-range or
+                any other error occurs, the statement fails. Because a
+                table copy is performed, the statement takes longer.
+</p></li></ul>
+</div>
+<p>
+            <code class="literal">WITHOUT VALIDATION</code> and <code class="literal">WITH
+            VALIDATION</code> are permitted only with <code class="literal">ADD
+            COLUMN</code>, <code class="literal">CHANGE COLUMN</code>, and
+            <code class="literal">MODIFY COLUMN</code> operations. Otherwise, an
+            <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_wrong_usage" target="_top"><code class="literal">ER_WRONG_USAGE</code></a> error occurs.
+          </p></li><li class="listitem"><p>
+            As of MySQL 5.7.10, if expression evaluation causes
+            truncation or provides incorrect input to a function, the
+            <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement
+            terminates with an error and the DDL operation is rejected.
+          </p></li><li class="listitem"><p>
+            An <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement that
+            changes the default value of a column
+            <em class="replaceable"><code>col_name</code></em> may also change the
+            value of a generated column expression that refers to the
+            column using
+            <a class="link" href="miscellaneous-functions.html#function_default"><code class="literal">DEFAULT(<em class="replaceable"><code>col_name</code></em>)</code></a>.
+            For this reason, as of MySQL 5.7.13,
+            <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operations that
+            change the definition of a column cause a table rebuild if
+            any generated column expression uses
+            <a class="link" href="miscellaneous-functions.html#function_default"><code class="literal">DEFAULT()</code></a>.
+</p></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

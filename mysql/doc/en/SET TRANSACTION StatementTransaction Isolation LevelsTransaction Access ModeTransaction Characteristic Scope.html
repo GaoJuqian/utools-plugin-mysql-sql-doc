@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SET TRANSACTION StatementTransaction Isolation LevelsTransaction Access ModeTransaction Characteristic Scope</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="set-transaction"></a>13.3.6&nbsp;SET TRANSACTION Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852576774768"></a><a class="indexterm" name="idm45852576773712"></a><a class="indexterm" name="idm45852576772640"></a><a class="indexterm" name="idm45852576771568"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SET [GLOBAL | SESSION] TRANSACTION
+    <em class="replaceable">transaction_characteristic</em> [, <em class="replaceable">transaction_characteristic</em>] ...
+
+<em class="replaceable">transaction_characteristic</em>: {
+    ISOLATION LEVEL <em class="replaceable">level</em>
+  | <em class="replaceable">access_mode</em>
+}
+
+<em class="replaceable">level</em>: {
+     REPEATABLE READ
+   | READ COMMITTED
+   | READ UNCOMMITTED
+   | SERIALIZABLE
+}
+
+<em class="replaceable">access_mode</em>: {
+     READ WRITE
+   | READ ONLY
+}</code></pre><p>
+      This statement specifies
+      <a class="link" href="glossary.html#glos_transaction" title="transaction">transaction</a>
+      characteristics. It takes a list of one or more characteristic
+      values separated by commas. Each characteristic value sets the
+      transaction <a class="link" href="glossary.html#glos_isolation_level" title="isolation level">isolation
+      level</a> or access mode. The isolation level is used for
+      operations on <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tables. The
+      access mode specifies whether transactions operate in read/write
+      or read-only mode.
+    </p><p>
+      In addition, <a class="link" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement"><code class="literal">SET TRANSACTION</code></a> can
+      include an optional <code class="literal">GLOBAL</code> or
+      <code class="literal">SESSION</code> keyword to indicate the scope of the
+      statement.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="set-transaction.html#set-transaction-isolation-level" title="Transaction Isolation Levels">Transaction Isolation Levels</a></p></li><li class="listitem"><p><a class="xref" href="set-transaction.html#set-transaction-access-mode" title="Transaction Access Mode">Transaction Access Mode</a></p></li><li class="listitem"><p><a class="xref" href="set-transaction.html#set-transaction-scope" title="Transaction Characteristic Scope">Transaction Characteristic Scope</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h4 class="title"><a name="set-transaction-isolation-level"></a>Transaction Isolation Levels</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        To set the transaction isolation level, use an
+        <code class="literal">ISOLATION LEVEL
+        <em class="replaceable"><code>level</code></em></code> clause. It is not
+        permitted to specify multiple <code class="literal">ISOLATION LEVEL</code>
+        clauses in the same <a class="link" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement"><code class="literal">SET
+        TRANSACTION</code></a> statement.
+      </p><p>
+        The default isolation level is
+        <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_repeatable-read"><code class="literal">REPEATABLE READ</code></a>. Other
+        permitted values are <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_read-committed"><code class="literal">READ
+        COMMITTED</code></a>, <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_read-uncommitted"><code class="literal">READ
+        UNCOMMITTED</code></a>, and
+        <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_serializable"><code class="literal">SERIALIZABLE</code></a>. For information
+        about these isolation levels, see
+        <a class="xref" href="innodb-transaction-isolation-levels.html" title="14.7.2.1&nbsp;Transaction Isolation Levels">Section&nbsp;14.7.2.1, “Transaction Isolation Levels”</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="set-transaction-access-mode"></a>Transaction Access Mode</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        To set the transaction access mode, use a <code class="literal">READ
+        WRITE</code> or <code class="literal">READ ONLY</code> clause. It is
+        not permitted to specify multiple access-mode clauses in the
+        same <a class="link" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement"><code class="literal">SET TRANSACTION</code></a> statement.
+      </p><p>
+        By default, a transaction takes place in read/write mode, with
+        both reads and writes permitted to tables used in the
+        transaction. This mode may be specified explicitly using
+        <a class="link" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement"><code class="literal">SET TRANSACTION</code></a> with an access
+        mode of <code class="literal">READ WRITE</code>.
+      </p><p>
+        If the transaction access mode is set to <code class="literal">READ
+        ONLY</code>, changes to tables are prohibited. This may
+        enable storage engines to make performance improvements that are
+        possible when writes are not permitted.
+      </p><p>
+        In read-only mode, it remains possible to change tables created
+        with the <code class="literal">TEMPORARY</code> keyword using DML
+        statements. Changes made with DDL statements are not permitted,
+        just as with permanent tables.
+      </p><p>
+        The <code class="literal">READ WRITE</code> and <code class="literal">READ
+        ONLY</code> access modes also may be specified for an
+        individual transaction using the
+        <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+        TRANSACTION</code></a> statement.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="set-transaction-scope"></a>Transaction Characteristic Scope</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        You can set transaction characteristics globally, for the
+        current session, or for the next transaction only:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            With the <code class="literal">GLOBAL</code> keyword:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                The statement applies globally for all subsequent
+                sessions.
+              </p></li><li class="listitem"><p>
+                Existing sessions are unaffected.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+            With the <code class="literal">SESSION</code> keyword:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                The statement applies to all subsequent transactions
+                performed within the current session.
+              </p></li><li class="listitem"><p>
+                The statement is permitted within transactions, but does
+                not affect the current ongoing transaction.
+              </p></li><li class="listitem"><p>
+                If executed between transactions, the statement
+                overrides any preceding statement that sets the
+                next-transaction value of the named characteristics.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+            Without any <code class="literal">SESSION</code> or
+            <code class="literal">GLOBAL</code> keyword:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                The statement applies only to the next single
+                transaction performed within the session.
+              </p></li><li class="listitem"><p>
+                Subsequent transactions revert to using the session
+                value of the named characteristics.
+              </p></li><li class="listitem"><p>
+                The statement is not permitted within transactions:
+              </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; START TRANSACTION;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql&gt; SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+ERROR 1568 (25001): Transaction characteristics can't be changed
+while a transaction is in progress</code></pre></li></ul>
+</div>
+</li></ul>
+</div>
+<p>
+        A change to global transaction characteristics requires the
+        <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege. Any session is
+        free to change its session characteristics (even in the middle
+        of a transaction), or the characteristics for its next
+        transaction (prior to the start of that transaction).
+      </p><p>
+        To set the global isolation level at server startup, use the
+        <a class="link" href="server-options.html#option_mysqld_transaction-isolation"><code class="option">--transaction-isolation=<em class="replaceable"><code>level</code></em></code></a>
+        option on the command line or in an option file. Values of
+        <em class="replaceable"><code>level</code></em> for this option use dashes
+        rather than spaces, so the permissible values are
+        <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_read-uncommitted"><code class="literal">READ-UNCOMMITTED</code></a>,
+        <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_read-committed"><code class="literal">READ-COMMITTED</code></a>,
+        <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_repeatable-read"><code class="literal">REPEATABLE-READ</code></a>, or
+        <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_serializable"><code class="literal">SERIALIZABLE</code></a>.
+      </p><p>
+        Similarly, to set the global transaction access mode at server
+        startup, use the
+        <a class="link" href="server-options.html#option_mysqld_transaction-read-only"><code class="option">--transaction-read-only</code></a> option.
+        The default is <code class="literal">OFF</code> (read/write mode) but the
+        value can be set to <code class="literal">ON</code> for a mode of read
+        only.
+      </p><p>
+        For example, to set the isolation level to
+        <a class="link" href="innodb-transaction-isolation-levels.html#isolevel_repeatable-read"><code class="literal">REPEATABLE READ</code></a> and the
+        access mode to <code class="literal">READ WRITE</code>, use these lines in
+        the <code class="literal">[mysqld]</code> section of an option file:
+      </p><pre class="programlisting copytoclipboard language-ini"><code class="language-ini">[mysqld]
+transaction-isolation = REPEATABLE-READ
+transaction-read-only = OFF</code></pre><p>
+        At runtime, characteristics at the global, session, and
+        next-transaction scope levels can be set indirectly using the
+        <a class="link" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement"><code class="literal">SET TRANSACTION</code></a> statement, as
+        described previously. They can also be set directly using the
+        <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+        statement to assign values to the
+        <a class="link" href="server-system-variables.html#sysvar_transaction_isolation"><code class="literal">transaction_isolation</code></a> and
+        <a class="link" href="server-system-variables.html#sysvar_transaction_read_only"><code class="literal">transaction_read_only</code></a> system
+        variables:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <a class="link" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement"><code class="literal">SET TRANSACTION</code></a> permits
+            optional <code class="literal">GLOBAL</code> and
+            <code class="literal">SESSION</code> keywords for setting transaction
+            characteristics at different scope levels.
+          </p></li><li class="listitem"><p>
+            The
+            <a class="link" href="set-variable.html" title="13.7.4.1&nbsp;SET Syntax for Variable Assignment"><code class="literal">SET</code></a>
+            statement for assigning values to the
+            <a class="link" href="server-system-variables.html#sysvar_transaction_isolation"><code class="literal">transaction_isolation</code></a> and
+            <a class="link" href="server-system-variables.html#sysvar_transaction_read_only"><code class="literal">transaction_read_only</code></a>
+            system variables has syntaxes for setting these variables at
+            different scope levels.
+</p></li></ul>
+</div>
+<p>
+        The following tables show the characteristic scope level set by
+        each <a class="link" href="set-transaction.html" title="13.3.6&nbsp;SET TRANSACTION Statement"><code class="literal">SET TRANSACTION</code></a> and
+        variable-assignment syntax.
+</p>
+<div class="table">
+<a name="set-transaction-characteristic-syntax"></a><p class="title"><b>Table&nbsp;13.6&nbsp;SET TRANSACTION Syntax for Transaction Characteristics</b></p>
+<div class="table-contents">
+<table summary="Syntax for setting transaction characteristics using SET TRANSACTION and affected scope."><colgroup><col style="width: 60%"><col style="width: 40%"></colgroup><thead><tr>
+            <th>Syntax</th>
+            <th>Affected Characteristic Scope</th>
+          </tr></thead><tbody><tr>
+            <td><code class="literal">SET GLOBAL TRANSACTION
+              <em class="replaceable"><code>transaction_characteristic</code></em></code></td>
+            <td>Global</td>
+          </tr><tr>
+            <td><code class="literal">SET SESSION TRANSACTION
+              <em class="replaceable"><code>transaction_characteristic</code></em></code></td>
+            <td>Session</td>
+          </tr><tr>
+            <td><code class="literal">SET TRANSACTION
+              <em class="replaceable"><code>transaction_characteristic</code></em></code></td>
+            <td>Next transaction only</td>
+</tr></tbody></table>
+</div>
+
+</div>
+<br class="table-break">
+<div class="table">
+<a name="set-variable-characteristic-syntax"></a><p class="title"><b>Table&nbsp;13.7&nbsp;SET Syntax for Transaction Characteristics</b></p>
+<div class="table-contents">
+<table summary="Syntax for setting transaction characteristics using SET and affected scope."><colgroup><col style="width: 60%"><col style="width: 40%"></colgroup><thead><tr>
+            <th>Syntax</th>
+            <th>Affected Characteristic Scope</th>
+          </tr></thead><tbody><tr>
+            <td><code class="literal">SET GLOBAL <em class="replaceable"><code>var_name</code></em> =
+              <em class="replaceable"><code>value</code></em></code></td>
+            <td>Global</td>
+          </tr><tr>
+            <td><code class="literal">SET @@GLOBAL.<em class="replaceable"><code>var_name</code></em> =
+              <em class="replaceable"><code>value</code></em></code></td>
+            <td>Global</td>
+          </tr><tr>
+            <td><code class="literal">SET SESSION <em class="replaceable"><code>var_name</code></em> =
+              <em class="replaceable"><code>value</code></em></code></td>
+            <td>Session</td>
+          </tr><tr>
+            <td><code class="literal">SET @@SESSION.<em class="replaceable"><code>var_name</code></em> =
+              <em class="replaceable"><code>value</code></em></code></td>
+            <td>Session</td>
+          </tr><tr>
+            <td><code class="literal">SET <em class="replaceable"><code>var_name</code></em> =
+              <em class="replaceable"><code>value</code></em></code></td>
+            <td>Session</td>
+          </tr><tr>
+            <td><code class="literal">SET @@<em class="replaceable"><code>var_name</code></em> =
+              <em class="replaceable"><code>value</code></em></code></td>
+            <td>Next transaction only</td>
+</tr></tbody></table>
+</div>
+
+</div>
+<br class="table-break"><p>
+        It is possible to check the global and session values of
+        transaction characteristics at runtime:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT @@GLOBAL.transaction_isolation, @@GLOBAL.transaction_read_only;
+SELECT @@SESSION.transaction_isolation, @@SESSION.transaction_read_only;</code></pre><p>
+        Prior to MySQL 5.7.20, use
+        <a class="link" href="server-system-variables.html#sysvar_tx_isolation"><code class="literal">tx_isolation</code></a> and
+        <a class="link" href="server-system-variables.html#sysvar_tx_read_only"><code class="literal">tx_read_only</code></a> rather than
+        <a class="link" href="server-system-variables.html#sysvar_transaction_isolation"><code class="literal">transaction_isolation</code></a> and
+        <a class="link" href="server-system-variables.html#sysvar_transaction_read_only"><code class="literal">transaction_read_only</code></a>.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

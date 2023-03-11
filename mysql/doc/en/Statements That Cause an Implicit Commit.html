@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Statements That Cause an Implicit Commit</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="implicit-commit"></a>13.3.3&nbsp;Statements That Cause an Implicit Commit</h3>
+
+</div>
+
+</div>
+
+</div>
+<p>
+      The statements listed in this section (and any synonyms for them)
+      implicitly end any transaction active in the current session, as
+      if you had done a <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">COMMIT</code></a> before
+      executing the statement.
+    </p><p>
+      Most of these statements also cause an implicit commit after
+      executing. The intent is to handle each such statement in its own
+      special transaction because it cannot be rolled back anyway.
+      Transaction-control and locking statements are exceptions: If an
+      implicit commit occurs before execution, another does not occur
+      after.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <span class="bold"><strong>Data definition language (DDL)
+          statements that define or modify database objects.</strong></span>
+          <a class="link" href="alter-database.html" title="13.1.1&nbsp;ALTER DATABASE Statement"><code class="literal">ALTER DATABASE
+          ... UPGRADE DATA DIRECTORY NAME</code></a>,
+          <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a>,
+          <a class="link" href="alter-procedure.html" title="13.1.6&nbsp;ALTER PROCEDURE Statement"><code class="literal">ALTER PROCEDURE</code></a>,
+          <a class="link" href="alter-server.html" title="13.1.7&nbsp;ALTER SERVER Statement"><code class="literal">ALTER SERVER</code></a>,
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>,
+          <a class="link" href="alter-tablespace.html" title="13.1.9&nbsp;ALTER TABLESPACE Statement"><code class="literal">ALTER TABLESPACE</code></a>,
+          <a class="link" href="alter-view.html" title="13.1.10&nbsp;ALTER VIEW Statement"><code class="literal">ALTER VIEW</code></a>,
+          <a class="link" href="create-database.html" title="13.1.11&nbsp;CREATE DATABASE Statement"><code class="literal">CREATE DATABASE</code></a>,
+          <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE EVENT</code></a>,
+          <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE INDEX</code></a>,
+          <a class="link" href="create-procedure.html" title="13.1.16&nbsp;CREATE PROCEDURE and CREATE FUNCTION Statements"><code class="literal">CREATE PROCEDURE</code></a>,
+          <a class="link" href="create-server.html" title="13.1.17&nbsp;CREATE SERVER Statement"><code class="literal">CREATE SERVER</code></a>,
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>,
+          <a class="link" href="create-tablespace.html" title="13.1.19&nbsp;CREATE TABLESPACE Statement"><code class="literal">CREATE TABLESPACE</code></a>,
+          <a class="link" href="create-trigger.html" title="13.1.20&nbsp;CREATE TRIGGER Statement"><code class="literal">CREATE TRIGGER</code></a>,
+          <a class="link" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement"><code class="literal">CREATE VIEW</code></a>,
+          <a class="link" href="drop-database.html" title="13.1.22&nbsp;DROP DATABASE Statement"><code class="literal">DROP DATABASE</code></a>,
+          <a class="link" href="drop-event.html" title="13.1.23&nbsp;DROP EVENT Statement"><code class="literal">DROP EVENT</code></a>,
+          <a class="link" href="drop-index.html" title="13.1.25&nbsp;DROP INDEX Statement"><code class="literal">DROP INDEX</code></a>,
+          <a class="link" href="drop-procedure.html" title="13.1.27&nbsp;DROP PROCEDURE and DROP FUNCTION Statements"><code class="literal">DROP PROCEDURE</code></a>,
+          <a class="link" href="drop-server.html" title="13.1.28&nbsp;DROP SERVER Statement"><code class="literal">DROP SERVER</code></a>,
+          <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a>,
+          <a class="link" href="drop-tablespace.html" title="13.1.30&nbsp;DROP TABLESPACE Statement"><code class="literal">DROP TABLESPACE</code></a>,
+          <a class="link" href="drop-trigger.html" title="13.1.31&nbsp;DROP TRIGGER Statement"><code class="literal">DROP TRIGGER</code></a>,
+          <a class="link" href="drop-view.html" title="13.1.32&nbsp;DROP VIEW Statement"><code class="literal">DROP VIEW</code></a>,
+          <a class="link" href="install-plugin.html" title="13.7.3.3&nbsp;INSTALL PLUGIN Statement"><code class="literal">INSTALL PLUGIN</code></a>,
+          <a class="link" href="rename-table.html" title="13.1.33&nbsp;RENAME TABLE Statement"><code class="literal">RENAME TABLE</code></a>,
+          <a class="link" href="truncate-table.html" title="13.1.34&nbsp;TRUNCATE TABLE Statement"><code class="literal">TRUNCATE TABLE</code></a>,
+          <a class="link" href="uninstall-plugin.html" title="13.7.3.4&nbsp;UNINSTALL PLUGIN Statement"><code class="literal">UNINSTALL PLUGIN</code></a>.
+        </p><p>
+          <a class="link" href="alter-function.html" title="13.1.3&nbsp;ALTER FUNCTION Statement"><code class="literal">ALTER FUNCTION</code></a>,
+          <a class="link" href="create-function.html" title="13.1.13&nbsp;CREATE FUNCTION Statement"><code class="literal">CREATE FUNCTION</code></a> and
+          <a class="link" href="drop-function.html" title="13.1.24&nbsp;DROP FUNCTION Statement"><code class="literal">DROP FUNCTION</code></a> also cause an
+          implicit commit when used with stored functions, but not with
+          loadable functions. (<a class="link" href="alter-function.html" title="13.1.3&nbsp;ALTER FUNCTION Statement"><code class="literal">ALTER
+          FUNCTION</code></a> can only be used with stored functions.)
+        </p><p>
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> and
+          <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> statements do not
+          commit a transaction if the <code class="literal">TEMPORARY</code>
+          keyword is used. (This does not apply to other operations on
+          temporary tables such as <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+          TABLE</code></a> and <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE
+          INDEX</code></a>, which do cause a commit.) However, although
+          no implicit commit occurs, neither can the statement be rolled
+          back, which means that the use of such statements causes
+          transactional atomicity to be violated. For example, if you
+          use <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+          TEMPORARY TABLE</code></a> and then roll back the transaction,
+          the table remains in existence.
+        </p><p>
+          The <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement in
+          <code class="literal">InnoDB</code> is processed as a single
+          transaction. This means that a
+          <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">ROLLBACK</code></a>
+          from the user does not undo <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+          TABLE</code></a> statements the user made during that
+          transaction.
+        </p><p>
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE ...
+          SELECT</code></a> causes an implicit commit before and after
+          the statement is executed when you are creating nontemporary
+          tables. (No commit occurs for <code class="literal">CREATE TEMPORARY TABLE
+          ... SELECT</code>.)
+        </p></li><li class="listitem"><p>
+          <span class="bold"><strong>Statements that implicitly use or modify
+          tables in the <code class="literal">mysql</code> database.</strong></span>
+          <a class="link" href="alter-user.html" title="13.7.1.1&nbsp;ALTER USER Statement"><code class="literal">ALTER USER</code></a>,
+          <a class="link" href="create-user.html" title="13.7.1.2&nbsp;CREATE USER Statement"><code class="literal">CREATE USER</code></a>,
+          <a class="link" href="drop-user.html" title="13.7.1.3&nbsp;DROP USER Statement"><code class="literal">DROP USER</code></a>,
+          <a class="link" href="grant.html" title="13.7.1.4&nbsp;GRANT Statement"><code class="literal">GRANT</code></a>,
+          <a class="link" href="rename-user.html" title="13.7.1.5&nbsp;RENAME USER Statement"><code class="literal">RENAME USER</code></a>,
+          <a class="link" href="revoke.html" title="13.7.1.6&nbsp;REVOKE Statement"><code class="literal">REVOKE</code></a>,
+          <a class="link" href="set-password.html" title="13.7.1.7&nbsp;SET PASSWORD Statement"><code class="literal">SET PASSWORD</code></a>.
+        </p></li><li class="listitem"><p>
+          <span class="bold"><strong>Transaction-control and locking
+          statements.</strong></span>
+          <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">BEGIN</code></a>,
+          <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK TABLES</code></a>, <code class="literal">SET
+          autocommit = 1</code> (if the value is not already 1),
+          <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+          TRANSACTION</code></a>,
+          <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+          TABLES</code></a>.
+        </p><p>
+          <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+          TABLES</code></a> commits a transaction only if any tables
+          currently have been locked with <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+          TABLES</code></a> to acquire nontransactional table locks. A
+          commit does not occur for
+          <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">UNLOCK
+          TABLES</code></a> following <a class="link" href="flush.html#flush-tables-with-read-lock"><code class="literal">FLUSH TABLES
+          WITH READ LOCK</code></a> because the latter statement does not
+          acquire table-level locks.
+        </p><p>
+          Transactions cannot be nested. This is a consequence of the
+          implicit commit performed for any current transaction when you
+          issue a <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+          TRANSACTION</code></a> statement or one of its synonyms.
+        </p><p>
+          Statements that cause an implicit commit cannot be used in an
+          XA transaction while the transaction is in an
+          <code class="literal">ACTIVE</code> state.
+        </p><p>
+          The <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">BEGIN</code></a>
+          statement differs from the use of the <code class="literal">BEGIN</code>
+          keyword that starts a
+          <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+          END</code></a> compound statement. The latter does not cause an
+          implicit commit. See <a class="xref" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement">Section&nbsp;13.6.1, “BEGIN ... END Compound Statement”</a>.
+        </p></li><li class="listitem"><p>
+          <span class="bold"><strong>Data loading statements.</strong></span>
+          <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>.
+          <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a> causes an implicit
+          commit only for tables using the
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage engine.
+        </p></li><li class="listitem"><p>
+          <span class="bold"><strong>Administrative statements.</strong></span>
+          <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a>,
+          <a class="link" href="cache-index.html" title="13.7.6.2&nbsp;CACHE INDEX Statement"><code class="literal">CACHE INDEX</code></a>,
+          <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a>,
+          <a class="link" href="flush.html" title="13.7.6.3&nbsp;FLUSH Statement"><code class="literal">FLUSH</code></a>,
+          <a class="link" href="load-index.html" title="13.7.6.5&nbsp;LOAD INDEX INTO CACHE Statement"><code class="literal">LOAD INDEX INTO
+          CACHE</code></a>, <a class="link" href="optimize-table.html" title="13.7.2.4&nbsp;OPTIMIZE TABLE Statement"><code class="literal">OPTIMIZE
+          TABLE</code></a>, <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a>,
+          <a class="link" href="reset.html" title="13.7.6.6&nbsp;RESET Statement"><code class="literal">RESET</code></a>.
+        </p></li><li class="listitem"><p>
+          <span class="bold"><strong>Replication control
+          statements</strong></span>. <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START
+          SLAVE</code></a>, <a class="link" href="stop-slave.html" title="13.4.2.7&nbsp;STOP SLAVE Statement"><code class="literal">STOP SLAVE</code></a>,
+          <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a>,
+          <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a>.
+</p></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

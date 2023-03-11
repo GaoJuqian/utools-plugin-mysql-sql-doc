@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>RESET MASTER Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="reset-master"></a>13.4.1.2&nbsp;RESET MASTER Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852576348544"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">RESET MASTER</code></pre>
+<div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Warning
+</div>
+<p>
+          Use this statement with caution to ensure you do not lose any
+          wanted binary log file data and GTID execution history.
+</p>
+</div>
+<p>
+        <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> requires the
+        <a class="link" href="privileges-provided.html#priv_reload"><code class="literal">RELOAD</code></a> privilege.
+      </p><p>
+        For a server where binary logging is enabled
+        (<a class="link" href="replication-options-binary-log.html#sysvar_log_bin"><code class="literal">log_bin</code></a> is
+        <code class="literal">ON</code>), <code class="literal">RESET MASTER</code> deletes
+        all existing binary log files and resets the binary log index
+        file, resetting the server to its state before binary logging
+        was started. A new empty binary log file is created so that
+        binary logging can be restarted.
+      </p><p>
+        For a server where GTIDs are in use
+        (<a class="link" href="replication-options-gtids.html#sysvar_gtid_mode"><code class="literal">gtid_mode</code></a> is
+        <code class="literal">ON</code>), issuing <code class="literal">RESET MASTER</code>
+        resets the GTID execution history. The value of the
+        <a class="link" href="replication-options-gtids.html#sysvar_gtid_purged"><code class="literal">gtid_purged</code></a> system variable is
+        set to an empty string (<code class="literal">''</code>), the global value
+        (but not the session value) of the
+        <a class="link" href="replication-options-gtids.html#sysvar_gtid_executed"><code class="literal">gtid_executed</code></a> system variable
+        is set to an empty string, and the
+        <code class="literal">mysql.gtid_executed</code> table is cleared (see
+        <a class="xref" href="replication-gtids-concepts.html#replication-gtids-gtid-executed-table" title="mysql.gtid_executed Table">mysql.gtid_executed Table</a>). If the
+        GTID-enabled server has binary logging enabled,
+        <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> also resets the
+        binary log as described above. Note that
+        <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> is the method to
+        reset the GTID execution history even if the GTID-enabled server
+        is a replica where binary logging is disabled;
+        <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> has no effect on the
+        GTID execution history. For more information on resetting the
+        GTID execution history, see
+        <a class="xref" href="replication-gtids-lifecycle.html#replication-gtids-execution-history" title="Resetting the GTID Execution History">Resetting the GTID Execution History</a>.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+          The effects of <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a>
+          differ from those of <a class="link" href="purge-binary-logs.html" title="13.4.1.1&nbsp;PURGE BINARY LOGS Statement"><code class="literal">PURGE BINARY
+          LOGS</code></a> in 2 key ways:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+              <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> removes
+              <span class="emphasis"><em>all</em></span> binary log files that are listed
+              in the index file, leaving only a single, empty binary log
+              file with a numeric suffix of <code class="literal">.000001</code>,
+              whereas the numbering is not reset by
+              <a class="link" href="purge-binary-logs.html" title="13.4.1.1&nbsp;PURGE BINARY LOGS Statement"><code class="literal">PURGE BINARY LOGS</code></a>.
+            </p></li><li class="listitem"><p>
+              <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> is
+              <span class="emphasis"><em>not</em></span> intended to be used while any
+              replicas are running. The behavior of
+              <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> when used
+              while replicas are running is undefined (and thus
+              unsupported), whereas <a class="link" href="purge-binary-logs.html" title="13.4.1.1&nbsp;PURGE BINARY LOGS Statement"><code class="literal">PURGE BINARY
+              LOGS</code></a> may be safely used while replicas are
+              running.
+</p></li></ol>
+</div>
+<p>
+          See also <a class="xref" href="purge-binary-logs.html" title="13.4.1.1&nbsp;PURGE BINARY LOGS Statement">Section&nbsp;13.4.1.1, “PURGE BINARY LOGS Statement”</a>.
+</p>
+</div>
+<p>
+        <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> can prove useful
+        when you first set up the source and the replica, so that you
+        can verify the setup as follows:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+            Start the source and replica, and start replication (see
+            <a class="xref" href="replication-howto.html" title="16.1.2&nbsp;Setting Up Binary Log File Position Based Replication">Section&nbsp;16.1.2, “Setting Up Binary Log File Position Based Replication”</a>).
+          </p></li><li class="listitem"><p>
+            Execute a few test queries on the source.
+          </p></li><li class="listitem"><p>
+            Check that the queries were replicated to the replica.
+          </p></li><li class="listitem"><p>
+            When replication is running correctly, issue
+            <a class="link" href="stop-slave.html" title="13.4.2.7&nbsp;STOP SLAVE Statement"><code class="literal">STOP SLAVE</code></a> followed by
+            <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a> on the replica,
+            then verify that any unwanted data no longer exists on the
+            replica.
+          </p></li><li class="listitem"><p>
+            Issue <a class="link" href="reset-master.html" title="13.4.1.2&nbsp;RESET MASTER Statement"><code class="literal">RESET MASTER</code></a> on the
+            source to clean up the test queries.
+</p></li></ol>
+</div>
+<p>
+        After verifying the setup, resetting the source and replica and
+        ensuring that no unwanted data or binary log files generated by
+        testing remain on source or replica, you can start the replica
+        and begin replicating.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW CREATE EVENT Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-create-event"></a>13.7.5.7&nbsp;SHOW CREATE EVENT Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW CREATE EVENT <em class="replaceable">event_name</em></code></pre><p>
+        This statement displays the <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE
+        EVENT</code></a> statement needed to re-create a given event. It
+        requires the <a class="link" href="privileges-provided.html#priv_event"><code class="literal">EVENT</code></a> privilege for
+        the database from which the event is to be shown. For example
+        (using the same event <code class="literal">e_daily</code> defined and
+        then altered in <a class="xref" href="show-events.html" title="13.7.5.18&nbsp;SHOW EVENTS Statement">Section&nbsp;13.7.5.18, “SHOW EVENTS Statement”</a>):
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW CREATE EVENT myschema.e_daily\G
+*************************** 1. row ***************************
+               Event: e_daily
+            sql_mode: ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,
+                      NO_ZERO_IN_DATE,NO_ZERO_DATE,
+                      ERROR_FOR_DIVISION_BY_ZERO,
+                      NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+           time_zone: SYSTEM
+        Create Event: CREATE DEFINER=`jon`@`ghidora` EVENT `e_daily`
+                        ON SCHEDULE EVERY 1 DAY
+                        STARTS CURRENT_TIMESTAMP + INTERVAL 6 HOUR
+                        ON COMPLETION NOT PRESERVE
+                        ENABLE
+                        COMMENT 'Saves total number of sessions then
+                                clears the table each day'
+                        DO BEGIN
+                          INSERT INTO site_activity.totals (time, total)
+                            SELECT CURRENT_TIMESTAMP, COUNT(*)
+                              FROM site_activity.sessions;
+                          DELETE FROM site_activity.sessions;
+                        END
+character_set_client: utf8
+collation_connection: utf8_general_ci
+  Database Collation: latin1_swedish_ci</code></pre><p>
+        <code class="literal">character_set_client</code> is the session value of
+        the <a class="link" href="server-system-variables.html#sysvar_character_set_client"><code class="literal">character_set_client</code></a> system
+        variable when the event was created.
+        <code class="literal">collation_connection</code> is the session value of
+        the <a class="link" href="server-system-variables.html#sysvar_collation_connection"><code class="literal">collation_connection</code></a> system
+        variable when the event was created. <code class="literal">Database
+        Collation</code> is the collation of the database with which
+        the event is associated.
+      </p><p>
+        The output reflects the current status of the event
+        (<code class="literal">ENABLE</code>) rather than the status with which it
+        was created.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

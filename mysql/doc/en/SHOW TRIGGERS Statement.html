@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW TRIGGERS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-triggers"></a>13.7.5.38&nbsp;SHOW TRIGGERS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852569631728"></a><a class="indexterm" name="idm45852569630656"></a><a class="indexterm" name="idm45852569629584"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW TRIGGERS
+    [{FROM | IN} <em class="replaceable">db_name</em>]
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        <a class="link" href="show-triggers.html" title="13.7.5.38&nbsp;SHOW TRIGGERS Statement"><code class="literal">SHOW TRIGGERS</code></a> lists the triggers
+        currently defined for tables in a database (the default database
+        unless a <code class="literal">FROM</code> clause is given). This
+        statement returns results only for databases and tables for
+        which you have the <a class="link" href="privileges-provided.html#priv_trigger"><code class="literal">TRIGGER</code></a>
+        privilege. The <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, if
+        present, indicates which table names (not trigger names) to
+        match and causes the statement to display triggers for those
+        tables. The <code class="literal">WHERE</code> clause can be given to
+        select rows using more general conditions, as discussed in
+        <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+      </p><p>
+        For the <code class="literal">ins_sum</code> trigger defined in
+        <a class="xref" href="triggers.html" title="23.3&nbsp;Using Triggers">Section&nbsp;23.3, “Using Triggers”</a>, the output of
+        <a class="link" href="show-triggers.html" title="13.7.5.38&nbsp;SHOW TRIGGERS Statement"><code class="literal">SHOW TRIGGERS</code></a> is as shown here:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW TRIGGERS LIKE 'acc%'\G
+*************************** 1. row ***************************
+             Trigger: ins_sum
+               Event: INSERT
+               Table: account
+           Statement: SET @sum = @sum + NEW.amount
+              Timing: BEFORE
+             Created: 2018-08-08 10:10:12.61
+            sql_mode: ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,
+                      NO_ZERO_IN_DATE,NO_ZERO_DATE,
+                      ERROR_FOR_DIVISION_BY_ZERO,
+                      NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+             Definer: me@localhost
+character_set_client: utf8
+collation_connection: utf8_general_ci
+  Database Collation: latin1_swedish_ci</code></pre><p>
+        <a class="link" href="show-triggers.html" title="13.7.5.38&nbsp;SHOW TRIGGERS Statement"><code class="literal">SHOW TRIGGERS</code></a> output has these
+        columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Trigger</code>
+          </p><p>
+            The name of the trigger.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Event</code>
+          </p><p>
+            The trigger event. This is the type of operation on the
+            associated table for which the trigger activates. The value
+            is <code class="literal">INSERT</code> (a row was inserted),
+            <code class="literal">DELETE</code> (a row was deleted), or
+            <code class="literal">UPDATE</code> (a row was modified).
+          </p></li><li class="listitem"><p>
+            <code class="literal">Table</code>
+          </p><p>
+            The table for which the trigger is defined.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Statement</code>
+          </p><p>
+            The trigger body; that is, the statement executed when the
+            trigger activates.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Timing</code>
+          </p><p>
+            Whether the trigger activates before or after the triggering
+            event. The value is <code class="literal">BEFORE</code> or
+            <code class="literal">AFTER</code>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Created</code>
+          </p><p>
+            The date and time when the trigger was created. This is a
+            <code class="literal">TIMESTAMP(2)</code> value (with a fractional
+            part in hundredths of seconds) for triggers created in MySQL
+            5.7.2 or later, <code class="literal">NULL</code> for triggers created
+            prior to 5.7.2.
+          </p></li><li class="listitem"><p>
+            <code class="literal">sql_mode</code>
+          </p><p>
+            The SQL mode in effect when the trigger was created, and
+            under which the trigger executes. For the permitted values,
+            see <a class="xref" href="sql-mode.html" title="5.1.10&nbsp;Server SQL Modes">Section&nbsp;5.1.10, “Server SQL Modes”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Definer</code>
+          </p><p>
+            The account of the user who created the trigger, in
+            <code class="literal">'<em class="replaceable"><code>user_name</code></em>'@'<em class="replaceable"><code>host_name</code></em>'</code>
+            format.
+          </p></li><li class="listitem"><p>
+            <code class="literal">character_set_client</code>
+          </p><p>
+            The session value of the
+            <a class="link" href="server-system-variables.html#sysvar_character_set_client"><code class="literal">character_set_client</code></a> system
+            variable when the trigger was created.
+          </p></li><li class="listitem"><p>
+            <code class="literal">collation_connection</code>
+          </p><p>
+            The session value of the
+            <a class="link" href="server-system-variables.html#sysvar_collation_connection"><code class="literal">collation_connection</code></a> system
+            variable when the trigger was created.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Database Collation</code>
+          </p><p>
+            The collation of the database with which the trigger is
+            associated.
+</p></li></ul>
+</div>
+<p>
+        Trigger information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-triggers-table.html" title="24.3.29&nbsp;The INFORMATION_SCHEMA TRIGGERS Table"><code class="literal">TRIGGERS</code></a> table. See
+        <a class="xref" href="information-schema-triggers-table.html" title="24.3.29&nbsp;The INFORMATION_SCHEMA TRIGGERS Table">Section&nbsp;24.3.29, “The INFORMATION_SCHEMA TRIGGERS Table”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

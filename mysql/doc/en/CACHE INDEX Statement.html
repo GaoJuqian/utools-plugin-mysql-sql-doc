@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CACHE INDEX Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="cache-index"></a>13.7.6.2&nbsp;CACHE INDEX Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852569391952"></a><a class="indexterm" name="idm45852569390880"></a><a class="indexterm" name="idm45852569389392"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CACHE INDEX {
+      <em class="replaceable">tbl_index_list</em> [, <em class="replaceable">tbl_index_list</em>] ...
+    | <em class="replaceable">tbl_name</em> PARTITION (<em class="replaceable">partition_list</em>)
+  }
+  IN <em class="replaceable">key_cache_name</em>
+
+<em class="replaceable">tbl_index_list</em>:
+  <em class="replaceable">tbl_name</em> [{INDEX|KEY} (<em class="replaceable">index_name</em>[, <em class="replaceable">index_name</em>] ...)]
+
+<em class="replaceable">partition_list</em>: {
+    <em class="replaceable">partition_name</em>[, <em class="replaceable">partition_name</em>] ...
+  | ALL
+}</code></pre><p>
+        The <a class="link" href="cache-index.html" title="13.7.6.2&nbsp;CACHE INDEX Statement"><code class="literal">CACHE INDEX</code></a> statement assigns
+        table indexes to a specific key cache. It applies only to
+        <code class="literal">MyISAM</code> tables, including partitioned
+        <code class="literal">MyISAM</code> tables. After the indexes have been
+        assigned, they can be preloaded into the cache if desired with
+        <a class="link" href="load-index.html" title="13.7.6.5&nbsp;LOAD INDEX INTO CACHE Statement"><code class="literal">LOAD INDEX INTO
+        CACHE</code></a>.
+      </p><p>
+        The following statement assigns indexes from the tables
+        <code class="literal">t1</code>, <code class="literal">t2</code>, and
+        <code class="literal">t3</code> to the key cache named
+        <code class="literal">hot_cache</code>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CACHE INDEX t1, t2, t3 IN hot_cache;
++---------+--------------------+----------+----------+
+| Table   | Op                 | Msg_type | Msg_text |
++---------+--------------------+----------+----------+
+| test.t1 | assign_to_keycache | status   | OK       |
+| test.t2 | assign_to_keycache | status   | OK       |
+| test.t3 | assign_to_keycache | status   | OK       |
++---------+--------------------+----------+----------+</code></pre><p>
+        The syntax of <a class="link" href="cache-index.html" title="13.7.6.2&nbsp;CACHE INDEX Statement"><code class="literal">CACHE INDEX</code></a> enables
+        you to specify that only particular indexes from a table should
+        be assigned to the cache. However, the implementation assigns
+        all the table's indexes to the cache, so there is no reason to
+        specify anything other than the table name.
+      </p><p>
+        The key cache referred to in a <a class="link" href="cache-index.html" title="13.7.6.2&nbsp;CACHE INDEX Statement"><code class="literal">CACHE
+        INDEX</code></a> statement can be created by setting its size
+        with a parameter setting statement or in the server parameter
+        settings. For example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SET GLOBAL keycache1.key_buffer_size=128*1024;</code></pre><p>
+        Key cache parameters are accessed as members of a structured
+        system variable. See
+        <a class="xref" href="structured-system-variables.html" title="5.1.8.3&nbsp;Structured System Variables">Section&nbsp;5.1.8.3, “Structured System Variables”</a>.
+      </p><p>
+        A key cache must exist before you assign indexes to it, or an
+        error occurs:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CACHE INDEX t1 IN non_existent_cache;
+ERROR 1284 (HY000): Unknown key cache 'non_existent_cache'</code></pre><p>
+        By default, table indexes are assigned to the main (default) key
+        cache created at the server startup. When a key cache is
+        destroyed, all indexes assigned to it are reassigned to the
+        default key cache.
+      </p><p>
+        Index assignment affects the server globally: If one client
+        assigns an index to a given cache, this cache is used for all
+        queries involving the index, no matter which client issues the
+        queries.
+      </p><p>
+        <a class="link" href="cache-index.html" title="13.7.6.2&nbsp;CACHE INDEX Statement"><code class="literal">CACHE INDEX</code></a> is supported for
+        partitioned <code class="literal">MyISAM</code> tables. You can assign one
+        or more indexes for one, several, or all partitions to a given
+        key cache. For example, you can do the following:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE pt (c1 INT, c2 VARCHAR(50), INDEX i(c1))
+    ENGINE=MyISAM
+    PARTITION BY HASH(c1)
+    PARTITIONS 4;
+
+SET GLOBAL kc_fast.key_buffer_size = 128 * 1024;
+SET GLOBAL kc_slow.key_buffer_size = 128 * 1024;
+
+CACHE INDEX pt PARTITION (p0) IN kc_fast;
+CACHE INDEX pt PARTITION (p1, p3) IN kc_slow;</code></pre><p>
+        The previous set of statements performs the following actions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Creates a partitioned table with 4 partitions; these
+            partitions are automatically named <code class="literal">p0</code>,
+            ..., <code class="literal">p3</code>; this table has an index named
+            <code class="literal">i</code> on column <code class="literal">c1</code>.
+          </p></li><li class="listitem"><p>
+            Creates 2 key caches named <code class="literal">kc_fast</code> and
+            <code class="literal">kc_slow</code>
+          </p></li><li class="listitem"><p>
+            Assigns the index for partition <code class="literal">p0</code> to the
+            <code class="literal">kc_fast</code> key cache and the index for
+            partitions <code class="literal">p1</code> and <code class="literal">p3</code>
+            to the <code class="literal">kc_slow</code> key cache; the index for
+            the remaining partition (<code class="literal">p2</code>) uses the
+            server's default key cache.
+</p></li></ul>
+</div>
+<p>
+        If you wish instead to assign the indexes for all partitions in
+        table <code class="literal">pt</code> to a single key cache named
+        <code class="literal">kc_all</code>, you can use either of the following
+        two statements:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CACHE INDEX pt PARTITION (ALL) IN kc_all;
+
+CACHE INDEX pt IN kc_all;</code></pre><p>
+        The two statements just shown are equivalent, and issuing either
+        one has exactly the same effect. In other words, if you wish to
+        assign indexes for all partitions of a partitioned table to the
+        same key cache, the <code class="literal">PARTITION (ALL)</code> clause is
+        optional.
+      </p><p>
+        When assigning indexes for multiple partitions to a key cache,
+        the partitions need not be contiguous, and you need not list
+        their names in any particular order. Indexes for any partitions
+        not explicitly assigned to a key cache automatically use the
+        server default key cache.
+      </p><p>
+        Index preloading is also supported for partitioned
+        <code class="literal">MyISAM</code> tables. For more information, see
+        <a class="xref" href="load-index.html" title="13.7.6.5&nbsp;LOAD INDEX INTO CACHE Statement">Section&nbsp;13.7.6.5, “LOAD INDEX INTO CACHE Statement”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE PROCEDURE and CREATE FUNCTION Statements</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="create-procedure"></a>13.1.16&nbsp;CREATE PROCEDURE and CREATE FUNCTION Statements</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852583670480"></a><a class="indexterm" name="idm45852583669440"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE
+    [DEFINER = <em class="replaceable">user</em>]
+    PROCEDURE <em class="replaceable">sp_name</em> ([<em class="replaceable">proc_parameter</em>[,...]])
+    [<em class="replaceable">characteristic</em> ...] <em class="replaceable">routine_body</em>
+
+CREATE
+    [DEFINER = <em class="replaceable">user</em>]
+    FUNCTION <em class="replaceable">sp_name</em> ([<em class="replaceable">func_parameter</em>[,...]])
+    RETURNS <em class="replaceable">type</em>
+    [<em class="replaceable">characteristic</em> ...] <em class="replaceable">routine_body</em>
+
+<em class="replaceable">proc_parameter</em>:
+    [ IN | OUT | INOUT ] <em class="replaceable">param_name</em> <em class="replaceable">type</em>
+
+<em class="replaceable">func_parameter</em>:
+    <em class="replaceable">param_name</em> <em class="replaceable">type</em>
+
+<em class="replaceable">type</em>:
+    <em class="replaceable">Any valid MySQL data type</em>
+
+<em class="replaceable">characteristic</em>: {
+    COMMENT '<em class="replaceable">string</em>'
+  | LANGUAGE SQL
+  | [NOT] DETERMINISTIC
+  | { CONTAINS SQL | NO SQL | READS SQL DATA | MODIFIES SQL DATA }
+  | SQL SECURITY { DEFINER | INVOKER }
+}
+
+<em class="replaceable">routine_body</em>:
+    <em class="replaceable">Valid SQL routine statement</em></code></pre><p>
+      These statements are used to create a stored routine (a stored
+      procedure or function). That is, the specified routine becomes
+      known to the server. By default, a stored routine is associated
+      with the default database. To associate the routine explicitly
+      with a given database, specify the name as
+      <em class="replaceable"><code>db_name.sp_name</code></em> when you create it.
+    </p><p>
+      The <code class="literal">CREATE FUNCTION</code> statement is also used in
+      MySQL to support loadable functions. See
+      <a class="xref" href="create-function-loadable.html" title="13.7.3.1&nbsp;CREATE FUNCTION Statement for Loadable Functions">Section&nbsp;13.7.3.1, “CREATE FUNCTION Statement for Loadable Functions”</a>. A loadable function
+      can be regarded as an external stored function. Stored functions
+      share their namespace with loadable functions. See
+      <a class="xref" href="function-resolution.html" title="9.2.5&nbsp;Function Name Parsing and Resolution">Section&nbsp;9.2.5, “Function Name Parsing and Resolution”</a>, for the rules describing
+      how the server interprets references to different kinds of
+      functions.
+    </p><p>
+      To invoke a stored procedure, use the
+      <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> statement (see
+      <a class="xref" href="call.html" title="13.2.1&nbsp;CALL Statement">Section&nbsp;13.2.1, “CALL Statement”</a>). To invoke a stored function, refer to it
+      in an expression. The function returns a value during expression
+      evaluation.
+    </p><p>
+      <a class="link" href="create-procedure.html" title="13.1.16&nbsp;CREATE PROCEDURE and CREATE FUNCTION Statements"><code class="literal">CREATE PROCEDURE</code></a> and
+      <a class="link" href="create-function.html" title="13.1.13&nbsp;CREATE FUNCTION Statement"><code class="literal">CREATE FUNCTION</code></a> require the
+      <a class="link" href="privileges-provided.html#priv_create-routine"><code class="literal">CREATE ROUTINE</code></a> privilege. If the
+      <code class="literal">DEFINER</code> clause is present, the privileges
+      required depend on the <em class="replaceable"><code>user</code></em> value, as
+      discussed in <a class="xref" href="stored-objects-security.html" title="23.6&nbsp;Stored Object Access Control">Section&nbsp;23.6, “Stored Object Access Control”</a>. If binary
+      logging is enabled, <a class="link" href="create-function.html" title="13.1.13&nbsp;CREATE FUNCTION Statement"><code class="literal">CREATE FUNCTION</code></a>
+      might require the <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege,
+      as discussed in <a class="xref" href="stored-programs-logging.html" title="23.7&nbsp;Stored Program Binary Logging">Section&nbsp;23.7, “Stored Program Binary Logging”</a>.
+    </p><p>
+      By default, MySQL automatically grants the
+      <a class="link" href="privileges-provided.html#priv_alter-routine"><code class="literal">ALTER ROUTINE</code></a> and
+      <a class="link" href="privileges-provided.html#priv_execute"><code class="literal">EXECUTE</code></a> privileges to the routine
+      creator. This behavior can be changed by disabling the
+      <a class="link" href="server-system-variables.html#sysvar_automatic_sp_privileges"><code class="literal">automatic_sp_privileges</code></a> system
+      variable. See <a class="xref" href="stored-routines-privileges.html" title="23.2.2&nbsp;Stored Routines and MySQL Privileges">Section&nbsp;23.2.2, “Stored Routines and MySQL Privileges”</a>.
+    </p><p>
+      The <code class="literal">DEFINER</code> and <code class="literal">SQL SECURITY</code>
+      clauses specify the security context to be used when checking
+      access privileges at routine execution time, as described later in
+      this section.
+    </p><p>
+      If the routine name is the same as the name of a built-in SQL
+      function, a syntax error occurs unless you use a space between the
+      name and the following parenthesis when defining the routine or
+      invoking it later. For this reason, avoid using the names of
+      existing SQL functions for your own stored routines.
+    </p><p>
+      The <a class="link" href="sql-mode.html#sqlmode_ignore_space"><code class="literal">IGNORE_SPACE</code></a> SQL mode
+      applies to built-in functions, not to stored routines. It is
+      always permissible to have spaces after a stored routine name,
+      regardless of whether
+      <a class="link" href="sql-mode.html#sqlmode_ignore_space"><code class="literal">IGNORE_SPACE</code></a> is enabled.
+    </p><p>
+      The parameter list enclosed within parentheses must always be
+      present. If there are no parameters, an empty parameter list of
+      <code class="literal">()</code> should be used. Parameter names are not
+      case-sensitive.
+    </p><p>
+      Each parameter is an <code class="literal">IN</code> parameter by default.
+      To specify otherwise for a parameter, use the keyword
+      <code class="literal">OUT</code> or <code class="literal">INOUT</code> before the
+      parameter name.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        Specifying a parameter as <code class="literal">IN</code>,
+        <code class="literal">OUT</code>, or <code class="literal">INOUT</code> is valid
+        only for a <code class="literal">PROCEDURE</code>. For a
+        <code class="literal">FUNCTION</code>, parameters are always regarded as
+        <code class="literal">IN</code> parameters.
+</p>
+</div>
+<p>
+      An <code class="literal">IN</code> parameter passes a value into a
+      procedure. The procedure might modify the value, but the
+      modification is not visible to the caller when the procedure
+      returns. An <code class="literal">OUT</code> parameter passes a value from
+      the procedure back to the caller. Its initial value is
+      <code class="literal">NULL</code> within the procedure, and its value is
+      visible to the caller when the procedure returns. An
+      <code class="literal">INOUT</code> parameter is initialized by the caller,
+      can be modified by the procedure, and any change made by the
+      procedure is visible to the caller when the procedure returns.
+    </p><p>
+      For each <code class="literal">OUT</code> or <code class="literal">INOUT</code>
+      parameter, pass a user-defined variable in the
+      <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> statement that invokes the
+      procedure so that you can obtain its value when the procedure
+      returns. If you are calling the procedure from within another
+      stored procedure or function, you can also pass a routine
+      parameter or local routine variable as an <code class="literal">OUT</code>
+      or <code class="literal">INOUT</code> parameter. If you are calling the
+      procedure from within a trigger, you can also pass
+      <code class="literal">NEW.<em class="replaceable"><code>col_name</code></em></code> as an
+      <code class="literal">OUT</code> or <code class="literal">INOUT</code> parameter.
+    </p><p>
+      For information about the effect of unhandled conditions on
+      procedure parameters, see
+      <a class="xref" href="conditions-and-parameters.html" title="13.6.7.8&nbsp;Condition Handling and OUT or INOUT Parameters">Section&nbsp;13.6.7.8, “Condition Handling and OUT or INOUT Parameters”</a>.
+    </p><p>
+      Routine parameters cannot be referenced in statements prepared
+      within the routine; see
+      <a class="xref" href="stored-program-restrictions.html" title="23.8&nbsp;Restrictions on Stored Programs">Section&nbsp;23.8, “Restrictions on Stored Programs”</a>.
+    </p><p>
+      The following example shows a simple stored procedure that, given
+      a country code, counts the number of cities for that country that
+      appear in the <code class="literal">city</code> table of the
+      <code class="literal">world</code> database. The country code is passed
+      using an <code class="literal">IN</code> parameter, and the city count is
+      returned using an <code class="literal">OUT</code> parameter:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; delimiter //
+
+mysql&gt; CREATE PROCEDURE citycount (IN country CHAR(3), OUT cities INT)
+       BEGIN
+         SELECT COUNT(*) INTO cities FROM world.city
+         WHERE CountryCode = country;
+       END//
+Query OK, 0 rows affected (0.01 sec)
+
+mysql&gt; delimiter ;
+
+mysql&gt; CALL citycount('JPN', @cities); -- cities in Japan
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; SELECT @cities;
++---------+
+| @cities |
++---------+
+|     248 |
++---------+
+1 row in set (0.00 sec)
+
+mysql&gt; CALL citycount('FRA', @cities); -- cities in France
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; SELECT @cities;
++---------+
+| @cities |
++---------+
+|      40 |
++---------+
+1 row in set (0.00 sec)</code></pre><p>
+      The example uses the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> client
+      <code class="literal">delimiter</code> command to change the statement
+      delimiter from <code class="literal">;</code> to <code class="literal">//</code> while
+      the procedure is being defined. This enables the
+      <code class="literal">;</code> delimiter used in the procedure body to be
+      passed through to the server rather than being interpreted by
+      <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> itself. See
+      <a class="xref" href="stored-programs-defining.html" title="23.1&nbsp;Defining Stored Programs">Section&nbsp;23.1, “Defining Stored Programs”</a>.
+    </p><p>
+      The <code class="literal">RETURNS</code> clause may be specified only for a
+      <code class="literal">FUNCTION</code>, for which it is mandatory. It
+      indicates the return type of the function, and the function body
+      must contain a <code class="literal">RETURN
+      <em class="replaceable"><code>value</code></em></code> statement. If the
+      <a class="link" href="return.html" title="13.6.5.7&nbsp;RETURN Statement"><code class="literal">RETURN</code></a> statement returns a value of
+      a different type, the value is coerced to the proper type. For
+      example, if a function specifies an
+      <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> or
+      <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> value in the
+      <code class="literal">RETURNS</code> clause, but the
+      <a class="link" href="return.html" title="13.6.5.7&nbsp;RETURN Statement"><code class="literal">RETURN</code></a> statement returns an
+      integer, the value returned from the function is the string for
+      the corresponding <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> member of
+      set of <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> members.
+    </p><p>
+      The following example function takes a parameter, performs an
+      operation using an SQL function, and returns the result. In this
+      case, it is unnecessary to use <code class="literal">delimiter</code>
+      because the function definition contains no internal
+      <code class="literal">;</code> statement delimiters:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE FUNCTION hello (s CHAR(20))
+mysql&gt; RETURNS CHAR(50) DETERMINISTIC
+       RETURN CONCAT('Hello, ',s,'!');
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; SELECT hello('world');
++----------------+
+| hello('world') |
++----------------+
+| Hello, world!  |
++----------------+
+1 row in set (0.00 sec)</code></pre><p>
+      Parameter types and function return types can be declared to use
+      any valid data type. The <code class="literal">COLLATE</code> attribute can
+      be used if preceded by a <code class="literal">CHARACTER SET</code>
+      specification.
+    </p><p>
+      The <em class="replaceable"><code>routine_body</code></em> consists of a valid
+      SQL routine statement. This can be a simple statement such as
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> or
+      <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>, or a compound statement
+      written using <code class="literal">BEGIN</code> and <code class="literal">END</code>.
+      Compound statements can contain declarations, loops, and other
+      control structure statements. The syntax for these statements is
+      described in <a class="xref" href="sql-compound-statements.html" title="13.6&nbsp;Compound Statements">Section&nbsp;13.6, “Compound Statements”</a>. In
+      practice, stored functions tend to use compound statements, unless
+      the body consists of a single
+      <a class="link" href="return.html" title="13.6.5.7&nbsp;RETURN Statement"><code class="literal">RETURN</code></a> statement.
+    </p><p>
+      MySQL permits routines to contain DDL statements, such as
+      <code class="literal">CREATE</code> and <code class="literal">DROP</code>. MySQL also
+      permits stored procedures (but not stored functions) to contain
+      SQL transaction statements such as
+      <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">COMMIT</code></a>. Stored functions may not
+      contain statements that perform explicit or implicit commit or
+      rollback. Support for these statements is not required by the SQL
+      standard, which states that each DBMS vendor may decide whether to
+      permit them.
+    </p><p>
+      Statements that return a result set can be used within a stored
+      procedure but not within a stored function. This prohibition
+      includes <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements that do
+      not have an <code class="literal">INTO
+      <em class="replaceable"><code>var_list</code></em></code> clause and other
+      statements such as <a class="link" href="show.html" title="13.7.5&nbsp;SHOW Statements"><code class="literal">SHOW</code></a>,
+      <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a>, and
+      <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a>. For statements that
+      can be determined at function definition time to return a result
+      set, a <code class="literal">Not allowed to return a result set from a
+      function</code> error occurs
+      (<a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_sp_no_retset" target="_top"><code class="literal">ER_SP_NO_RETSET</code></a>). For statements
+      that can be determined only at runtime to return a result set, a
+      <code class="literal">PROCEDURE %s can't return a result set in the given
+      context</code> error occurs
+      (<a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_sp_badselect" target="_top"><code class="literal">ER_SP_BADSELECT</code></a>).
+    </p><p>
+      <a class="link" href="use.html" title="13.8.4&nbsp;USE Statement"><code class="literal">USE</code></a> statements within stored
+      routines are not permitted. When a routine is invoked, an implicit
+      <code class="literal">USE <em class="replaceable"><code>db_name</code></em></code> is
+      performed (and undone when the routine terminates). The causes the
+      routine to have the given default database while it executes.
+      References to objects in databases other than the routine default
+      database should be qualified with the appropriate database name.
+    </p><p>
+      For additional information about statements that are not permitted
+      in stored routines, see
+      <a class="xref" href="stored-program-restrictions.html" title="23.8&nbsp;Restrictions on Stored Programs">Section&nbsp;23.8, “Restrictions on Stored Programs”</a>.
+    </p><p>
+      For information about invoking stored procedures from within
+      programs written in a language that has a MySQL interface, see
+      <a class="xref" href="call.html" title="13.2.1&nbsp;CALL Statement">Section&nbsp;13.2.1, “CALL Statement”</a>.
+    </p><p>
+      MySQL stores the <a class="link" href="server-system-variables.html#sysvar_sql_mode"><code class="literal">sql_mode</code></a> system
+      variable setting in effect when a routine is created or altered,
+      and always executes the routine with this setting in force,
+      <span class="emphasis"><em>regardless of the current server SQL mode when the
+      routine begins executing</em></span>.
+    </p><p>
+      The switch from the SQL mode of the invoker to that of the routine
+      occurs after evaluation of arguments and assignment of the
+      resulting values to routine parameters. If you define a routine in
+      strict SQL mode but invoke it in nonstrict mode, assignment of
+      arguments to routine parameters does not take place in strict
+      mode. If you require that expressions passed to a routine be
+      assigned in strict SQL mode, you should invoke the routine with
+      strict mode in effect.
+    </p><p>
+      The <code class="literal">COMMENT</code> characteristic is a MySQL
+      extension, and may be used to describe the stored routine. This
+      information is displayed by the <a class="link" href="show-create-procedure.html" title="13.7.5.9&nbsp;SHOW CREATE PROCEDURE Statement"><code class="literal">SHOW CREATE
+      PROCEDURE</code></a> and <a class="link" href="show-create-function.html" title="13.7.5.8&nbsp;SHOW CREATE FUNCTION Statement"><code class="literal">SHOW CREATE
+      FUNCTION</code></a> statements.
+    </p><p>
+      The <code class="literal">LANGUAGE</code> characteristic indicates the
+      language in which the routine is written. The server ignores this
+      characteristic; only SQL routines are supported.
+    </p><p>
+      A routine is considered <span class="quote">“<span class="quote">deterministic</span>”</span> if it always
+      produces the same result for the same input parameters, and
+      <span class="quote">“<span class="quote">not deterministic</span>”</span> otherwise. If neither
+      <code class="literal">DETERMINISTIC</code> nor <code class="literal">NOT
+      DETERMINISTIC</code> is given in the routine definition, the
+      default is <code class="literal">NOT DETERMINISTIC</code>. To declare that a
+      function is deterministic, you must specify
+      <code class="literal">DETERMINISTIC</code> explicitly.
+    </p><p>
+      Assessment of the nature of a routine is based on the
+      <span class="quote">“<span class="quote">honesty</span>”</span> of the creator: MySQL does not check that a
+      routine declared <code class="literal">DETERMINISTIC</code> is free of
+      statements that produce nondeterministic results. However,
+      misdeclaring a routine might affect results or affect performance.
+      Declaring a nondeterministic routine as
+      <code class="literal">DETERMINISTIC</code> might lead to unexpected results
+      by causing the optimizer to make incorrect execution plan choices.
+      Declaring a deterministic routine as
+      <code class="literal">NONDETERMINISTIC</code> might diminish performance by
+      causing available optimizations not to be used.
+    </p><p>
+      If binary logging is enabled, the <code class="literal">DETERMINISTIC</code>
+      characteristic affects which routine definitions MySQL accepts.
+      See <a class="xref" href="stored-programs-logging.html" title="23.7&nbsp;Stored Program Binary Logging">Section&nbsp;23.7, “Stored Program Binary Logging”</a>.
+    </p><p>
+      A routine that contains the <a class="link" href="date-and-time-functions.html#function_now"><code class="literal">NOW()</code></a>
+      function (or its synonyms) or
+      <a class="link" href="mathematical-functions.html#function_rand"><code class="literal">RAND()</code></a> is nondeterministic, but it
+      might still be replication-safe. For
+      <a class="link" href="date-and-time-functions.html#function_now"><code class="literal">NOW()</code></a>, the binary log includes the
+      timestamp and replicates correctly.
+      <a class="link" href="mathematical-functions.html#function_rand"><code class="literal">RAND()</code></a> also replicates correctly as
+      long as it is called only a single time during the execution of a
+      routine. (You can consider the routine execution timestamp and
+      random number seed as implicit inputs that are identical on the
+      source and replica.)
+    </p><p>
+      Several characteristics provide information about the nature of
+      data use by the routine. In MySQL, these characteristics are
+      advisory only. The server does not use them to constrain what
+      kinds of statements a routine is permitted to execute.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">CONTAINS SQL</code> indicates that the routine
+          does not contain statements that read or write data. This is
+          the default if none of these characteristics is given
+          explicitly. Examples of such statements are <code class="literal">SET @x =
+          1</code> or <code class="literal">DO RELEASE_LOCK('abc')</code>,
+          which execute but neither read nor write data.
+        </p></li><li class="listitem"><p>
+          <code class="literal">NO SQL</code> indicates that the routine contains
+          no SQL statements.
+        </p></li><li class="listitem"><p>
+          <code class="literal">READS SQL DATA</code> indicates that the routine
+          contains statements that read data (for example,
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a>), but not statements
+          that write data.
+        </p></li><li class="listitem"><p>
+          <code class="literal">MODIFIES SQL DATA</code> indicates that the
+          routine contains statements that may write data (for example,
+          <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> or
+          <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a>).
+</p></li></ul>
+</div>
+<p>
+      The <code class="literal">SQL SECURITY</code> characteristic can be
+      <code class="literal">DEFINER</code> or <code class="literal">INVOKER</code> to
+      specify the security context; that is, whether the routine
+      executes using the privileges of the account named in the routine
+      <code class="literal">DEFINER</code> clause or the user who invokes it. This
+      account must have permission to access the database with which the
+      routine is associated. The default value is
+      <code class="literal">DEFINER</code>. The user who invokes the routine must
+      have the <a class="link" href="privileges-provided.html#priv_execute"><code class="literal">EXECUTE</code></a> privilege for it,
+      as must the <code class="literal">DEFINER</code> account if the routine
+      executes in definer security context.
+    </p><p>
+      The <code class="literal">DEFINER</code> clause specifies the MySQL account
+      to be used when checking access privileges at routine execution
+      time for routines that have the <code class="literal">SQL SECURITY
+      DEFINER</code> characteristic.
+    </p><p>
+      If the <code class="literal">DEFINER</code> clause is present, the
+      <em class="replaceable"><code>user</code></em> value should be a MySQL account
+      specified as
+      <code class="literal">'<em class="replaceable"><code>user_name</code></em>'@'<em class="replaceable"><code>host_name</code></em>'</code>,
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a>, or
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER()</code></a>. The permitted
+      <em class="replaceable"><code>user</code></em> values depend on the privileges
+      you hold, as discussed in
+      <a class="xref" href="stored-objects-security.html" title="23.6&nbsp;Stored Object Access Control">Section&nbsp;23.6, “Stored Object Access Control”</a>. Also see that section
+      for additional information about stored routine security.
+    </p><p>
+      If the <code class="literal">DEFINER</code> clause is omitted, the default
+      definer is the user who executes the <a class="link" href="create-procedure.html" title="13.1.16&nbsp;CREATE PROCEDURE and CREATE FUNCTION Statements"><code class="literal">CREATE
+      PROCEDURE</code></a> or <a class="link" href="create-function.html" title="13.1.13&nbsp;CREATE FUNCTION Statement"><code class="literal">CREATE
+      FUNCTION</code></a> statement. This is the same as specifying
+      <code class="literal">DEFINER = CURRENT_USER</code> explicitly.
+    </p><p>
+      Within the body of a stored routine that is defined with the
+      <code class="literal">SQL SECURITY DEFINER</code> characteristic, the
+      <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER</code></a> function returns the
+      routine's <code class="literal">DEFINER</code> value. For information about
+      user auditing within stored routines, see
+      <a class="xref" href="account-activity-auditing.html" title="6.2.18&nbsp;SQL-Based Account Activity Auditing">Section&nbsp;6.2.18, “SQL-Based Account Activity Auditing”</a>.
+    </p><p>
+      Consider the following procedure, which displays a count of the
+      number of MySQL accounts listed in the
+      <code class="literal">mysql.user</code> system table:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE DEFINER = 'admin'@'localhost' PROCEDURE account_count()
+BEGIN
+  SELECT 'Number of accounts:', COUNT(*) FROM mysql.user;
+END;</code></pre><p>
+      The procedure is assigned a <code class="literal">DEFINER</code> account of
+      <code class="literal">'admin'@'localhost'</code> no matter which user
+      defines it. It executes with the privileges of that account no
+      matter which user invokes it (because the default security
+      characteristic is <code class="literal">DEFINER</code>). The procedure
+      succeeds or fails depending on whether invoker has the
+      <a class="link" href="privileges-provided.html#priv_execute"><code class="literal">EXECUTE</code></a> privilege for it and
+      <code class="literal">'admin'@'localhost'</code> has the
+      <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for the
+      <code class="literal">mysql.user</code> table.
+    </p><p>
+      Now suppose that the procedure is defined with the <code class="literal">SQL
+      SECURITY INVOKER</code> characteristic:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE DEFINER = 'admin'@'localhost' PROCEDURE account_count()
+SQL SECURITY INVOKER
+BEGIN
+  SELECT 'Number of accounts:', COUNT(*) FROM mysql.user;
+END;</code></pre><p>
+      The procedure still has a <code class="literal">DEFINER</code> of
+      <code class="literal">'admin'@'localhost'</code>, but in this case, it
+      executes with the privileges of the invoking user. Thus, the
+      procedure succeeds or fails depending on whether the invoker has
+      the <a class="link" href="privileges-provided.html#priv_execute"><code class="literal">EXECUTE</code></a> privilege for it and
+      the <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for the
+      <code class="literal">mysql.user</code> table.
+    </p><p>
+      The server handles the data type of a routine parameter, local
+      routine variable created with
+      <a class="link" href="declare.html" title="13.6.3&nbsp;DECLARE Statement"><code class="literal">DECLARE</code></a>, or function return value
+      as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Assignments are checked for data type mismatches and overflow.
+          Conversion and overflow problems result in warnings, or errors
+          in strict SQL mode.
+        </p></li><li class="listitem"><p>
+          Only scalar values can be assigned. For example, a statement
+          such as <code class="literal">SET x = (SELECT 1, 2)</code> is invalid.
+        </p></li><li class="listitem"><p>
+          For character data types, if <code class="literal">CHARACTER SET</code>
+          is includedd in the declaration, the specified character set
+          and its default collation is used. If the
+          <code class="literal">COLLATE</code> attribute is also present, that
+          collation is used rather than the default collation.
+        </p><p>
+          If <code class="literal">CHARACTER SET</code> and
+          <code class="literal">COLLATE</code> are not present, the database
+          character set and collation in effect at routine creation time
+          are used. To avoid having the server use the database
+          character set and collation, provide an explicit
+          <code class="literal">CHARACTER SET</code> and a
+          <code class="literal">COLLATE</code> attribute for character data
+          parameters.
+        </p><p>
+          If you alter the database default character set or collation,
+          stored routines that are to use the new database defaults must
+          be dropped and recreated.
+        </p><p>
+          The database character set and collation are given by the
+          value of the
+          <a class="link" href="server-system-variables.html#sysvar_character_set_database"><code class="literal">character_set_database</code></a> and
+          <a class="link" href="server-system-variables.html#sysvar_collation_database"><code class="literal">collation_database</code></a> system
+          variables. For more information, see
+          <a class="xref" href="charset-database.html" title="10.3.3&nbsp;Database Character Set and Collation">Section&nbsp;10.3.3, “Database Character Set and Collation”</a>.
+</p></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

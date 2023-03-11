@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>LOOP Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="loop"></a>13.6.5.5&nbsp;LOOP Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575120800"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">[<em class="replaceable">begin_label</em>:] LOOP
+    <em class="replaceable">statement_list</em>
+END LOOP [<em class="replaceable">end_label</em>]</code></pre><p>
+        <a class="link" href="loop.html" title="13.6.5.5&nbsp;LOOP Statement"><code class="literal">LOOP</code></a> implements a simple loop
+        construct, enabling repeated execution of the statement list,
+        which consists of one or more statements, each terminated by a
+        semicolon (<code class="literal">;</code>) statement delimiter. The
+        statements within the loop are repeated until the loop is
+        terminated. Usually, this is accomplished with a
+        <a class="link" href="leave.html" title="13.6.5.4&nbsp;LEAVE Statement"><code class="literal">LEAVE</code></a> statement. Within a stored
+        function, <a class="link" href="return.html" title="13.6.5.7&nbsp;RETURN Statement"><code class="literal">RETURN</code></a> can also be
+        used, which exits the function entirely.
+      </p><p>
+        Neglecting to include a loop-termination statement results in an
+        infinite loop.
+      </p><p>
+        A <a class="link" href="loop.html" title="13.6.5.5&nbsp;LOOP Statement"><code class="literal">LOOP</code></a> statement can be labeled.
+        For the rules regarding label use, see
+        <a class="xref" href="statement-labels.html" title="13.6.2&nbsp;Statement Labels">Section&nbsp;13.6.2, “Statement Labels”</a>.
+      </p><p>
+        Example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE doiterate(p1 INT)
+BEGIN
+  label1: LOOP
+    SET p1 = p1 + 1;
+    IF p1 &lt; 10 THEN
+      ITERATE label1;
+    END IF;
+    LEAVE label1;
+  END LOOP label1;
+  SET @x = p1;
+END;</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

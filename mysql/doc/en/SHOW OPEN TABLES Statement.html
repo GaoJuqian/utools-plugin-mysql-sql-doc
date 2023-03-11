@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW OPEN TABLES Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-open-tables"></a>13.7.5.24&nbsp;SHOW OPEN TABLES Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570568144"></a><a class="indexterm" name="idm45852570566272"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW OPEN TABLES
+    [{FROM | IN} <em class="replaceable">db_name</em>]
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        <a class="link" href="show-open-tables.html" title="13.7.5.24&nbsp;SHOW OPEN TABLES Statement"><code class="literal">SHOW OPEN TABLES</code></a> lists the
+        non-<code class="literal">TEMPORARY</code> tables that are currently open
+        in the table cache. See <a class="xref" href="table-cache.html" title="8.4.3.1&nbsp;How MySQL Opens and Closes Tables">Section&nbsp;8.4.3.1, “How MySQL Opens and Closes Tables”</a>. The
+        <code class="literal">FROM</code> clause, if present, restricts the tables
+        shown to those present in the <em class="replaceable"><code>db_name</code></em>
+        database. The <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, if
+        present, indicates which table names to match. The
+        <code class="literal">WHERE</code> clause can be given to select rows
+        using more general conditions, as discussed in
+        <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+      </p><p>
+        <a class="link" href="show-open-tables.html" title="13.7.5.24&nbsp;SHOW OPEN TABLES Statement"><code class="literal">SHOW OPEN TABLES</code></a> output has these
+        columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Database</code>
+          </p><p>
+            The database containing the table.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Table</code>
+          </p><p>
+            The table name.
+          </p></li><li class="listitem"><p>
+            <code class="literal">In_use</code>
+          </p><p>
+            The number of table locks or lock requests there are for the
+            table. For example, if one client acquires a lock for a
+            table using <code class="literal">LOCK TABLE t1 WRITE</code>,
+            <code class="literal">In_use</code> is 1. If another client issues
+            <code class="literal">LOCK TABLE t1 WRITE</code> while the table
+            remains locked, the client blocks waiting for the lock, but
+            the lock request causes <code class="literal">In_use</code> to be 2.
+            If the count is zero, the table is open but not currently
+            being used. <code class="literal">In_use</code> is also increased by
+            the <a class="link" href="handler.html" title="13.2.4&nbsp;HANDLER Statement"><code class="literal">HANDLER ...
+            OPEN</code></a> statement and decreased by
+            <a class="link" href="handler.html" title="13.2.4&nbsp;HANDLER Statement"><code class="literal">HANDLER ...
+            CLOSE</code></a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Name_locked</code>
+          </p><p>
+            Whether the table name is locked. Name locking is used for
+            operations such as dropping or renaming tables.
+</p></li></ul>
+</div>
+<p>
+        If you have no privileges for a table, it does not show up in
+        the output from <a class="link" href="show-open-tables.html" title="13.7.5.24&nbsp;SHOW OPEN TABLES Statement"><code class="literal">SHOW OPEN TABLES</code></a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

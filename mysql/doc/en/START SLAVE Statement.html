@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>START SLAVE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="start-slave"></a>13.4.2.6&nbsp;START SLAVE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575784304"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">START SLAVE [<em class="replaceable">thread_types</em>] [<em class="replaceable">until_option</em>] [<em class="replaceable">connection_options</em>] [<em class="replaceable">channel_option</em>]
+
+<em class="replaceable">thread_types</em>:
+    [<em class="replaceable">thread_type</em> [, <em class="replaceable">thread_type</em>] ... ]
+
+<em class="replaceable">thread_type</em>:
+    IO_THREAD | SQL_THREAD
+
+<em class="replaceable">until_option</em>:
+    UNTIL {   {SQL_BEFORE_GTIDS | SQL_AFTER_GTIDS} = <em class="replaceable">gtid_set</em>
+          |   MASTER_LOG_FILE = '<em class="replaceable">log_name</em>', MASTER_LOG_POS = <em class="replaceable">log_pos</em>
+          |   RELAY_LOG_FILE = '<em class="replaceable">log_name</em>', RELAY_LOG_POS = <em class="replaceable">log_pos</em>
+          |   SQL_AFTER_MTS_GAPS  }
+
+<em class="replaceable">connection_options</em>:
+    [USER='<em class="replaceable">user_name</em>'] [PASSWORD='<em class="replaceable">user_pass</em>'] [DEFAULT_AUTH='<em class="replaceable">plugin_name</em>'] [PLUGIN_DIR='<em class="replaceable">plugin_dir</em>']
+
+
+<em class="replaceable">channel_option</em>:
+    FOR CHANNEL <em class="replaceable">channel</em>
+
+<em class="replaceable">gtid_set</em>:
+    <em class="replaceable">uuid_set</em> [, <em class="replaceable">uuid_set</em>] ...
+    | ''
+
+<em class="replaceable">uuid_set</em>:
+    <em class="replaceable">uuid</em>:<em class="replaceable">interval</em>[:<em class="replaceable">interval</em>]...
+
+<em class="replaceable">uuid</em>:
+    <em class="replaceable">hhhhhhhh</em>-<em class="replaceable">hhhh</em>-<em class="replaceable">hhhh</em>-<em class="replaceable">hhhh</em>-<em class="replaceable">hhhhhhhhhhhh</em>
+
+<em class="replaceable">h</em>:
+    [0-9,A-F]
+
+<em class="replaceable">interval</em>:
+    <em class="replaceable">n</em>[-<em class="replaceable">n</em>]
+
+    (<em class="replaceable">n</em> &gt;= 1)</code></pre><p>
+        <code class="literal">START SLAVE</code> starts the replication threads,
+        either together or separately. The statement requires the
+        <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege. <code class="literal">START
+        SLAVE</code> causes an implicit commit of an ongoing
+        transaction (see <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>).
+      </p><p>
+        For the thread type options, you can specify
+        <code class="literal">IO_THREAD</code>, <code class="literal">SQL_THREAD</code>,
+        both of these, or neither of them. Only the threads that are
+        started are affected by the statement.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">START SLAVE</code> with no thread type options
+            starts all of the replication threads, and so does
+            <code class="literal">START SLAVE</code> with both of the thread type
+            options.
+          </p></li><li class="listitem"><p>
+            <code class="literal">IO_THREAD</code> starts the replication receiver
+            thread, which reads events from the source server and stores
+            them in the relay log.
+          </p></li><li class="listitem"><p>
+            <code class="literal">SQL_THREAD</code> starts the replication applier
+            thread, which reads events from the relay log and executes
+            them. A multithreaded replica (with
+            <a class="link" href="replication-options-replica.html#sysvar_slave_parallel_workers"><code class="literal">slave_parallel_workers</code></a> &gt; 0)
+            applies transactions using a coordinator thread and multiple
+            applier threads, and <code class="literal">SQL_THREAD</code> starts
+            all of these.
+</p></li></ul>
+</div>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Important
+</div>
+<p>
+          <code class="literal">START SLAVE</code> sends an acknowledgment to the
+          user after all the replication threads have started. However,
+          the replication receiver thread might not yet have connected
+          to the source successfully, or an applier thread might stop
+          when applying an event right after starting. <code class="literal">START
+          SLAVE</code> does not continue to monitor the threads after
+          they are started, so it does not warn you if they subsequently
+          stop or cannot connect. You must check the replica's error log
+          for error messages generated by the replication threads, or
+          check that they are running satisfactorily with
+          <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE STATUS</code></a>.
+          A successful <code class="literal">START SLAVE</code> statement causes
+          <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE STATUS</code></a> to show
+          <code class="literal">Slave_SQL_Running=Yes</code>, but it might or
+          might not show <code class="literal">Slave_IO_Running=Yes</code>,
+          because <code class="literal">Slave_IO_Running=Yes</code> is only shown
+          if the receiver thread is both running and connected. For more
+          information, see
+          <a class="xref" href="replication-administration-status.html" title="16.1.7.1&nbsp;Checking Replication Status">Section&nbsp;16.1.7.1, “Checking Replication Status”</a>.
+</p>
+</div>
+<p>
+        The optional <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause enables you
+        to name which replication channel the statement applies to.
+        Providing a <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause applies the
+        <code class="literal">START SLAVE</code> statement to a specific
+        replication channel. If no clause is named and no extra channels
+        exist, the statement applies to the default channel. If a
+        <code class="literal">START SLAVE</code> statement does not have a channel
+        defined when using multiple channels, this statement starts the
+        specified threads for all channels. See
+        <a class="xref" href="replication-channels.html" title="16.2.2&nbsp;Replication Channels">Section&nbsp;16.2.2, “Replication Channels”</a> for more
+        information.
+      </p><p>
+        The replication channels for Group Replication
+        (<code class="literal">group_replication_applier</code> and
+        <code class="literal">group_replication_recovery</code>) are managed
+        automatically by the server instance. The only Group Replication
+        channel that you can interact with is the
+        <code class="literal">group_replication_applier</code> channel. This
+        channel only has an applier thread and has no receiver thread,
+        so it can be started by using the <code class="literal">SQL_THREAD</code>
+        option without the <code class="literal">IO_THREAD</code> option.
+        <code class="literal">START SLAVE</code> cannot be used at all with the
+        <code class="literal">group_replication_recovery</code> channel.
+      </p><p>
+        <code class="literal">START SLAVE</code> supports pluggable user-password
+        authentication (see
+        <a class="xref" href="pluggable-authentication.html" title="6.2.13&nbsp;Pluggable Authentication">Section&nbsp;6.2.13, “Pluggable Authentication”</a>) with the
+        <code class="literal">USER</code>, <code class="literal">PASSWORD</code>,
+        <code class="literal">DEFAULT_AUTH</code> and
+        <code class="literal">PLUGIN_DIR</code> options, as described in the
+        following list. When you use these options, you must start the
+        receiver thread (<code class="literal">IO_THREAD</code> option) or all the
+        replication threads - you cannot start the replication applier
+        thread (<code class="literal">SQL_THREAD</code> option) alone.
+</p>
+<div class="variablelist">
+<dl class="variablelist"><dt><span class="term">
+            <code class="literal">USER</code>
+          </span></dt><dd><p>
+              The user name for the account. You must set this if
+              <code class="literal">PASSWORD</code> is used. The option cannot be
+              set to an empty or null string.
+            </p></dd><dt><span class="term">
+            <code class="literal">PASSWORD</code>
+          </span></dt><dd><p>
+              The password for the named user account.
+            </p></dd><dt><span class="term">
+            <code class="literal">DEFAULT_AUTH</code>
+          </span></dt><dd><p>
+              The name of the authentication plugin. The default is
+              MySQL native authentication.
+            </p></dd><dt><span class="term">
+            <code class="literal">PLUGIN_DIR</code>
+          </span></dt><dd><p>
+              The location of the authentication plugin.
+</p></dd></dl>
+</div>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Important
+</div>
+<p>
+          The password that you set using <code class="literal">START SLAVE</code>
+          is masked when it is written to MySQL Server’s logs,
+          Performance Schema tables, and
+          <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW PROCESSLIST</code></a>
+          statements. However, it is sent in plain text over the
+          connection to the replica server instance. To protect the
+          password in transit, use SSL/TLS encryption, an SSH tunnel, or
+          another method of protecting the connection from unauthorized
+          viewing, for the connection between the replica server
+          instance and the client that you use to issue <code class="literal">START
+          SLAVE</code>.
+</p>
+</div>
+<p>
+        The <code class="literal">UNTIL</code> clause makes the replica start
+        replication, then process transactions up to the point that you
+        specify in the <code class="literal">UNTIL</code> clause, then stop again.
+        The <code class="literal">UNTIL</code> clause can be used to make a
+        replica proceed until just before the point where you want to
+        skip a transaction that is unwanted, and then skip the
+        transaction as described in
+        <a class="xref" href="replication-administration-skip.html" title="16.1.7.3&nbsp;Skipping Transactions">Section&nbsp;16.1.7.3, “Skipping Transactions”</a>. To
+        identify a transaction, you can use
+        <a class="link" href="mysqlbinlog.html" title="4.6.7&nbsp;mysqlbinlog — Utility for Processing Binary Log Files"><span class="command"><strong>mysqlbinlog</strong></span></a> with the source's binary log or
+        the replica's relay log, or use a <a class="link" href="show-binlog-events.html" title="13.7.5.2&nbsp;SHOW BINLOG EVENTS Statement"><code class="literal">SHOW
+        BINLOG EVENTS</code></a> statement.
+      </p><p>
+        You can also use the <code class="literal">UNTIL</code> clause for
+        debugging replication by processing transactions one at a time
+        or in sections. If you are using the <code class="literal">UNTIL</code>
+        clause to do this, start the replica with the
+        <a class="link" href="replication-options-replica.html#option_mysqld_skip-slave-start"><code class="option">--skip-slave-start</code></a>
+        option to prevent the SQL thread from running when the replica
+        server starts. Remove the option after the procedure is
+        complete, so that it is not forgotten in the event of an
+        unexpected server restart.
+      </p><p>
+        The <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE STATUS</code></a> statement
+        includes output fields that display the current values of the
+        <code class="literal">UNTIL</code> condition. The <code class="literal">UNTIL</code>
+        condition lasts for as long as the affected threads are still
+        running, and is removed when they stop.
+      </p><p>
+        The <code class="literal">UNTIL</code> clause operates on the replication
+        applier thread (<code class="literal">SQL_THREAD</code> option). You can
+        use the <code class="literal">SQL_THREAD</code> option or let the replica
+        default to starting both threads. If you use the
+        <code class="literal">IO_THREAD</code> option alone, the
+        <code class="literal">UNTIL</code> clause is ignored because the applier
+        thread is not started.
+      </p><p>
+        The point that you specify in the <code class="literal">UNTIL</code>
+        clause can be any one (and only one) of the following options:
+</p>
+<div class="variablelist">
+<dl class="variablelist"><dt><span class="term">
+            <code class="literal">SOURCE_LOG_FILE</code> and
+            <code class="literal">SOURCE_LOG_POS</code>
+          </span></dt><dd><p>
+              These options make the replication applier process
+              transactions up to a position in its relay log, identified
+              by the file name and file position of the corresponding
+              point in the binary log on the source server. The applier
+              thread finds the nearest transaction boundary at or after
+              the specified position, finishes applying the transaction,
+              and stops there.
+            </p></dd><dt><span class="term">
+            <code class="literal">RELAY_LOG_FILE</code> and
+            <code class="literal">RELAY_LOG_POS</code>
+          </span></dt><dd><p>
+              These options make the replication applier process
+              transactions up to a position in the replica’s relay
+              log, identified by the relay log file name and a position
+              in that file. The applier thread finds the nearest
+              transaction boundary at or after the specified position,
+              finishes applying the transaction, and stops there.
+            </p></dd><dt><span class="term">
+            <code class="literal">SQL_BEFORE_GTIDS</code>
+          </span></dt><dd><p>
+              This option makes the replication applier start processing
+              transactions and stop when it encounters any transaction
+              that is in the specified GTID set. The encountered
+              transaction from the GTID set is not applied, and nor are
+              any of the other transactions in the GTID set. The option
+              takes a GTID set containing one or more global transaction
+              identifiers as an argument (see
+              <a class="xref" href="replication-gtids-concepts.html#replication-gtids-concepts-gtid-sets" title="GTID Sets">GTID Sets</a>).
+              Transactions in a GTID set do not necessarily appear in
+              the replication stream in the order of their GTIDs, so the
+              transaction before which the applier stops is not
+              necessarily the earliest.
+            </p></dd><dt><span class="term">
+            <code class="literal">SQL_AFTER_GTIDS</code>
+          </span></dt><dd><p>
+              This option makes the replication applier start processing
+              transactions and stop when it has processed all of the
+              transactions in a specified GTID set. The option takes a
+              GTID set containing one or more global transaction
+              identifiers as an argument (see
+              <a class="xref" href="replication-gtids-concepts.html#replication-gtids-concepts-gtid-sets" title="GTID Sets">GTID Sets</a>).
+            </p><p>
+              With <code class="literal">SQL_AFTER_GTIDS</code>, the replication
+              threads stop when they have processed the transactions in
+              the GTID set and encounter the first transaction whose
+              GTID is not part of the GTID set. For example, executing
+              <code class="literal">START REPLICA UNTIL SQL_AFTER_GTIDS =
+              3E11FA47-71CA-11E1-9E33-C80AA9429562:11-56</code>
+              causes the replica to obtain all transactions just
+              mentioned from the source, including all of the
+              transactions having the sequence numbers 11 through 56,
+              and then to stop without processing any additional
+              transactions.
+            </p></dd><dt><span class="term">
+            <code class="literal">SQL_AFTER_MTS_GAPS</code>
+          </span></dt><dd><p>
+              For a multithreaded replica only (with
+              <a class="link" href="replication-options-replica.html#sysvar_slave_parallel_workers"><code class="literal">slave_parallel_workers</code></a> &gt;
+              0), this option makes the replica process transactions up
+              to the point where there are no more gaps in the sequence
+              of transactions executed from the relay log. When using a
+              multithreaded replica, there is a chance of gaps occurring
+              in the following situations:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+                  The coordinator thread is stopped.
+                </p></li><li class="listitem"><p>
+                  An error occurs in the applier threads.
+                </p></li><li class="listitem"><p>
+                  <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> shuts down unexpectedly.
+</p></li></ul>
+</div>
+<p>
+              When a replication channel has gaps, the replica’s
+              database is in a state that might never have existed on
+              the source. The replica tracks the gaps internally and
+              disallows <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a>
+              statements that would remove the gap information if they
+              executed.
+            </p><p>
+              Issuing <code class="literal">START SLAVE</code> on a multithreaded
+              replica with gaps in the sequence of transactions executed
+              from the relay log generates a warning. To correct this
+              situation, the solution is to use <code class="literal">START SLAVE
+              UNTIL SQL_AFTER_MTS_GAPS</code>. See
+              <a class="xref" href="replication-features-transaction-inconsistencies.html" title="16.4.1.32&nbsp;Replication and Transaction Inconsistencies">Section&nbsp;16.4.1.32, “Replication and Transaction Inconsistencies”</a>
+              for more information.
+            </p><p>
+              If you need to change a failed multithreaded replica to
+              single-threaded mode, you can issue the following series
+              of statements, in the order shown:
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">START SLAVE UNTIL SQL_AFTER_MTS_GAPS;
+SET @@GLOBAL.slave_parallel_workers = 0;
+START SLAVE SQL_THREAD;</code></pre></dd></dl>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

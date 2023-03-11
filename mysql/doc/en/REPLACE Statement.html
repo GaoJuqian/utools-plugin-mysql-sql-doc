@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>REPLACE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="replace"></a>13.2.8&nbsp;REPLACE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852578851680"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">REPLACE [LOW_PRIORITY | DELAYED]
+    [INTO] <em class="replaceable">tbl_name</em>
+    [PARTITION (<em class="replaceable">partition_name</em> [, <em class="replaceable">partition_name</em>] ...)]
+    [(<em class="replaceable">col_name</em> [, <em class="replaceable">col_name</em>] ...)]
+    {VALUES | VALUE} (<em class="replaceable">value_list</em>) [, (<em class="replaceable">value_list</em>)] ...
+
+REPLACE [LOW_PRIORITY | DELAYED]
+    [INTO] <em class="replaceable">tbl_name</em>
+    [PARTITION (<em class="replaceable">partition_name</em> [, <em class="replaceable">partition_name</em>] ...)]
+    SET <em class="replaceable">assignment_list</em>
+
+REPLACE [LOW_PRIORITY | DELAYED]
+    [INTO] <em class="replaceable">tbl_name</em>
+    [PARTITION (<em class="replaceable">partition_name</em> [, <em class="replaceable">partition_name</em>] ...)]
+    [(<em class="replaceable">col_name</em> [, <em class="replaceable">col_name</em>] ...)]
+    SELECT ...
+
+<em class="replaceable">value</em>:
+    {<em class="replaceable">expr</em> | DEFAULT}
+
+<em class="replaceable">value_list</em>:
+    <em class="replaceable">value</em> [, <em class="replaceable">value</em>] ...
+
+<em class="replaceable">assignment</em>:
+    <em class="replaceable">col_name</em> = <em class="replaceable">value</em>
+
+<em class="replaceable">assignment_list</em>:
+    <em class="replaceable">assignment</em> [, <em class="replaceable">assignment</em>] ...</code></pre><p>
+      <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a> works exactly like
+      <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>, except that if an old row
+      in the table has the same value as a new row for a
+      <code class="literal">PRIMARY KEY</code> or a <code class="literal">UNIQUE</code>
+      index, the old row is deleted before the new row is inserted. See
+      <a class="xref" href="insert.html" title="13.2.5&nbsp;INSERT Statement">Section&nbsp;13.2.5, “INSERT Statement”</a>.
+    </p><p>
+      <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a> is a MySQL extension to the
+      SQL standard. It either inserts, or <span class="emphasis"><em>deletes</em></span>
+      and inserts. For another MySQL extension to standard
+      SQL—that either inserts or
+      <span class="emphasis"><em>updates</em></span>—see
+      <a class="xref" href="insert-on-duplicate.html" title="13.2.5.2&nbsp;INSERT ... ON DUPLICATE KEY UPDATE Statement">Section&nbsp;13.2.5.2, “INSERT ... ON DUPLICATE KEY UPDATE Statement”</a>.
+    </p><p>
+      <code class="literal">DELAYED</code> inserts and replaces were deprecated in
+      MySQL 5.6. In MySQL 5.7, <code class="literal">DELAYED</code>
+      is not supported. The server recognizes but ignores the
+      <code class="literal">DELAYED</code> keyword, handles the replace as a
+      nondelayed replace, and generates an
+      <code class="literal">ER_WARN_LEGACY_SYNTAX_CONVERTED</code> warning:
+      <span class="errortext">REPLACE DELAYED is no longer supported. The statement
+      was converted to REPLACE</span>. The
+      <code class="literal">DELAYED</code> keyword is scheduled for removal in a
+      future release. release.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a> makes sense only if a
+        table has a <code class="literal">PRIMARY KEY</code> or
+        <code class="literal">UNIQUE</code> index. Otherwise, it becomes
+        equivalent to <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>, because
+        there is no index to be used to determine whether a new row
+        duplicates another.
+</p>
+</div>
+<p>
+      Values for all columns are taken from the values specified in the
+      <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a> statement. Any missing
+      columns are set to their default values, just as happens for
+      <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>. You cannot refer to values
+      from the current row and use them in the new row. If you use an
+      assignment such as <code class="literal">SET
+      <em class="replaceable"><code>col_name</code></em> =
+      <em class="replaceable"><code>col_name</code></em> + 1</code>, the reference
+      to the column name on the right hand side is treated as
+      <a class="link" href="miscellaneous-functions.html#function_default"><code class="literal">DEFAULT(<em class="replaceable"><code>col_name</code></em>)</code></a>,
+      so the assignment is equivalent to <code class="literal">SET
+      <em class="replaceable"><code>col_name</code></em> =
+      DEFAULT(<em class="replaceable"><code>col_name</code></em>) + 1</code>.
+    </p><p>
+      To use <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a>, you must have both
+      the <a class="link" href="privileges-provided.html#priv_insert"><code class="literal">INSERT</code></a> and
+      <a class="link" href="privileges-provided.html#priv_delete"><code class="literal">DELETE</code></a> privileges for the table.
+    </p><a class="indexterm" name="idm45852578804032"></a><p>
+      If a generated column is replaced explicitly, the only permitted
+      value is <code class="literal">DEFAULT</code>. For information about
+      generated columns, see
+      <a class="xref" href="create-table-generated-columns.html" title="13.1.18.7&nbsp;CREATE TABLE and Generated Columns">Section&nbsp;13.1.18.7, “CREATE TABLE and Generated Columns”</a>.
+    </p><p>
+      <code class="literal">REPLACE</code> supports explicit partition selection
+      using the <code class="literal">PARTITION</code> clause with a list of
+      comma-separated names of partitions, subpartitions, or both. As
+      with <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>, if it is not possible
+      to insert the new row into any of these partitions or
+      subpartitions, the <code class="literal">REPLACE</code> statement fails with
+      the error <span class="errortext">Found a row not matching the given partition
+      set</span>. For more information and examples, see
+      <a class="xref" href="partitioning-selection.html" title="22.5&nbsp;Partition Selection">Section&nbsp;22.5, “Partition Selection”</a>.
+    </p><p>
+      The <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a> statement returns a
+      count to indicate the number of rows affected. This is the sum of
+      the rows deleted and inserted. If the count is 1 for a single-row
+      <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a>, a row was inserted and no
+      rows were deleted. If the count is greater than 1, one or more old
+      rows were deleted before the new row was inserted. It is possible
+      for a single row to replace more than one old row if the table
+      contains multiple unique indexes and the new row duplicates values
+      for different old rows in different unique indexes.
+    </p><p>
+      The affected-rows count makes it easy to determine whether
+      <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a> only added a row or whether
+      it also replaced any rows: Check whether the count is 1 (added) or
+      greater (replaced).
+    </p><p>
+      If you are using the C API, the affected-rows count can be
+      obtained using the
+      <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-affected-rows.html" target="_top"><code class="literal">mysql_affected_rows()</code></a> function.
+    </p><p>
+      You cannot replace into a table and select from the same table in
+      a subquery.
+    </p><p>
+      MySQL uses the following algorithm for
+      <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a> (and
+      <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA ...
+      REPLACE</code></a>):
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+          Try to insert the new row into the table
+        </p></li><li class="listitem"><p>
+          While the insertion fails because a duplicate-key error occurs
+          for a primary key or unique index:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="a"><li class="listitem"><p>
+              Delete from the table the conflicting row that has the
+              duplicate key value
+            </p></li><li class="listitem"><p>
+              Try again to insert the new row into the table
+</p></li></ol>
+</div>
+</li></ol>
+</div>
+<p>
+      It is possible that in the case of a duplicate-key error, a
+      storage engine may perform the <code class="literal">REPLACE</code> as an
+      update rather than a delete plus insert, but the semantics are the
+      same. There are no user-visible effects other than a possible
+      difference in how the storage engine increments
+      <code class="literal">Handler_<em class="replaceable"><code>xxx</code></em></code> status
+      variables.
+    </p><p>
+      Because the results of <code class="literal">REPLACE ... SELECT</code>
+      statements depend on the ordering of rows from the
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> and this order cannot always
+      be guaranteed, it is possible when logging these statements for
+      the source and the replica to diverge. For this reason,
+      <code class="literal">REPLACE ... SELECT</code> statements are flagged as
+      unsafe for statement-based replication. such statements produce a
+      warning in the error log when using statement-based mode and are
+      written to the binary log using the row-based format when using
+      <code class="literal">MIXED</code> mode. See also
+      <a class="xref" href="replication-sbr-rbr.html" title="16.2.1.1&nbsp;Advantages and Disadvantages of Statement-Based and Row-Based Replication">Section&nbsp;16.2.1.1, “Advantages and Disadvantages of Statement-Based and Row-Based
+        Replication”</a>.
+    </p><p>
+      When modifying an existing table that is not partitioned to
+      accommodate partitioning, or, when modifying the partitioning of
+      an already partitioned table, you may consider altering the
+      table's primary key (see
+      <a class="xref" href="partitioning-limitations-partitioning-keys-unique-keys.html" title="22.6.1&nbsp;Partitioning Keys, Primary Keys, and Unique Keys">Section&nbsp;22.6.1, “Partitioning Keys, Primary Keys, and Unique Keys”</a>).
+      You should be aware that, if you do this, the results of
+      <code class="literal">REPLACE</code> statements may be affected, just as
+      they would be if you modified the primary key of a nonpartitioned
+      table. Consider the table created by the following
+      <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE test (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  data VARCHAR(64) DEFAULT NULL,
+  ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+);</code></pre><p>
+      When we create this table and run the statements shown in the
+      mysql client, the result is as follows:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; REPLACE INTO test VALUES (1, 'Old', '2014-08-20 18:47:00');
+Query OK, 1 row affected (0.04 sec)
+
+mysql&gt; REPLACE INTO test VALUES (1, 'New', '2014-08-20 18:47:42');
+Query OK, 2 rows affected (0.04 sec)
+
+mysql&gt; SELECT * FROM test;
++----+------+---------------------+
+| id | data | ts                  |
++----+------+---------------------+
+|  1 | New  | 2014-08-20 18:47:42 |
++----+------+---------------------+
+1 row in set (0.00 sec)</code></pre><p>
+      Now we create a second table almost identical to the first, except
+      that the primary key now covers 2 columns, as shown here
+      (emphasized text):
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE test2 (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  data VARCHAR(64) DEFAULT NULL,
+  ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  <em>PRIMARY KEY (id, ts)</em>
+);</code></pre><p>
+      When we run on <code class="literal">test2</code> the same two
+      <code class="literal">REPLACE</code> statements as we did on the original
+      <code class="literal">test</code> table, we obtain a different result:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; REPLACE INTO test2 VALUES (1, 'Old', '2014-08-20 18:47:00');
+Query OK, 1 row affected (0.05 sec)
+
+mysql&gt; REPLACE INTO test2 VALUES (1, 'New', '2014-08-20 18:47:42');
+Query OK, 1 row affected (0.06 sec)
+
+mysql&gt; SELECT * FROM test2;
++----+------+---------------------+
+| id | data | ts                  |
++----+------+---------------------+
+|  1 | Old  | 2014-08-20 18:47:00 |
+|  1 | New  | 2014-08-20 18:47:42 |
++----+------+---------------------+
+2 rows in set (0.00 sec)</code></pre><p>
+      This is due to the fact that, when run on
+      <code class="literal">test2</code>, both the <code class="literal">id</code> and
+      <code class="literal">ts</code> column values must match those of an
+      existing row for the row to be replaced; otherwise, a row is
+      inserted.
+    </p><p>
+      A <code class="literal">REPLACE</code> statement affecting a partitioned
+      table using a storage engine such as
+      <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> that employs table-level locks
+      locks only those partitions containing rows that match the
+      <code class="literal">REPLACE</code> statement <code class="literal">WHERE</code>
+      clause, as long as none of the table partitioning columns are
+      updated; otherwise the entire table is locked. (For storage
+      engines such as <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> that employ
+      row-level locking, no locking of partitions takes place.) For more
+      information, see
+      <a class="xref" href="partitioning-limitations-locking.html" title="22.6.4&nbsp;Partitioning and Locking">Section&nbsp;22.6.4, “Partitioning and Locking”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

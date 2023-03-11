@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>ALTER TABLE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="alter-table"></a>13.1.8&nbsp;ALTER TABLE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="alter-table-partition-operations.html">13.1.8.1 ALTER TABLE Partition Operations</a></span></dt><dt><span class="section"><a href="alter-table-generated-columns.html">13.1.8.2 ALTER TABLE and Generated Columns</a></span></dt><dt><span class="section"><a href="alter-table-examples.html">13.1.8.3 ALTER TABLE Examples</a></span></dt></dl>
+</div>
+<a class="indexterm" name="idm45852585537520"></a><a class="indexterm" name="idm45852585536448"></a><a class="indexterm" name="idm45852585534960"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER TABLE <em class="replaceable">tbl_name</em>
+    [<em class="replaceable">alter_option</em> [, <em class="replaceable">alter_option</em>] ...]
+    [<em class="replaceable">partition_options</em>]
+
+<em class="replaceable">alter_option</em>: {
+    <em class="replaceable">table_options</em>
+  | ADD [COLUMN] <em class="replaceable">col_name</em> <em class="replaceable">column_definition</em>
+        [FIRST | AFTER <em class="replaceable">col_name</em>]
+  | ADD [COLUMN] (<em class="replaceable">col_name</em> <em class="replaceable">column_definition</em>,...)
+  | ADD {INDEX | KEY} [<em class="replaceable">index_name</em>]
+        [<em class="replaceable">index_type</em>] (<em class="replaceable">key_part</em>,...) [<em class="replaceable">index_option</em>] ...
+  | ADD {FULLTEXT | SPATIAL} [INDEX | KEY] [<em class="replaceable">index_name</em>]
+        (<em class="replaceable">key_part</em>,...) [<em class="replaceable">index_option</em>] ...
+  | ADD [CONSTRAINT [<em class="replaceable">symbol</em>]] PRIMARY KEY
+        [<em class="replaceable">index_type</em>] (<em class="replaceable">key_part</em>,...)
+        [<em class="replaceable">index_option</em>] ...
+  | ADD [CONSTRAINT [<em class="replaceable">symbol</em>]] UNIQUE [INDEX | KEY]
+        [<em class="replaceable">index_name</em>] [<em class="replaceable">index_type</em>] (<em class="replaceable">key_part</em>,...)
+        [<em class="replaceable">index_option</em>] ...
+  | ADD [CONSTRAINT [<em class="replaceable">symbol</em>]] FOREIGN KEY
+        [<em class="replaceable">index_name</em>] (<em class="replaceable">col_name</em>,...)
+        <em class="replaceable">reference_definition</em>
+  | ADD CHECK (<em class="replaceable">expr</em>)
+  | ALGORITHM [=] {DEFAULT | INPLACE | COPY}
+  | ALTER [COLUMN] <em class="replaceable">col_name</em> {
+        SET DEFAULT {<em class="replaceable">literal</em> | (<em class="replaceable">expr</em>)}
+      | DROP DEFAULT
+    }
+  | CHANGE [COLUMN] <em class="replaceable">old_col_name</em> <em class="replaceable">new_col_name</em> <em class="replaceable">column_definition</em>
+        [FIRST | AFTER <em class="replaceable">col_name</em>]
+  | [DEFAULT] CHARACTER SET [=] <em class="replaceable">charset_name</em> [COLLATE [=] <em class="replaceable">collation_name</em>]
+  | CONVERT TO CHARACTER SET <em class="replaceable">charset_name</em> [COLLATE <em class="replaceable">collation_name</em>]
+  | {DISABLE | ENABLE} KEYS
+  | {DISCARD | IMPORT} TABLESPACE
+  | DROP [COLUMN] <em class="replaceable">col_name</em>
+  | DROP {INDEX | KEY} <em class="replaceable">index_name</em>
+  | DROP PRIMARY KEY
+  | DROP FOREIGN KEY <em class="replaceable">fk_symbol</em>
+  | FORCE
+  | LOCK [=] {DEFAULT | NONE | SHARED | EXCLUSIVE}
+  | MODIFY [COLUMN] <em class="replaceable">col_name</em> <em class="replaceable">column_definition</em>
+        [FIRST | AFTER <em class="replaceable">col_name</em>]
+  | ORDER BY <em class="replaceable">col_name</em> [, <em class="replaceable">col_name</em>] ...
+  | RENAME {INDEX | KEY} <em class="replaceable">old_index_name</em> TO <em class="replaceable">new_index_name</em>
+  | RENAME [TO | AS] <em class="replaceable">new_tbl_name</em>
+  | {WITHOUT | WITH} VALIDATION
+}
+
+<em class="replaceable">partition_options</em>:
+    <em class="replaceable">partition_option</em> [<em class="replaceable">partition_option</em>] ...
+
+<em class="replaceable">partition_option</em>: {
+    ADD PARTITION (<em class="replaceable">partition_definition</em>)
+  | DROP PARTITION <em class="replaceable">partition_names</em>
+  | DISCARD PARTITION {<em class="replaceable">partition_names</em> | ALL} TABLESPACE
+  | IMPORT PARTITION {<em class="replaceable">partition_names</em> | ALL} TABLESPACE
+  | TRUNCATE PARTITION {<em class="replaceable">partition_names</em> | ALL}
+  | COALESCE PARTITION <em class="replaceable">number</em>
+  | REORGANIZE PARTITION <em class="replaceable">partition_names</em> INTO (<em class="replaceable">partition_definitions</em>)
+  | EXCHANGE PARTITION <em class="replaceable">partition_name</em> WITH TABLE <em class="replaceable">tbl_name</em> [{WITH | WITHOUT} VALIDATION]
+  | ANALYZE PARTITION {<em class="replaceable">partition_names</em> | ALL}
+  | CHECK PARTITION {<em class="replaceable">partition_names</em> | ALL}
+  | OPTIMIZE PARTITION {<em class="replaceable">partition_names</em> | ALL}
+  | REBUILD PARTITION {<em class="replaceable">partition_names</em> | ALL}
+  | REPAIR PARTITION {<em class="replaceable">partition_names</em> | ALL}
+  | REMOVE PARTITIONING
+  | UPGRADE PARTITIONING
+}
+
+<em class="replaceable">key_part</em>:
+    <em class="replaceable">col_name</em> [(<em class="replaceable">length</em>)] [ASC | DESC]
+
+<em class="replaceable">index_type</em>:
+    USING {BTREE | HASH}
+
+<em class="replaceable">index_option</em>: {
+    KEY_BLOCK_SIZE [=] <em class="replaceable">value</em>
+  | <em class="replaceable">index_type</em>
+  | WITH PARSER <em class="replaceable">parser_name</em>
+  | COMMENT '<em class="replaceable">string</em>'
+}
+
+<em class="replaceable">table_options</em>:
+    <em class="replaceable">table_option</em> [[,] <em class="replaceable">table_option</em>] ...
+
+<em class="replaceable">table_option</em>: {
+    AUTO_INCREMENT [=] <em class="replaceable">value</em>
+  | AVG_ROW_LENGTH [=] <em class="replaceable">value</em>
+  | [DEFAULT] CHARACTER SET [=] <em class="replaceable">charset_name</em>
+  | CHECKSUM [=] {0 | 1}
+  | [DEFAULT] COLLATE [=] <em class="replaceable">collation_name</em>
+  | COMMENT [=] '<em class="replaceable">string</em>'
+  | COMPRESSION [=] {'ZLIB' | 'LZ4' | 'NONE'}
+  | CONNECTION [=] '<em class="replaceable">connect_string</em>'
+  | {DATA | INDEX} DIRECTORY [=] '<em class="replaceable">absolute path to directory</em>'
+  | DELAY_KEY_WRITE [=] {0 | 1}
+  | ENCRYPTION [=] {'Y' | 'N'}
+  | ENGINE [=] <em class="replaceable">engine_name</em>
+  | INSERT_METHOD [=] { NO | FIRST | LAST }
+  | KEY_BLOCK_SIZE [=] <em class="replaceable">value</em>
+  | MAX_ROWS [=] <em class="replaceable">value</em>
+  | MIN_ROWS [=] <em class="replaceable">value</em>
+  | PACK_KEYS [=] {0 | 1 | DEFAULT}
+  | PASSWORD [=] '<em class="replaceable">string</em>'
+  | ROW_FORMAT [=] {DEFAULT | DYNAMIC | FIXED | COMPRESSED | REDUNDANT | COMPACT}
+  | STATS_AUTO_RECALC [=] {DEFAULT | 0 | 1}
+  | STATS_PERSISTENT [=] {DEFAULT | 0 | 1}
+  | STATS_SAMPLE_PAGES [=] <em class="replaceable">value</em>
+  | TABLESPACE <em class="replaceable">tablespace_name</em> [STORAGE {DISK | MEMORY}]
+  | UNION [=] (<em class="replaceable">tbl_name</em>[,<em class="replaceable">tbl_name</em>]...)
+}
+
+<em class="replaceable">partition_options</em>:
+    (see CREATE TABLE options)</code></pre><p>
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> changes the structure
+      of a table. For example, you can add or delete columns, create or
+      destroy indexes, change the type of existing columns, or rename
+      columns or the table itself. You can also change characteristics
+      such as the storage engine used for the table or the table
+      comment.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          To use <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>, you need
+          <a class="link" href="privileges-provided.html#priv_alter"><code class="literal">ALTER</code></a>,
+          <a class="link" href="privileges-provided.html#priv_create"><code class="literal">CREATE</code></a>, and
+          <a class="link" href="privileges-provided.html#priv_insert"><code class="literal">INSERT</code></a> privileges for the
+          table. Renaming a table requires
+          <a class="link" href="privileges-provided.html#priv_alter"><code class="literal">ALTER</code></a> and
+          <a class="link" href="privileges-provided.html#priv_drop"><code class="literal">DROP</code></a> on the old table,
+          <a class="link" href="privileges-provided.html#priv_alter"><code class="literal">ALTER</code></a>,
+          <a class="link" href="privileges-provided.html#priv_create"><code class="literal">CREATE</code></a>, and
+          <a class="link" href="privileges-provided.html#priv_insert"><code class="literal">INSERT</code></a> on the new table.
+        </p></li><li class="listitem"><p>
+          Following the table name, specify the alterations to be made.
+          If none are given, <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+          does nothing.
+        </p></li><li class="listitem"><p>
+          The syntax for many of the permissible alterations is similar
+          to clauses of the <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>
+          statement. <em class="replaceable"><code>column_definition</code></em>
+          clauses use the same syntax for <code class="literal">ADD</code> and
+          <code class="literal">CHANGE</code> as for <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+          TABLE</code></a>. For more information, see
+          <a class="xref" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement">Section&nbsp;13.1.18, “CREATE TABLE Statement”</a>.
+        </p></li><li class="listitem"><p>
+          The word <code class="literal">COLUMN</code> is optional and can be
+          omitted.
+        </p></li><li class="listitem"><p>
+          Multiple <code class="literal">ADD</code>, <code class="literal">ALTER</code>,
+          <code class="literal">DROP</code>, and <code class="literal">CHANGE</code> clauses
+          are permitted in a single <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+          TABLE</code></a> statement, separated by commas. This is a
+          MySQL extension to standard SQL, which permits only one of
+          each clause per <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+          statement. For example, to drop multiple columns in a single
+          statement, do this:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t2 DROP COLUMN c, DROP COLUMN d;</code></pre></li><li class="listitem"><p>
+          If a storage engine does not support an attempted
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operation, a
+          warning may result. Such warnings can be displayed with
+          <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW WARNINGS</code></a>. See
+          <a class="xref" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement">Section&nbsp;13.7.5.40, “SHOW WARNINGS Statement”</a>. For information on
+          troubleshooting <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>,
+          see <a class="xref" href="alter-table-problems.html" title="B.3.6.1&nbsp;Problems with ALTER TABLE">Section&nbsp;B.3.6.1, “Problems with ALTER TABLE”</a>.
+        </p></li><li class="listitem"><p>
+          For information about generated columns, see
+          <a class="xref" href="alter-table-generated-columns.html" title="13.1.8.2&nbsp;ALTER TABLE and Generated Columns">Section&nbsp;13.1.8.2, “ALTER TABLE and Generated Columns”</a>.
+        </p></li><li class="listitem"><p>
+          For usage examples, see
+          <a class="xref" href="alter-table-examples.html" title="13.1.8.3&nbsp;ALTER TABLE Examples">Section&nbsp;13.1.8.3, “ALTER TABLE Examples”</a>.
+        </p></li><li class="listitem"><p>
+          With the <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-info.html" target="_top"><code class="literal">mysql_info()</code></a> C API
+          function, you can find out how many rows were copied by
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>. See
+          <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-info.html" target="_top">mysql_info()</a>.
+</p><a class="indexterm" name="idm45852585436512"></a></li></ul>
+</div>
+<p>
+      There are several additional aspects to the <code class="literal">ALTER
+      TABLE</code> statement, described under the following topics in
+      this section:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-options" title="Table Options">Table Options</a></p></li><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-performance" title="Performance and Space Requirements">Performance and Space Requirements</a></p></li><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-concurrency" title="Concurrency Control">Concurrency Control</a></p></li><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-add-drop-column" title="Adding and Dropping Columns">Adding and Dropping Columns</a></p></li><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-redefine-column" title="Renaming, Redefining, and Reordering Columns">Renaming, Redefining, and Reordering Columns</a></p></li><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-index" title="Primary Keys and Indexes">Primary Keys and Indexes</a></p></li><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-foreign-key" title="Foreign Keys and Other Constraints">Foreign Keys and Other Constraints</a></p></li><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-character-set" title="Changing the Character Set">Changing the Character Set</a></p></li><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-discard-import" title="Discarding and Importing InnoDB Tablespaces">Discarding and Importing InnoDB Tablespaces</a></p></li><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-row-order" title="Row Order for MyISAM Tables">Row Order for MyISAM Tables</a></p></li><li class="listitem"><p><a class="xref" href="alter-table.html#alter-table-partition-options" title="Partitioning Options">Partitioning Options</a></p></li></ul>
+</div>
+<h4><a name="alter-table-options"></a>Table Options</h4>
+<p>
+      <em class="replaceable"><code>table_options</code></em> signifies table options
+      of the kind that can be used in the <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+      TABLE</code></a> statement, such as <code class="literal">ENGINE</code>,
+      <code class="literal">AUTO_INCREMENT</code>,
+      <code class="literal">AVG_ROW_LENGTH</code>, <code class="literal">MAX_ROWS</code>,
+      <code class="literal">ROW_FORMAT</code>, or <code class="literal">TABLESPACE</code>.
+    </p><p>
+      For descriptions of all table options, see
+      <a class="xref" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement">Section&nbsp;13.1.18, “CREATE TABLE Statement”</a>. However,
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> ignores <code class="literal">DATA
+      DIRECTORY</code> and <code class="literal">INDEX DIRECTORY</code> when
+      given as table options. <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+      permits them only as partitioning options, and, as of MySQL
+      5.7.17, requires that you have the <code class="literal">FILE</code>
+      privilege.
+    </p><p>
+      Use of table options with <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+      TABLE</code></a> provides a convenient way of altering single table
+      characteristics. For example:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          If <code class="literal">t1</code> is currently not an
+          <code class="literal">InnoDB</code> table, this statement changes its
+          storage engine to <code class="literal">InnoDB</code>:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 ENGINE = InnoDB;</code></pre>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              See <a class="xref" href="converting-tables-to-innodb.html" title="14.6.1.5&nbsp;Converting Tables from MyISAM to InnoDB">Section&nbsp;14.6.1.5, “Converting Tables from MyISAM to InnoDB”</a> for
+              considerations when switching tables to the
+              <code class="literal">InnoDB</code> storage engine.
+            </p></li><li class="listitem"><p>
+              When you specify an <code class="literal">ENGINE</code> clause,
+              <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> rebuilds the
+              table. This is true even if the table already has the
+              specified storage engine.
+            </p></li><li class="listitem"><p>
+              Running <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+              TABLE <em class="replaceable"><code>tbl_name</code></em>
+              ENGINE=INNODB</code></a> on an existing
+              <code class="literal">InnoDB</code> table performs a
+              <span class="quote">“<span class="quote">null</span>”</span> <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+              TABLE</code></a> operation, which can be used to defragment
+              an <code class="literal">InnoDB</code> table, as described in
+              <a class="xref" href="innodb-file-defragmenting.html" title="14.12.4&nbsp;Defragmenting a Table">Section&nbsp;14.12.4, “Defragmenting a Table”</a>. Running
+              <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE
+              <em class="replaceable"><code>tbl_name</code></em> FORCE</code></a> on an
+              <code class="literal">InnoDB</code> table performs the same
+              function.
+            </p></li><li class="listitem"><p>
+              <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE
+              <em class="replaceable"><code>tbl_name</code></em>
+              ENGINE=INNODB</code></a> and
+              <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE
+              <em class="replaceable"><code>tbl_name</code></em> FORCE</code></a> use
+              <a class="link" href="innodb-online-ddl.html" title="14.13&nbsp;InnoDB and Online DDL">online DDL</a>. For
+              more information, see <a class="xref" href="innodb-online-ddl.html" title="14.13&nbsp;InnoDB and Online DDL">Section&nbsp;14.13, “InnoDB and Online DDL”</a>.
+            </p></li><li class="listitem"><p>
+              The outcome of attempting to change the storage engine of
+              a table is affected by whether the desired storage engine
+              is available and the setting of the
+              <a class="link" href="sql-mode.html#sqlmode_no_engine_substitution"><code class="literal">NO_ENGINE_SUBSTITUTION</code></a>
+              SQL mode, as described in <a class="xref" href="sql-mode.html" title="5.1.10&nbsp;Server SQL Modes">Section&nbsp;5.1.10, “Server SQL Modes”</a>.
+            </p></li><li class="listitem"><p>
+              To prevent inadvertent loss of data,
+              <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> cannot be used
+              to change the storage engine of a table to
+              <code class="literal">MERGE</code> or <code class="literal">BLACKHOLE</code>.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          To change the <code class="literal">InnoDB</code> table to use
+          compressed row-storage format:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 ROW_FORMAT = COMPRESSED;</code></pre></li><li class="listitem"><p>
+          To enable or disable encryption for an
+          <code class="literal">InnoDB</code> table in a file-per-table
+          tablespace:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER TABLE t1 ENCRYPTION='Y';
+ALTER TABLE t1 ENCRYPTION='N';</code></pre><p>
+          A keyring plugin must be installed and configured to use the
+          <code class="literal">ENCRYPTION</code> option. For more information,
+          see <a class="xref" href="innodb-data-encryption.html" title="14.14&nbsp;InnoDB Data-at-Rest Encryption">Section&nbsp;14.14, “InnoDB Data-at-Rest Encryption”</a>.
+        </p></li><li class="listitem"><p>
+          To reset the current auto-increment value:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 AUTO_INCREMENT = 13;</code></pre><p>
+          You cannot reset the counter to a value less than or equal to
+          the value that is currently in use. For both
+          <code class="literal">InnoDB</code> and <code class="literal">MyISAM</code>, if
+          the value is less than or equal to the maximum value currently
+          in the <code class="literal">AUTO_INCREMENT</code> column, the value is
+          reset to the current maximum <code class="literal">AUTO_INCREMENT</code>
+          column value plus one.
+        </p></li><li class="listitem"><p>
+          To change the default table character set:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 CHARACTER SET = utf8;</code></pre><p>
+          See also <a class="xref" href="alter-table.html#alter-table-character-set" title="Changing the Character Set">Changing the Character Set</a>.
+        </p></li><li class="listitem"><p>
+          To add (or change) a table comment:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 COMMENT = 'New table comment';</code></pre></li><li class="listitem"><p>
+          Use <code class="literal">ALTER TABLE</code> with the
+          <code class="literal">TABLESPACE</code> option to move
+          <code class="literal">InnoDB</code> tables between existing
+          <a class="link" href="glossary.html#glos_general_tablespace" title="general tablespace">general
+          tablespaces</a>,
+          <a class="link" href="glossary.html#glos_file_per_table" title="file-per-table">file-per-table</a>
+          tablespaces, and the
+          <a class="link" href="glossary.html#glos_system_tablespace" title="system tablespace">system
+          tablespace</a>. See
+          <a class="xref" href="general-tablespaces.html#general-tablespaces-moving-non-partitioned-tables" title="Moving Tables Between Tablespaces Using ALTER TABLE">Moving Tables Between Tablespaces Using ALTER TABLE</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              <code class="literal">ALTER TABLE ... TABLESPACE</code> operations
+              always cause a full table rebuild, even if the
+              <code class="literal">TABLESPACE</code> attribute has not changed
+              from its previous value.
+            </p></li><li class="listitem"><p>
+              <code class="literal">ALTER TABLE ... TABLESPACE</code> syntax does
+              not support moving a table from a temporary tablespace to
+              a persistent tablespace.
+            </p></li><li class="listitem"><p>
+              The <code class="literal">DATA DIRECTORY</code> clause, which is
+              supported with
+              <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE
+              ... TABLESPACE</code></a>, is not supported with
+              <code class="literal">ALTER TABLE ... TABLESPACE</code>, and is
+              ignored if specified.
+            </p></li><li class="listitem"><p>
+              For more information about the capabilities and
+              limitations of the <code class="literal">TABLESPACE</code> option,
+              see <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          MySQL NDB Cluster 7.5.2 and later supports setting
+          <code class="literal">NDB_TABLE</code> options for controlling a
+          table's partition balance (fragment count type),
+          read-from-any-replica capability, full replication, or any
+          combination of these, as part of the table comment for an
+          <code class="literal">ALTER TABLE</code> statement in the same manner as
+          for <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>, as shown in
+          this example:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 COMMENT = "NDB_TABLE=READ_BACKUP=0,PARTITION_BALANCE=FOR_RA_BY_NODE";</code></pre><p>
+          It is also possible to set <code class="literal">NDB_COMMENT</code>
+          options for columns of <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables
+          as part of an <code class="literal">ALTER TABLE</code> statement, like
+          this one:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER TABLE t1 
+  CHANGE COLUMN c1 c1 BLOB 
+    COMMENT = 'NDB_COLUMN=MAX_BLOB_PART_SIZE';</code></pre><p>
+          Bear in mind that <code class="literal">ALTER TABLE ... COMMENT
+          ...</code> discards any existing comment for the table. See
+          <a class="xref" href="create-table.html#create-table-comment-ndb-table-options" title="Setting NDB_TABLE options">Setting NDB_TABLE options</a>, for
+          additional information and examples.
+</p></li></ul>
+</div>
+<p>
+      To verify that the table options were changed as intended, use
+      <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE TABLE</code></a>, or query the
+      Information Schema <a class="link" href="information-schema-tables-table.html" title="24.3.25&nbsp;The INFORMATION_SCHEMA TABLES Table"><code class="literal">TABLES</code></a> table.
+</p>
+<h4><a name="alter-table-performance"></a>Performance and Space Requirements</h4>
+<p>
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operations are
+      processed using one of the following algorithms:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">COPY</code>: Operations are performed on a copy of
+          the original table, and table data is copied from the original
+          table to the new table row by row. Concurrent DML is not
+          permitted.
+        </p></li><li class="listitem"><p>
+          <code class="literal">INPLACE</code>: Operations avoid copying table
+          data but may rebuild the table in place. An exclusive metadata
+          lock on the table may be taken briefly during preparation and
+          execution phases of the operation. Typically, concurrent DML
+          is supported.
+</p></li></ul>
+</div>
+<p>
+      For tables using the <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage
+      engine, these algorithms work as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">COPY</code>: <code class="literal">NDB</code> creates a copy
+          of the table and alters it; the NDB Cluster handler then
+          copies the data between the old and new versions of the table.
+          Subsequently, <code class="literal">NDB</code> deletes the old table and
+          renames the new one.
+        </p><p>
+          This is sometimes also referred to as a <span class="quote">“<span class="quote">copying</span>”</span>
+          or <span class="quote">“<span class="quote">offline</span>”</span> <code class="literal">ALTER TABLE</code>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">INPLACE</code>: The data nodes make the required
+          changes; the NDB Cluster handler does not copy data or
+          otherwise take part.
+        </p><p>
+          This is sometimes also referred to as a
+          <span class="quote">“<span class="quote">non-copying</span>”</span> or <span class="quote">“<span class="quote">online</span>”</span>
+          <code class="literal">ALTER TABLE</code>.
+</p></li></ul>
+</div>
+<p>
+      See <a class="xref" href="mysql-cluster-online-operations.html" title="21.6.12&nbsp;Online Operations with ALTER TABLE in NDB Cluster">Section&nbsp;21.6.12, “Online Operations with ALTER TABLE in NDB Cluster”</a>, for more
+      information.
+    </p><p>
+      The <code class="literal">ALGORITHM</code> clause is optional. If the
+      <code class="literal">ALGORITHM</code> clause is omitted, MySQL uses
+      <code class="literal">ALGORITHM=INPLACE</code> for storage engines and
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> clauses that support
+      it. Otherwise, <code class="literal">ALGORITHM=COPY</code> is used.
+    </p><p>
+      Specifying an <code class="literal">ALGORITHM</code> clause requires the
+      operation to use the specified algorithm for clauses and storage
+      engines that support it, or fail with an error otherwise.
+      Specifying <code class="literal">ALGORITHM=DEFAULT</code> is the same as
+      omitting the <code class="literal">ALGORITHM</code> clause.
+    </p><p>
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operations that use the
+      <code class="literal">COPY</code> algorithm wait for other operations that
+      are modifying the table to complete. After alterations are applied
+      to the table copy, data is copied over, the original table is
+      deleted, and the table copy is renamed to the name of the original
+      table. While the <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+      operation executes, the original table is readable by other
+      sessions (with the exception noted shortly). Updates and writes to
+      the table started after the <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+      TABLE</code></a> operation begins are stalled until the new table
+      is ready, then are automatically redirected to the new table. The
+      temporary copy of the table is created in the database directory
+      of the original table unless it is a <code class="literal">RENAME TO</code>
+      operation that moves the table to a database that resides in a
+      different directory.
+    </p><p>
+      The exception referred to earlier is that
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> blocks reads (not just
+      writes) at the point where it is ready to install a new version of
+      the table <code class="filename">.frm</code> file, discard the old file,
+      and clear outdated table structures from the table and table
+      definition caches. At this point, it must acquire an exclusive
+      lock. To do so, it waits for current readers to finish, and blocks
+      new reads and writes.
+    </p><p>
+      An <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operation that uses
+      the <code class="literal">COPY</code> algorithm prevents concurrent DML
+      operations. Concurrent queries are still allowed. That is, a
+      table-copying operation always includes at least the concurrency
+      restrictions of <code class="literal">LOCK=SHARED</code> (allow queries but
+      not DML). You can further restrict concurrency for operations that
+      support the <code class="literal">LOCK</code> clause by specifying
+      <code class="literal">LOCK=EXCLUSIVE</code>, which prevents DML and queries.
+      For more information, see
+      <a class="xref" href="alter-table.html#alter-table-concurrency" title="Concurrency Control">Concurrency Control</a>.
+    </p><p>
+      To force use of the <code class="literal">COPY</code> algorithm for an
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operation that would
+      otherwise not use it, enable the
+      <a class="link" href="server-system-variables.html#sysvar_old_alter_table"><code class="literal">old_alter_table</code></a> system variable
+      or specify <code class="literal">ALGORITHM=COPY</code>. If there is a
+      conflict between the <code class="literal">old_alter_table</code> setting
+      and an <code class="literal">ALGORITHM</code> clause with a value other than
+      <code class="literal">DEFAULT</code>, the <code class="literal">ALGORITHM</code>
+      clause takes precedence.
+    </p><p>
+      For <code class="literal">InnoDB</code> tables, an
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operation that uses the
+      <code class="literal">COPY</code> algorithm on a table that resides in a
+      <a class="link" href="glossary.html#glos_shared_tablespace" title="shared tablespace">shared tablespace</a>
+      can increase the amount of space used by the tablespace. Such
+      operations require as much additional space as the data in the
+      table plus indexes. For a table residing in a shared tablespace,
+      the additional space used during the operation is not released
+      back to the operating system as it is for a table that resides in
+      a <a class="link" href="glossary.html#glos_file_per_table" title="file-per-table">file-per-table</a>
+      tablespace.
+    </p><p>
+      For information about space requirements for online DDL
+      operations, see
+      <a class="xref" href="innodb-online-ddl-space-requirements.html" title="14.13.3&nbsp;Online DDL Space Requirements">Section&nbsp;14.13.3, “Online DDL Space Requirements”</a>.
+    </p><p>
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operations that support
+      the <code class="literal">INPLACE</code> algorithm include:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">ALTER TABLE</code> operations supported by the
+          <code class="literal">InnoDB</code>
+          <a class="link" href="glossary.html#glos_online_ddl" title="online DDL">online DDL</a> feature. See
+          <a class="xref" href="innodb-online-ddl-operations.html" title="14.13.1&nbsp;Online DDL Operations">Section&nbsp;14.13.1, “Online DDL Operations”</a>.
+        </p></li><li class="listitem"><p>
+          Renaming a table. MySQL renames files that correspond to the
+          table <em class="replaceable"><code>tbl_name</code></em> without making a
+          copy. (You can also use the <a class="link" href="rename-table.html" title="13.1.33&nbsp;RENAME TABLE Statement"><code class="literal">RENAME
+          TABLE</code></a> statement to rename tables. See
+          <a class="xref" href="rename-table.html" title="13.1.33&nbsp;RENAME TABLE Statement">Section&nbsp;13.1.33, “RENAME TABLE Statement”</a>.) Privileges granted
+          specifically for the renamed table are not migrated to the new
+          name. They must be changed manually.
+        </p></li><li class="listitem"><p>
+          Operations that only modify table metadata. These operations
+          are immediate because the server only alters the table
+          <code class="filename">.frm</code> file, not touch table contents.
+          Metadata-only operations include:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              Renaming a column.
+            </p></li><li class="listitem"><p>
+              Changing the default value of a column (except for
+              <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables).
+            </p></li><li class="listitem"><p>
+              Modifying the definition of an
+              <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a> or
+              <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> column by adding new
+              enumeration or set members to the <span class="emphasis"><em>end</em></span>
+              of the list of valid member values, as long as the storage
+              size of the data type does not change. For example, adding
+              a member to a <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a> column
+              that has 8 members changes the required storage per value
+              from 1 byte to 2 bytes; this requires a table copy. Adding
+              members in the middle of the list causes renumbering of
+              existing members, which requires a table copy.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          Renaming an index.
+        </p></li><li class="listitem"><p>
+          Adding or dropping a secondary index, for
+          <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> and
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables. See
+          <a class="xref" href="innodb-online-ddl.html" title="14.13&nbsp;InnoDB and Online DDL">Section&nbsp;14.13, “InnoDB and Online DDL”</a>.
+        </p></li><li class="listitem"><p>
+          For <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables, operations that
+          add and drop indexes on variable-width columns. These
+          operations occur online, without table copying and without
+          blocking concurrent DML actions for most of their duration.
+          See <a class="xref" href="mysql-cluster-online-operations.html" title="21.6.12&nbsp;Online Operations with ALTER TABLE in NDB Cluster">Section&nbsp;21.6.12, “Online Operations with ALTER TABLE in NDB Cluster”</a>.
+</p></li></ul>
+</div>
+<p>
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> upgrades MySQL 5.5
+      temporal columns to 5.6 format for <code class="literal">ADD COLUMN</code>,
+      <code class="literal">CHANGE COLUMN</code>, <code class="literal">MODIFY
+      COLUMN</code>, <code class="literal">ADD INDEX</code>, and
+      <code class="literal">FORCE</code> operations. This conversion cannot be
+      done using the <code class="literal">INPLACE</code> algorithm because the
+      table must be rebuilt, so specifying
+      <code class="literal">ALGORITHM=INPLACE</code> in these cases results in an
+      error. Specify <code class="literal">ALGORITHM=COPY</code> if necessary.
+    </p><p>
+      If an <code class="literal">ALTER TABLE</code> operation on a multicolumn
+      index used to partition a table by <code class="literal">KEY</code> changes
+      the order of the columns, it can only be performed using
+      <code class="literal">ALGORITHM=COPY</code>.
+    </p><p>
+      The <code class="literal">WITHOUT VALIDATION</code> and <code class="literal">WITH
+      VALIDATION</code> clauses affect whether
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> performs an in-place
+      operation for
+      <a class="link" href="glossary.html#glos_virtual_generated_column" title="virtual generated column">virtual generated
+      column</a> modifications. See
+      <a class="xref" href="alter-table-generated-columns.html" title="13.1.8.2&nbsp;ALTER TABLE and Generated Columns">Section&nbsp;13.1.8.2, “ALTER TABLE and Generated Columns”</a>.
+    </p><p>
+      NDB Cluster formerly supported online <code class="literal">ALTER
+      TABLE</code> operations using the <code class="literal">ONLINE</code> and
+      <code class="literal">OFFLINE</code> keywords. These keywords are no longer
+      supported; their use causes a syntax error. MySQL NDB Cluster 7.5
+      (and later) supports online operations using the same
+      <code class="literal">ALGORITHM=INPLACE</code> syntax used with the standard
+      MySQL Server. <code class="literal">NDB</code> does not support changing a
+      tablespace online. See
+      <a class="xref" href="mysql-cluster-online-operations.html" title="21.6.12&nbsp;Online Operations with ALTER TABLE in NDB Cluster">Section&nbsp;21.6.12, “Online Operations with ALTER TABLE in NDB Cluster”</a>, for more
+      information.
+    </p><p>
+      <code class="literal">ALTER TABLE</code> with <code class="literal">DISCARD ... PARTITION
+      ... TABLESPACE</code> or <code class="literal">IMPORT ... PARTITION ...
+      TABLESPACE</code> does not create any temporary tables or
+      temporary partition files.
+    </p><p>
+      <code class="literal">ALTER TABLE</code> with <code class="literal">ADD
+      PARTITION</code>, <code class="literal">DROP PARTITION</code>,
+      <code class="literal">COALESCE PARTITION</code>, <code class="literal">REBUILD
+      PARTITION</code>, or <code class="literal">REORGANIZE PARTITION</code>
+      does not create temporary tables (except when used with
+      <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables); however, these
+      operations can and do create temporary partition files.
+    </p><p>
+      <code class="literal">ADD</code> or <code class="literal">DROP</code> operations for
+      <code class="literal">RANGE</code> or <code class="literal">LIST</code> partitions are
+      immediate operations or nearly so. <code class="literal">ADD</code> or
+      <code class="literal">COALESCE</code> operations for <code class="literal">HASH</code>
+      or <code class="literal">KEY</code> partitions copy data between all
+      partitions, unless <code class="literal">LINEAR HASH</code> or
+      <code class="literal">LINEAR KEY</code> was used; this is effectively the
+      same as creating a new table, although the <code class="literal">ADD</code>
+      or <code class="literal">COALESCE</code> operation is performed partition by
+      partition. <code class="literal">REORGANIZE</code> operations copy only
+      changed partitions and do not touch unchanged ones.
+    </p><p>
+      For <code class="literal">MyISAM</code> tables, you can speed up index
+      re-creation (the slowest part of the alteration process) by
+      setting the
+      <a class="link" href="server-system-variables.html#sysvar_myisam_sort_buffer_size"><code class="literal">myisam_sort_buffer_size</code></a> system
+      variable to a high value.
+</p>
+<h4><a name="alter-table-concurrency"></a>Concurrency Control</h4>
+<p>
+      For <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> operations that
+      support it, you can use the <code class="literal">LOCK</code> clause to
+      control the level of concurrent reads and writes on a table while
+      it is being altered. Specifying a non-default value for this
+      clause enables you to require a certain amount of concurrent
+      access or exclusivity during the alter operation, and halts the
+      operation if the requested degree of locking is not available. The
+      parameters for the <code class="literal">LOCK</code> clause are:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">LOCK = DEFAULT</code>
+        </p><p>
+          Maximum level of concurrency for the given
+          <code class="literal">ALGORITHM</code> clause (if any) and
+          <code class="literal">ALTER TABLE</code> operation: Permit concurrent
+          reads and writes if supported. If not, permit concurrent reads
+          if supported. If not, enforce exclusive access.
+        </p></li><li class="listitem"><p>
+          <code class="literal">LOCK = NONE</code>
+        </p><p>
+          If supported, permit concurrent reads and writes. Otherwise,
+          an error occurs.
+        </p></li><li class="listitem"><p>
+          <code class="literal">LOCK = SHARED</code>
+        </p><p>
+          If supported, permit concurrent reads but block writes. Writes
+          are blocked even if concurrent writes are supported by the
+          storage engine for the given <code class="literal">ALGORITHM</code>
+          clause (if any) and <code class="literal">ALTER TABLE</code> operation.
+          If concurrent reads are not supported, an error occurs.
+        </p></li><li class="listitem"><p>
+          <code class="literal">LOCK = EXCLUSIVE</code>
+        </p><p>
+          Enforce exclusive access. This is done even if concurrent
+          reads/writes are supported by the storage engine for the given
+          <code class="literal">ALGORITHM</code> clause (if any) and
+          <code class="literal">ALTER TABLE</code> operation.
+</p></li></ul>
+</div>
+<h4><a name="alter-table-add-drop-column"></a>Adding and Dropping Columns</h4>
+<p>
+      Use <code class="literal">ADD</code> to add new columns to a table, and
+      <code class="literal">DROP</code> to remove existing columns. <code class="literal">DROP
+      <em class="replaceable"><code>col_name</code></em></code> is a MySQL extension
+      to standard SQL.
+    </p><p>
+      To add a column at a specific position within a table row, use
+      <code class="literal">FIRST</code> or <code class="literal">AFTER
+      <em class="replaceable"><code>col_name</code></em></code>. The default is to
+      add the column last.
+    </p><p>
+      If a table contains only one column, the column cannot be dropped.
+      If what you intend is to remove the table, use the
+      <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> statement instead.
+    </p><p>
+      If columns are dropped from a table, the columns are also removed
+      from any index of which they are a part. If all columns that make
+      up an index are dropped, the index is dropped as well.
+</p>
+<h4><a name="alter-table-redefine-column"></a>Renaming, Redefining, and Reordering Columns</h4>
+<a class="indexterm" name="idm45852585174320"></a><a class="indexterm" name="idm45852585172832"></a><a class="indexterm" name="idm45852585171344"></a><a class="indexterm" name="idm45852585169856"></a><p>
+      The <code class="literal">CHANGE</code>, <code class="literal">MODIFY</code>, and
+      <code class="literal">ALTER</code> clauses enable the names and definitions
+      of existing columns to be altered. They have these comparative
+      characteristics:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">CHANGE</code>:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              Can rename a column and change its definition, or both.
+            </p></li><li class="listitem"><p>
+              Has more capability than <code class="literal">MODIFY</code>, but at
+              the expense of convenience for some operations.
+              <code class="literal">CHANGE</code> requires naming the column twice
+              if not renaming it.
+            </p></li><li class="listitem"><p>
+              With <code class="literal">FIRST</code> or <code class="literal">AFTER</code>,
+              can reorder columns.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal">MODIFY</code>:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              Can change a column definition but not its name.
+            </p></li><li class="listitem"><p>
+              More convenient than <code class="literal">CHANGE</code> to change a
+              column definition without renaming it.
+            </p></li><li class="listitem"><p>
+              With <code class="literal">FIRST</code> or <code class="literal">AFTER</code>,
+              can reorder columns.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal">ALTER</code>: Used only to change a column default
+          value.
+</p></li></ul>
+</div>
+<a class="indexterm" name="idm45852585149808"></a><a class="indexterm" name="idm45852585148736"></a><p>
+      <code class="literal">CHANGE</code> is a MySQL extension to standard SQL.
+      <code class="literal">MODIFY</code> is a MySQL extension for Oracle
+      compatibility.
+    </p><p>
+      To alter a column to change both its name and definition, use
+      <code class="literal">CHANGE</code>, specifying the old and new names and
+      the new definition. For example, to rename an <code class="literal">INT NOT
+      NULL</code> column from <code class="literal">a</code> to
+      <code class="literal">b</code> and change its definition to use the
+      <code class="literal">BIGINT</code> data type while retaining the
+      <code class="literal">NOT NULL</code> attribute, do this:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 CHANGE a b BIGINT NOT NULL;</code></pre><p>
+      To change a column definition but not its name, use
+      <code class="literal">CHANGE</code> or <code class="literal">MODIFY</code>. With
+      <code class="literal">CHANGE</code>, the syntax requires two column names,
+      so you must specify the same name twice to leave the name
+      unchanged. For example, to change the definition of column
+      <code class="literal">b</code>, do this:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 CHANGE b b INT NOT NULL;</code></pre><p>
+      <code class="literal">MODIFY</code> is more convenient to change the
+      definition without changing the name because it requires the
+      column name only once:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 MODIFY b INT NOT NULL;</code></pre><p>
+      To change a column name but not its definition, use
+      <code class="literal">CHANGE</code>. The syntax requires a column
+      definition, so to leave the definition unchanged, you must
+      respecify the definition the column currently has. For example, to
+      rename an <code class="literal">INT NOT NULL</code> column from
+      <code class="literal">b</code> to <code class="literal">a</code>, do this:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 CHANGE b a INT NOT NULL;</code></pre><p>
+      For column definition changes using <code class="literal">CHANGE</code> or
+      <code class="literal">MODIFY</code>, the definition must include the data
+      type and all attributes that should apply to the new column, other
+      than index attributes such as <code class="literal">PRIMARY KEY</code> or
+      <code class="literal">UNIQUE</code>. Attributes present in the original
+      definition but not specified for the new definition are not
+      carried forward. Suppose that a column <code class="literal">col1</code> is
+      defined as <code class="literal">INT UNSIGNED DEFAULT 1 COMMENT 'my
+      column'</code> and you modify the column as follows, intending
+      to change only <code class="literal">INT</code> to
+      <code class="literal">BIGINT</code>:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 MODIFY col1 BIGINT;</code></pre><p>
+      That statement changes the data type from <code class="literal">INT</code>
+      to <code class="literal">BIGINT</code>, but it also drops the
+      <code class="literal">UNSIGNED</code>, <code class="literal">DEFAULT</code>, and
+      <code class="literal">COMMENT</code> attributes. To retain them, the
+      statement must include them explicitly:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE t1 MODIFY col1 BIGINT UNSIGNED DEFAULT 1 COMMENT 'my column';</code></pre><p>
+      For data type changes using <code class="literal">CHANGE</code> or
+      <code class="literal">MODIFY</code>, MySQL tries to convert existing column
+      values to the new type as well as possible.
+</p>
+<div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Warning
+</div>
+<p>
+        This conversion may result in alteration of data. For example,
+        if you shorten a string column, values may be truncated. To
+        prevent the operation from succeeding if conversions to the new
+        data type would result in loss of data, enable strict SQL mode
+        before using <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> (see
+        <a class="xref" href="sql-mode.html" title="5.1.10&nbsp;Server SQL Modes">Section&nbsp;5.1.10, “Server SQL Modes”</a>).
+</p>
+</div>
+<p>
+      If you use <code class="literal">CHANGE</code> or <code class="literal">MODIFY</code>
+      to shorten a column for which an index exists on the column, and
+      the resulting column length is less than the index length, MySQL
+      shortens the index automatically.
+    </p><p>
+      For columns renamed by <code class="literal">CHANGE</code>, MySQL
+      automatically renames these references to the renamed column:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Indexes that refer to the old column, including indexes and
+          disabled <code class="literal">MyISAM</code> indexes.
+        </p></li><li class="listitem"><p>
+          Foreign keys that refer to the old column.
+</p></li></ul>
+</div>
+<p>
+      For columns renamed by <code class="literal">CHANGE</code>, MySQL does not
+      automatically rename these references to the renamed column:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Generated column and partition expressions that refer to the
+          renamed column. You must use <code class="literal">CHANGE</code> to
+          redefine such expressions in the same
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement as the
+          one that renames the column.
+        </p></li><li class="listitem"><p>
+          Views and stored programs that refer to the renamed column.
+          You must manually alter the definition of these objects to
+          refer to the new column name.
+</p></li></ul>
+</div>
+<p>
+      To reorder columns within a table, use <code class="literal">FIRST</code>
+      and <code class="literal">AFTER</code> in <code class="literal">CHANGE</code> or
+      <code class="literal">MODIFY</code> operations.
+    </p><a class="indexterm" name="idm45852585096096"></a><p>
+      <code class="literal">ALTER ... SET DEFAULT</code> or <code class="literal">ALTER ...
+      DROP DEFAULT</code> specify a new default value for a column or
+      remove the old default value, respectively. If the old default is
+      removed and the column can be <code class="literal">NULL</code>, the new
+      default is <code class="literal">NULL</code>. If the column cannot be
+      <code class="literal">NULL</code>, MySQL assigns a default value as
+      described in <a class="xref" href="data-type-defaults.html" title="11.6&nbsp;Data Type Default Values">Section&nbsp;11.6, “Data Type Default Values”</a>.
+    </p><p>
+      <code class="literal">ALTER ... SET DEFAULT</code> cannot be used with the
+      <a class="link" href="date-and-time-functions.html#function_current-timestamp"><code class="literal">CURRENT_TIMESTAMP</code></a> function.
+</p>
+<h4><a name="alter-table-index"></a>Primary Keys and Indexes</h4>
+<a class="indexterm" name="idm45852585086576"></a><a class="indexterm" name="idm45852585085536"></a><a class="indexterm" name="idm45852585084048"></a><p>
+      <code class="literal">DROP PRIMARY KEY</code> drops the
+      <a class="link" href="glossary.html#glos_primary_key" title="primary key">primary key</a>. If there is
+      no primary key, an error occurs. For information about the
+      performance characteristics of primary keys, especially for
+      <code class="literal">InnoDB</code> tables, see
+      <a class="xref" href="primary-key-optimization.html" title="8.3.2&nbsp;Primary Key Optimization">Section&nbsp;8.3.2, “Primary Key Optimization”</a>.
+    </p><a class="indexterm" name="idm45852585078896"></a><a class="indexterm" name="idm45852585077824"></a><p>
+      If you add a <code class="literal">UNIQUE INDEX</code> or <code class="literal">PRIMARY
+      KEY</code> to a table, MySQL stores it before any nonunique
+      index to permit detection of duplicate keys as early as possible.
+    </p><a class="indexterm" name="idm45852585074784"></a><a class="indexterm" name="idm45852585073712"></a><a class="indexterm" name="idm45852585072224"></a><p>
+      <a class="link" href="drop-index.html" title="13.1.25&nbsp;DROP INDEX Statement"><code class="literal">DROP INDEX</code></a> removes an index. This
+      is a MySQL extension to standard SQL. See
+      <a class="xref" href="drop-index.html" title="13.1.25&nbsp;DROP INDEX Statement">Section&nbsp;13.1.25, “DROP INDEX Statement”</a>. To determine index names, use
+      <code class="literal">SHOW INDEX FROM
+      <em class="replaceable"><code>tbl_name</code></em></code>.
+    </p><p>
+      Some storage engines permit you to specify an index type when
+      creating an index. The syntax for the
+      <em class="replaceable"><code>index_type</code></em> specifier is <code class="literal">USING
+      <em class="replaceable"><code>type_name</code></em></code>. For details about
+      <code class="literal">USING</code>, see <a class="xref" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement">Section&nbsp;13.1.14, “CREATE INDEX Statement”</a>. The
+      preferred position is after the column list. You should expect
+      support for use of the option before the column list to be removed
+      in a future MySQL release.
+    </p><p>
+      <em class="replaceable"><code>index_option</code></em> values specify additional
+      options for an index. For details about permissible
+      <em class="replaceable"><code>index_option</code></em> values, see
+      <a class="xref" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement">Section&nbsp;13.1.14, “CREATE INDEX Statement”</a>.
+    </p><p>
+      <code class="literal">RENAME INDEX <em class="replaceable"><code>old_index_name</code></em> TO
+      <em class="replaceable"><code>new_index_name</code></em></code> renames an
+      index. This is a MySQL extension to standard SQL. The content of
+      the table remains unchanged.
+      <em class="replaceable"><code>old_index_name</code></em> must be the name of an
+      existing index in the table that is not dropped by the same
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement.
+      <em class="replaceable"><code>new_index_name</code></em> is the new index name,
+      which cannot duplicate the name of an index in the resulting table
+      after changes have been applied. Neither index name can be
+      <code class="literal">PRIMARY</code>.
+    </p><a class="indexterm" name="idm45852585056784"></a><a class="indexterm" name="idm45852585055712"></a><a class="indexterm" name="idm45852585054224"></a><p>
+      If you use <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> on a
+      <code class="literal">MyISAM</code> table, all nonunique indexes are created
+      in a separate batch (as for <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR
+      TABLE</code></a>). This should make <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+      TABLE</code></a> much faster when you have many indexes.
+    </p><p>
+      For <code class="literal">MyISAM</code> tables, key updating can be
+      controlled explicitly. Use <code class="literal">ALTER TABLE ... DISABLE
+      KEYS</code> to tell MySQL to stop updating nonunique indexes.
+      Then use <code class="literal">ALTER TABLE ... ENABLE KEYS</code> to
+      re-create missing indexes. <code class="literal">MyISAM</code> does this
+      with a special algorithm that is much faster than inserting keys
+      one by one, so disabling keys before performing bulk insert
+      operations should give a considerable speedup. Using
+      <code class="literal">ALTER TABLE ... DISABLE KEYS</code> requires the
+      <a class="link" href="privileges-provided.html#priv_index"><code class="literal">INDEX</code></a> privilege in addition to the
+      privileges mentioned earlier.
+    </p><p>
+      While the nonunique indexes are disabled, they are ignored for
+      statements such as <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> and
+      <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> that otherwise would use
+      them.
+    </p><p>
+      After an <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement, it
+      may be necessary to run <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE
+      TABLE</code></a> to update index cardinality information. See
+      <a class="xref" href="show-index.html" title="13.7.5.22&nbsp;SHOW INDEX Statement">Section&nbsp;13.7.5.22, “SHOW INDEX Statement”</a>.
+</p>
+<h4><a name="alter-table-foreign-key"></a>Foreign Keys and Other Constraints</h4>
+<a class="indexterm" name="idm45852585034368"></a><a class="indexterm" name="idm45852585033328"></a><p>
+      The <code class="literal">FOREIGN KEY</code> and
+      <code class="literal">REFERENCES</code> clauses are supported by the
+      <code class="literal">InnoDB</code> and <code class="literal">NDB</code> storage
+      engines, which implement <code class="literal">ADD [CONSTRAINT
+      [<em class="replaceable"><code>symbol</code></em>]] FOREIGN KEY
+      [<em class="replaceable"><code>index_name</code></em>] (...) REFERENCES ...
+      (...)</code>. See <a class="xref" href="constraint-foreign-key.html" title="1.6.3.2&nbsp;FOREIGN KEY Constraints">Section&nbsp;1.6.3.2, “FOREIGN KEY Constraints”</a>. For
+      other storage engines, the clauses are parsed but ignored.
+    </p><p>
+      The <code class="literal">CHECK</code> constraint clause is parsed but
+      ignored by all storage engines. See
+      <a class="xref" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement">Section&nbsp;13.1.18, “CREATE TABLE Statement”</a>. The reason for accepting but
+      ignoring syntax clauses is for compatibility, to make it easier to
+      port code from other SQL servers, and to run applications that
+      create tables with references. See
+      <a class="xref" href="differences-from-ansi.html" title="1.6.2&nbsp;MySQL Differences from Standard SQL">Section&nbsp;1.6.2, “MySQL Differences from Standard SQL”</a>.
+    </p><p>
+      For <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>, unlike
+      <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>, <code class="literal">ADD FOREIGN
+      KEY</code> ignores <em class="replaceable"><code>index_name</code></em> if
+      given and uses an automatically generated foreign key name. As a
+      workaround, include the <code class="literal">CONSTRAINT</code> clause to
+      specify the foreign key name:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ADD CONSTRAINT <em class="replaceable">name</em> FOREIGN KEY (....) ...</code></pre>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+        MySQL silently ignores inline <code class="literal">REFERENCES</code>
+        specifications, where the references are defined as part of the
+        column specification. MySQL accepts only
+        <code class="literal">REFERENCES</code> clauses defined as part of a
+        separate <code class="literal">FOREIGN KEY</code> specification.
+</p>
+</div>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Note
+</div>
+<p>
+        Partitioned <code class="literal">InnoDB</code> tables do not support
+        foreign keys. This restriction does not apply to
+        <code class="literal">NDB</code> tables, including those explicitly
+        partitioned by <code class="literal">[LINEAR] KEY</code>. For more
+        information, see
+        <a class="xref" href="partitioning-limitations-storage-engines.html" title="22.6.2&nbsp;Partitioning Limitations Relating to Storage Engines">Section&nbsp;22.6.2, “Partitioning Limitations Relating to Storage Engines”</a>.
+</p>
+</div>
+<a class="indexterm" name="idm45852585010256"></a><a class="indexterm" name="idm45852585009184"></a><a class="indexterm" name="idm45852585007696"></a><p>
+      MySQL Server and NDB Cluster both support the use of
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> to drop foreign keys:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE <em class="replaceable">tbl_name</em> DROP FOREIGN KEY <em class="replaceable">fk_symbol</em>;</code></pre><p>
+      Adding and dropping a foreign key in the same
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement is supported
+      for <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE ...
+      ALGORITHM=INPLACE</code></a> but not for
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE ...
+      ALGORITHM=COPY</code></a>.
+    </p><p>
+      The server prohibits changes to foreign key columns that have the
+      potential to cause loss of referential integrity. A workaround is
+      to use <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE
+      ... DROP FOREIGN KEY</code></a> before changing the column
+      definition and <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+      TABLE ... ADD FOREIGN KEY</code></a> afterward. Examples of
+      prohibited changes include:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Changes to the data type of foreign key columns that may be
+          unsafe. For example, changing
+          <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR(20)</code></a> to
+          <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR(30)</code></a> is permitted, but
+          changing it to <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR(1024)</code></a> is
+          not because that alters the number of length bytes required to
+          store individual values.
+        </p></li><li class="listitem"><p>
+          Changing a <code class="literal">NULL</code> column to <code class="literal">NOT
+          NULL</code> in non-strict mode is prohibited to prevent
+          converting <code class="literal">NULL</code> values to default
+          non-<code class="literal">NULL</code> values, for which there are no
+          corresponding values in the referenced table. The operation is
+          permitted in strict mode, but an error is returned if any such
+          conversion is required.
+</p></li></ul>
+</div>
+<p>
+      <code class="literal">ALTER TABLE <em class="replaceable"><code>tbl_name</code></em> RENAME
+      <em class="replaceable"><code>new_tbl_name</code></em></code> changes
+      internally generated foreign key constraint names and user-defined
+      foreign key constraint names that begin with the string
+      <span class="quote">“<span class="quote"><em class="replaceable"><code>tbl_name</code></em>_ibfk_</span>”</span> to
+      reflect the new table name. <code class="literal">InnoDB</code> interprets
+      foreign key constraint names that begin with the string
+      <span class="quote">“<span class="quote"><em class="replaceable"><code>tbl_name</code></em>_ibfk_</span>”</span> as
+      internally generated names.
+</p>
+<h4><a name="alter-table-character-set"></a>Changing the Character Set</h4>
+<p>
+      <a class="indexterm" name="idm45852584980688"></a>
+
+      To change the table default character set and all character
+      columns (<a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+      <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>,
+      <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a>) to a new character set, use a
+      statement like this:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE <em class="replaceable">tbl_name</em> CONVERT TO CHARACTER SET <em class="replaceable">charset_name</em>;</code></pre><p>
+      The statement also changes the collation of all character columns.
+      If you specify no <code class="literal">COLLATE</code> clause to indicate
+      which collation to use, the statement uses default collation for
+      the character set. If this collation is inappropriate for the
+      intended table use (for example, if it would change from a
+      case-sensitive collation to a case-insensitive collation), specify
+      a collation explicitly.
+    </p><p>
+      For a column that has a data type of
+      <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a> or one of the
+      <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> types, <code class="literal">CONVERT TO
+      CHARACTER SET</code> changes the data type as necessary to
+      ensure that the new column is long enough to store as many
+      characters as the original column. For example, a
+      <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> column has two length bytes,
+      which store the byte-length of values in the column, up to a
+      maximum of 65,535. For a <code class="literal">latin1</code>
+      <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> column, each character
+      requires a single byte, so the column can store up to 65,535
+      characters. If the column is converted to <code class="literal">utf8</code>,
+      each character might require up to three bytes, for a maximum
+      possible length of 3 × 65,535 = 196,605 bytes. That length
+      does not fit in a <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> column's
+      length bytes, so MySQL converts the data type to
+      <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">MEDIUMTEXT</code></a>, which is the smallest
+      string type for which the length bytes can record a value of
+      196,605. Similarly, a <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>
+      column might be converted to
+      <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">MEDIUMTEXT</code></a>.
+    </p><p>
+      To avoid data type changes of the type just described, do not use
+      <code class="literal">CONVERT TO CHARACTER SET</code>. Instead, use
+      <code class="literal">MODIFY</code> to change individual columns. For
+      example:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER TABLE t MODIFY latin1_text_col TEXT CHARACTER SET utf8;
+ALTER TABLE t MODIFY latin1_varchar_col VARCHAR(<em class="replaceable">M</em>) CHARACTER SET utf8;</code></pre><p>
+      If you specify <code class="literal">CONVERT TO CHARACTER SET binary</code>,
+      the <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+      <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>, and
+      <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns are converted to their
+      corresponding binary string types
+      (<a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a>,
+      <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a>,
+      <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>). This means that the columns
+      no longer have a character set and a subsequent <code class="literal">CONVERT
+      TO</code> operation does not apply to them.
+    </p><p>
+      If <em class="replaceable"><code>charset_name</code></em> is
+      <code class="literal">DEFAULT</code> in a <code class="literal">CONVERT TO CHARACTER
+      SET</code> operation, the character set named by the
+      <a class="link" href="server-system-variables.html#sysvar_character_set_database"><code class="literal">character_set_database</code></a> system
+      variable is used.
+</p>
+<div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Warning
+</div>
+<p>
+        The <code class="literal">CONVERT TO</code> operation converts column
+        values between the original and named character sets. This is
+        <span class="emphasis"><em>not</em></span> what you want if you have a column in
+        one character set (like <code class="literal">latin1</code>) but the
+        stored values actually use some other, incompatible character
+        set (like <code class="literal">utf8</code>). In this case, you have to do
+        the following for each such column:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER TABLE t1 CHANGE c1 c1 BLOB;
+ALTER TABLE t1 CHANGE c1 c1 TEXT CHARACTER SET utf8;</code></pre><p>
+        The reason this works is that there is no conversion when you
+        convert to or from <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> columns.
+</p>
+</div>
+<p>
+      To change only the <span class="emphasis"><em>default</em></span> character set for
+      a table, use this statement:
+    </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE <em class="replaceable">tbl_name</em> DEFAULT CHARACTER SET <em class="replaceable">charset_name</em>;</code></pre><p>
+      The word <code class="literal">DEFAULT</code> is optional. The default
+      character set is the character set that is used if you do not
+      specify the character set for columns that you add to a table
+      later (for example, with <code class="literal">ALTER TABLE ... ADD
+      column</code>).
+    </p><p>
+      When the <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a>
+      system variable is enabled, which is the default setting,
+      character set conversion is not permitted on tables that include a
+      character string column used in a foreign key constraint. The
+      workaround is to disable
+      <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a> before
+      performing the character set conversion. You must perform the
+      conversion on both tables involved in the foreign key constraint
+      before re-enabling
+      <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a>. If you
+      re-enable <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a>
+      after converting only one of the tables, an <code class="literal">ON DELETE
+      CASCADE</code> or <code class="literal">ON UPDATE CASCADE</code>
+      operation could corrupt data in the referencing table due to
+      implicit conversion that occurs during these operations (Bug
+      #45290, Bug #74816).
+</p>
+<h4><a name="alter-table-discard-import"></a>Discarding and Importing InnoDB Tablespaces</h4>
+<a class="indexterm" name="idm45852584922640"></a><a class="indexterm" name="idm45852584921568"></a><p>
+      An <code class="literal">InnoDB</code> table created in its own
+      <a class="link" href="glossary.html#glos_file_per_table" title="file-per-table">file-per-table</a>
+      tablespace can be imported from a backup or from another MySQL
+      server instance using <code class="literal">DISCARD TABLEPACE</code> and
+      <code class="literal">IMPORT TABLESPACE</code> clauses. See
+      <a class="xref" href="innodb-table-import.html" title="14.6.1.3&nbsp;Importing InnoDB Tables">Section&nbsp;14.6.1.3, “Importing InnoDB Tables”</a>.
+</p>
+<h4><a name="alter-table-row-order"></a>Row Order for MyISAM Tables</h4>
+<a class="indexterm" name="idm45852584915184"></a><p>
+      <code class="literal">ORDER BY</code> enables you to create the new table
+      with the rows in a specific order. This option is useful primarily
+      when you know that you query the rows in a certain order most of
+      the time. By using this option after major changes to the table,
+      you might be able to get higher performance. In some cases, it
+      might make sorting easier for MySQL if the table is in order by
+      the column that you want to order it by later.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        The table does not remain in the specified order after inserts
+        and deletes.
+</p>
+</div>
+<p>
+      <code class="literal">ORDER BY</code> syntax permits one or more column
+      names to be specified for sorting, each of which optionally can be
+      followed by <code class="literal">ASC</code> or <code class="literal">DESC</code> to
+      indicate ascending or descending sort order, respectively. The
+      default is ascending order. Only column names are permitted as
+      sort criteria; arbitrary expressions are not permitted. This
+      clause should be given last after any other clauses.
+    </p><p>
+      <code class="literal">ORDER BY</code> does not make sense for
+      <code class="literal">InnoDB</code> tables because <code class="literal">InnoDB</code>
+      always orders table rows according to the
+      <a class="link" href="glossary.html#glos_clustered_index" title="clustered index">clustered index</a>.
+    </p><p>
+      When used on a partitioned table, <code class="literal">ALTER TABLE ... ORDER
+      BY</code> orders rows within each partition only.
+</p>
+<h4><a name="alter-table-partition-options"></a>Partitioning Options</h4>
+<p>
+      <em class="replaceable"><code>partition_options</code></em> signifies options
+      that can be used with partitioned tables for repartitioning, to
+      add, drop, discard, import, merge, and split partitions, and to
+      perform partitioning maintenance.
+    </p><p>
+      It is possible for an <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+      statement to contain a <code class="literal">PARTITION BY</code> or
+      <code class="literal">REMOVE PARTITIONING</code> clause in an addition to
+      other alter specifications, but the <code class="literal">PARTITION
+      BY</code> or <code class="literal">REMOVE PARTITIONING</code> clause must
+      be specified last after any other specifications. The <code class="literal">ADD
+      PARTITION</code>, <code class="literal">DROP PARTITION</code>,
+      <code class="literal">DISCARD PARTITION</code>, <code class="literal">IMPORT
+      PARTITION</code>, <code class="literal">COALESCE PARTITION</code>,
+      <code class="literal">REORGANIZE PARTITION</code>, <code class="literal">EXCHANGE
+      PARTITION</code>, <code class="literal">ANALYZE PARTITION</code>,
+      <code class="literal">CHECK PARTITION</code>, and <code class="literal">REPAIR
+      PARTITION</code> options cannot be combined with other alter
+      specifications in a single <code class="literal">ALTER TABLE</code>, since
+      the options just listed act on individual partitions.
+    </p><p>
+      For more information about partition options, see
+      <a class="xref" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement">Section&nbsp;13.1.18, “CREATE TABLE Statement”</a>, and
+      <a class="xref" href="alter-table-partition-operations.html" title="13.1.8.1&nbsp;ALTER TABLE Partition Operations">Section&nbsp;13.1.8.1, “ALTER TABLE Partition Operations”</a>. For
+      information about and examples of <code class="literal">ALTER TABLE ...
+      EXCHANGE PARTITION</code> statements, see
+      <a class="xref" href="partitioning-management-exchange.html" title="22.3.3&nbsp;Exchanging Partitions and Subpartitions with Tables">Section&nbsp;22.3.3, “Exchanging Partitions and Subpartitions with Tables”</a>.
+    </p><p>
+      Prior to MySQL 5.7.6, partitioned <code class="literal">InnoDB</code> tables
+      used the generic <code class="literal">ha_partition</code> partitioning
+      handler employed by <code class="literal">MyISAM</code> and other storage
+      engines not supplying their own partitioning handlers; in MySQL
+      5.7.6 and later, such tables are created using the
+      <code class="literal">InnoDB</code> storage engine's own (or
+      <span class="quote">“<span class="quote">native</span>”</span>) partitioning handler. Beginning with MySQL
+      5.7.9, you can upgrade an <code class="literal">InnoDB</code> table that was
+      created in MySQL 5.7.6 or earlier (that is, created using
+      <code class="literal">ha_partition</code>) to the <code class="literal">InnoDB</code>
+      native partition handler using <code class="literal">ALTER TABLE ... UPGRADE
+      PARTITIONING</code>. (Bug #76734, Bug #20727344) This
+      <code class="literal">ALTER TABLE</code> syntax does not accept any other
+      options and can be used only on a single table at a time. You can
+      also use <a class="link" href="mysql-upgrade.html" title="4.4.7&nbsp;mysql_upgrade — Check and Upgrade MySQL Tables"><span class="command"><strong>mysql_upgrade</strong></span></a> in MySQL 5.7.9 or later
+      to upgrade older partitioned <span class="command"><strong>InnoDB</strong></span> tables to
+      the native partitioning handler.
+</p>
+</div><br>
+        
+</body>
+</html>

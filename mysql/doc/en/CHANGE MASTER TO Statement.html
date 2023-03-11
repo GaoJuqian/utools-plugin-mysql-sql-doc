@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CHANGE MASTER TO Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="change-master-to"></a>13.4.2.1&nbsp;CHANGE MASTER TO Statement</h4>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852576264064"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CHANGE MASTER TO <em class="replaceable">option</em> [, <em class="replaceable">option</em>] ... [ <em class="replaceable">channel_option</em> ]
+
+<em class="replaceable">option</em>: {
+    MASTER_BIND = '<em class="replaceable">interface_name</em>'
+  | MASTER_HOST = '<em class="replaceable">host_name</em>'
+  | MASTER_USER = '<em class="replaceable">user_name</em>'
+  | MASTER_PASSWORD = '<em class="replaceable">password</em>'
+  | MASTER_PORT = <em class="replaceable">port_num</em>
+  | MASTER_CONNECT_RETRY = <em class="replaceable">interval</em>
+  | MASTER_RETRY_COUNT = <em class="replaceable">count</em>
+  | MASTER_DELAY = <em class="replaceable">interval</em>
+  | MASTER_HEARTBEAT_PERIOD = <em class="replaceable">interval</em>
+  | MASTER_LOG_FILE = '<em class="replaceable">source_log_name</em>'
+  | MASTER_LOG_POS = <em class="replaceable">source_log_pos</em>
+  | MASTER_AUTO_POSITION = {0|1}
+  | RELAY_LOG_FILE = '<em class="replaceable">relay_log_name</em>'
+  | RELAY_LOG_POS = <em class="replaceable">relay_log_pos</em>
+  | MASTER_SSL = {0|1}
+  | MASTER_SSL_CA = '<em class="replaceable">ca_file_name</em>'
+  | MASTER_SSL_CAPATH = '<em class="replaceable">ca_directory_name</em>'
+  | MASTER_SSL_CERT = '<em class="replaceable">cert_file_name</em>'
+  | MASTER_SSL_CRL = '<em class="replaceable">crl_file_name</em>'
+  | MASTER_SSL_CRLPATH = '<em class="replaceable">crl_directory_name</em>'
+  | MASTER_SSL_KEY = '<em class="replaceable">key_file_name</em>'
+  | MASTER_SSL_CIPHER = '<em class="replaceable">cipher_list</em>'
+  | MASTER_SSL_VERIFY_SERVER_CERT = {0|1}
+  | MASTER_TLS_VERSION = '<em class="replaceable">protocol_list</em>'
+  | IGNORE_SERVER_IDS = (<em class="replaceable">server_id_list</em>)
+}
+
+<em class="replaceable">channel_option</em>:
+    FOR CHANNEL <em class="replaceable">channel</em>
+
+<em class="replaceable">server_id_list</em>:
+    [<em class="replaceable">server_id</em> [, <em class="replaceable">server_id</em>] ... ]</code></pre><p>
+        <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a> changes the
+        parameters that the replica uses for connecting to the
+        replication source server, for reading the source's binary log,
+        and reading the replica's relay log. It also updates the
+        contents of the replication metadata repositories (see
+        <a class="xref" href="replica-logs.html" title="16.2.4&nbsp;Relay Log and Replication Metadata Repositories">Section&nbsp;16.2.4, “Relay Log and Replication Metadata Repositories”</a>). <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE
+        MASTER TO</code></a> requires the
+        <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege.
+      </p><p>
+        Prior to MySQL 5.7.4, the replication threads must be stopped,
+        using <a class="link" href="stop-slave.html" title="13.4.2.7&nbsp;STOP SLAVE Statement"><code class="literal">STOP SLAVE</code></a> if necessary,
+        before issuing this statement. In MySQL 5.7.4 and later, you can
+        issue <code class="literal">CHANGE MASTER TO</code> statements on a
+        running replica without doing this, depending on the states of
+        the replication SQL thread and replication I/O thread. The rules
+        governing such use are provided later in this section.
+      </p><p>
+        When using a multithreaded replica (in other words
+        <a class="link" href="replication-options-replica.html#sysvar_slave_parallel_workers"><code class="literal">slave_parallel_workers</code></a> is
+        greater than 0), stopping the replica can cause
+        <span class="quote">“<span class="quote">gaps</span>”</span> in the sequence of transactions that have
+        been executed from the relay log, regardless of whether the
+        replica was stopped intentionally or otherwise. When such gaps
+        exist, issuing <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a>
+        fails. The solution in this situation is to issue
+        <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START SLAVE UNTIL
+        SQL_AFTER_MTS_GAPS</code></a> which ensures that the gaps are
+        closed.
+      </p><p>
+        The optional <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause enables you
+        to name which replication channel the statement applies to.
+        Providing a <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause applies the
+        <code class="literal">CHANGE MASTER TO</code> statement to a specific
+        replication channel, and is used to add a new channel or modify
+        an existing channel. For example, to add a new channel called
+        channel2:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CHANGE MASTER TO MASTER_HOST=host1, MASTER_PORT=3002 FOR CHANNEL 'channel2'</code></pre><p>
+        If no clause is named and no extra channels exist, the statement
+        applies to the default channel.
+      </p><p>
+        When using multiple replication channels, if a <code class="literal">CHANGE
+        MASTER TO</code> statement does not name a channel using a
+        <code class="literal">FOR CHANNEL
+        <em class="replaceable"><code>channel</code></em></code> clause, an error
+        occurs. See <a class="xref" href="replication-channels.html" title="16.2.2&nbsp;Replication Channels">Section&nbsp;16.2.2, “Replication Channels”</a> for more
+        information.
+      </p><p>
+        Options not specified retain their value, except as indicated in
+        the following discussion. Thus, in most cases, there is no need
+        to specify options that do not change. For example, if the
+        password to connect to your replication source server has
+        changed, issue this statement to tell the replica about the new
+        password:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CHANGE MASTER TO MASTER_PASSWORD='new3cret';</code></pre><p>
+        <code class="literal">MASTER_HOST</code>, <code class="literal">MASTER_USER</code>,
+        <code class="literal">MASTER_PASSWORD</code>, and
+        <code class="literal">MASTER_PORT</code> provide information to the
+        replica about how to connect to its replication source server:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">MASTER_HOST</code> and
+            <code class="literal">MASTER_PORT</code> are the host name (or IP
+            address) of the master host and its TCP/IP port.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              Replication cannot use Unix socket files. You must be able
+              to connect to the replication source server using TCP/IP.
+</p>
+</div>
+<p>
+            If you specify the <code class="literal">MASTER_HOST</code> or
+            <code class="literal">MASTER_PORT</code> option, the replica assumes
+            that the source is different from before (even if the option
+            value is the same as its current value.) In this case, the
+            old values for the source's binary log file name and
+            position are considered no longer applicable, so if you do
+            not specify <code class="literal">MASTER_LOG_FILE</code> and
+            <code class="literal">MASTER_LOG_POS</code> in the statement,
+            <code class="literal">MASTER_LOG_FILE=''</code> and
+            <code class="literal">MASTER_LOG_POS=4</code> are silently appended to
+            it.
+          </p><p>
+            Setting <code class="literal">MASTER_HOST=''</code> (that is, setting
+            its value explicitly to an empty string) is
+            <span class="emphasis"><em>not</em></span> the same as not setting
+            <code class="literal">MASTER_HOST</code> at all. Beginning with MySQL
+            5.5, trying to set <code class="literal">MASTER_HOST</code> to an
+            empty string fails with an error. Previously, setting
+            <code class="literal">MASTER_HOST</code> to an empty string caused
+            <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START SLAVE</code></a> subsequently to
+            fail. (Bug #28796)
+          </p><p>
+            Values used for <code class="literal">MASTER_HOST</code> and other
+            <code class="literal">CHANGE MASTER TO</code> options are checked for
+            linefeed (<code class="literal">\n</code> or <code class="literal">0x0A</code>)
+            characters; the presence of such characters in these values
+            causes the statement to fail with
+            <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_master_info" target="_top"><code class="literal">ER_MASTER_INFO</code></a>. (Bug
+            #11758581, Bug #50801)
+          </p></li><li class="listitem"><p>
+            <code class="literal">MASTER_USER</code> and
+            <code class="literal">MASTER_PASSWORD</code> are the user name and
+            password of the account to use for connecting to the source.
+            If you specify <code class="literal">MASTER_PASSWORD</code>,
+            <code class="literal">MASTER_USER</code> is also required. The
+            password used for a replication user account in a
+            <code class="literal">CHANGE MASTER TO</code> statement is limited to
+            32 characters in length; prior to MySQL 5.7.5, if the
+            password was longer, the statement succeeded, but any excess
+            characters were silently truncated. In MySQL 5.7.5 and
+            later, trying to use a password of more than 32 characters
+            causes <code class="literal">CHANGE MASTER TO</code> to fail. (Bug
+            #11752299, Bug #43439)
+          </p><p>
+            It is possible to set an empty user name by specifying
+            <code class="literal">MASTER_USER=''</code>, but the replication
+            channel cannot be started with an empty user name. Only set
+            an empty <code class="literal">MASTER_USER</code> user name if you
+            need to clear previously used credentials from the replica's
+            repositories for security purposes, and do not attempt to
+            use the channel afterwards.
+          </p><p>
+            The text of a running <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER
+            TO</code></a> statement, including values for
+            <code class="literal">MASTER_USER</code> and
+            <code class="literal">MASTER_PASSWORD</code>, can be seen in the
+            output of a concurrent <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW
+            PROCESSLIST</code></a> statement. (The complete text of a
+            <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START SLAVE</code></a> statement is also
+            visible to <a class="link" href="show-processlist.html" title="13.7.5.29&nbsp;SHOW PROCESSLIST Statement"><code class="literal">SHOW PROCESSLIST</code></a>.)
+</p></li></ul>
+</div>
+<p>
+        Setting <code class="literal">MASTER_SSL=1</code> for a replication
+        connection and then setting no further
+        <code class="literal">MASTER_SSL_<em class="replaceable"><code>xxx</code></em></code>
+        options corresponds to setting
+        <code class="literal">--ssl-mode=REQUIRED</code> for the client, as
+        described in
+        <a class="xref" href="connection-options.html#encrypted-connection-options" title="Command Options for Encrypted Connections">Command Options for Encrypted Connections</a>. With
+        <code class="literal">MASTER_SSL=1</code>, the connection attempt only
+        succeeds if an encrypted connection can be established. A
+        replication connection does not fall back to an unencrypted
+        connection, so there is no setting corresponding to the
+        <code class="literal">--ssl-mode=PREFERRED</code> setting for replication.
+        If <code class="literal">MASTER_SSL=0</code> is set, this corresponds to
+        <code class="literal">--ssl-mode=DISABLED</code>.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+          To help prevent sophisticated man-in-the-middle attacks, it is
+          important for the replica to verify the server’s identity.
+          You can specify additional
+          <code class="literal">MASTER_SSL_<em class="replaceable"><code>xxx</code></em></code>
+          options to correspond to the settings
+          <code class="literal">--ssl-mode=VERIFY_CA</code> and
+          <code class="literal">--ssl-mode=VERIFY_IDENTITY</code>, which are a
+          better choice than the default setting to help prevent this
+          type of attack. With these settings, the replica checks that
+          the server’s certificate is valid, and checks that the host
+          name the replica is using matches the identity in the
+          server’s certificate. To implement one of these levels of
+          verification, you must first ensure that the CA certificate
+          for the server is reliably available to the replica, otherwise
+          availability issues will result. For this reason, they are not
+          the default setting.
+</p>
+</div>
+<p>
+        The <code class="literal">MASTER_SSL_<em class="replaceable"><code>xxx</code></em></code>
+        options and the <code class="literal">MASTER_TLS_VERSION</code> option
+        specify how the replica uses encryption and ciphers to secure
+        the replication connection. These options can be changed even on
+        replicas that are compiled without SSL support. They are saved
+        to the source metadata repository, but are ignored if the
+        replica does not have SSL support enabled. The
+        <code class="literal">MASTER_SSL_<em class="replaceable"><code>xxx</code></em></code> and
+        <code class="literal">MASTER_TLS_VERSION</code> options perform the same
+        functions as the
+        <code class="literal">--ssl-<em class="replaceable"><code>xxx</code></em></code> and
+        <code class="literal">--tls-version</code> client options described in
+        <a class="xref" href="connection-options.html#encrypted-connection-options" title="Command Options for Encrypted Connections">Command Options for Encrypted Connections</a>. The
+        correspondence between the two sets of options, and the use of
+        the <code class="literal">MASTER_SSL_<em class="replaceable"><code>xxx</code></em></code>
+        and <code class="literal">MASTER_TLS_VERSION</code> options to set up a
+        secure connection, is explained in
+        <a class="xref" href="replication-encrypted-connections.html" title="16.3.8&nbsp;Setting Up Replication to Use Encrypted Connections">Section&nbsp;16.3.8, “Setting Up Replication to Use Encrypted Connections”</a>.
+      </p><p>
+        The <code class="literal">MASTER_HEARTBEAT_PERIOD</code>,
+        <code class="literal">MASTER_CONNECT_RETRY</code>, and
+        <code class="literal">MASTER_RETRY_COUNT</code> options control how the
+        replica recognizes that the connection to the source has been
+        lost and makes attempts to reconnect.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            The <a class="link" href="replication-options-replica.html#sysvar_slave_net_timeout"><code class="literal">slave_net_timeout</code></a>
+            system variable specifies the number of seconds that the
+            replica waits for either more data or a heartbeat signal
+            from the source, before the replica considers the connection
+            broken, aborts the read, and tries to reconnect. The default
+            value is 60 seconds (one minute). Prior to MySQL 5.7.7, the
+            default was 3600 seconds (one hour).
+          </p></li><li class="listitem"><p>
+            The heartbeat interval, which stops the connection timeout
+            occurring in the absence of data if the connection is still
+            good, is controlled by the
+            <code class="literal">MASTER_HEARTBEAT_PERIOD</code> option. A
+            heartbeat signal is sent to the replica after that number of
+            seconds, and the waiting period is reset whenever the
+            source's binary log is updated with an event. Heartbeats are
+            therefore sent by the source only if there are no unsent
+            events in the binary log file for a period longer than this.
+            The heartbeat interval <em class="replaceable"><code>interval</code></em>
+            is a decimal value having the range 0 to 4294967 seconds and
+            a resolution in milliseconds; the smallest nonzero value is
+            0.001. Setting <em class="replaceable"><code>interval</code></em> to 0
+            disables heartbeats altogether. The heartbeat interval
+            defaults to half the value of the
+            <a class="link" href="replication-options-replica.html#sysvar_slave_net_timeout"><code class="literal">slave_net_timeout</code></a> system
+            variable. It is recorded in the source metadata repository
+            and shown in the
+            <a class="link" href="performance-schema-replication-connection-configuration-table.html" title="25.12.11.1&nbsp;The replication_connection_configuration Table"><code class="literal">replication_connection_configuration</code></a>
+            Performance Schema table. Issuing <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET
+            SLAVE</code></a> resets the heartbeat interval to the default
+            value.
+          </p></li><li class="listitem"><p>
+            Prior to MySQL 5.7.4, not including
+            <code class="literal">MASTER_HEARTBEAT_PERIOD</code> caused
+            <code class="literal">CHANGE MASTER TO</code> to reset the heartbeat
+            interval to the default (half the value of the
+            <a class="link" href="replication-options-replica.html#sysvar_slave_net_timeout"><code class="literal">slave_net_timeout</code></a> system
+            variable), and
+            <a class="link" href="server-status-variables.html#statvar_Slave_received_heartbeats"><code class="literal">Slave_received_heartbeats</code></a>
+            to 0. The heartbeat interval is now not reset except by
+            <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE</code></a>. (Bug #18185490)
+          </p></li><li class="listitem"><p>
+            Note that a change to the value or default setting of
+            <a class="link" href="replication-options-replica.html#sysvar_slave_net_timeout"><code class="literal">slave_net_timeout</code></a> does not
+            automatically change the heartbeat interval, whether that
+            has been set explicitly or is using a previously calculated
+            default. A warning is issued if you set
+            <code class="literal">@@GLOBAL.slave_net_timeout</code> to a value
+            less than that of the current heartbeat interval. If
+            <a class="link" href="replication-options-replica.html#sysvar_slave_net_timeout"><code class="literal">slave_net_timeout</code></a> is
+            changed, you must also issue <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE
+            MASTER TO</code></a> to adjust the heartbeat interval to an
+            appropriate value so that the heartbeat signal occurs before
+            the connection timeout. If you do not do this, the heartbeat
+            signal has no effect, and if no data is received from the
+            source, the replica can make repeated reconnection attempts,
+            creating zombie dump threads.
+          </p></li><li class="listitem"><p>
+            If the replica does need to reconnect, the first retry
+            occurs immediately after the timeout.
+            <code class="literal">MASTER_CONNECT_RETRY</code> specifies the
+            interval between reconnection attempts, and
+            <code class="literal">MASTER_RETRY_COUNT</code> limits the number of
+            reconnection attempts. If both the default settings are
+            used, the replica waits 60 seconds between reconnection
+            attempts (<code class="literal">MASTER_CONNECT_RETRY=60</code>), and
+            keeps attempting to reconnect at this rate for 60 days
+            (<code class="literal">MASTER_RETRY_COUNT=86400</code>). A setting of
+            0 for <code class="literal">MASTER_RETRY_COUNT</code> means that there
+            is no limit on the number of reconnection attempts, so the
+            replica keeps trying to reconnect indefinitely. These values
+            are recorded in the source metadata repository and shown in
+            the
+            <a class="link" href="performance-schema-replication-connection-configuration-table.html" title="25.12.11.1&nbsp;The replication_connection_configuration Table"><code class="literal">replication_connection_configuration</code></a>
+            Performance Schema table.
+            <code class="literal">MASTER_RETRY_COUNT</code> supersedes the
+            <a class="link" href="replication-options-replica.html#option_mysqld_master-retry-count"><code class="option">--master-retry-count</code></a> server
+            startup option.
+</p></li></ul>
+</div>
+<p>
+        <code class="literal">MASTER_DELAY</code> specifies how many seconds
+        behind the source the replica must lag. An event received from
+        the source is not executed until at least
+        <em class="replaceable"><code>interval</code></em> seconds later than its
+        execution on the source. The default is 0. An error occurs if
+        <em class="replaceable"><code>interval</code></em> is not a nonnegative integer
+        in the range from 0 to 2<sup>31</sup>−1.
+        For more information, see <a class="xref" href="replication-delayed.html" title="16.3.10&nbsp;Delayed Replication">Section&nbsp;16.3.10, “Delayed Replication”</a>.
+      </p><p>
+        From MySQL 5.7, a <code class="literal">CHANGE MASTER TO</code> statement
+        employing the <code class="literal">MASTER_DELAY</code> option can be
+        executed on a running replica when the replication SQL thread is
+        stopped.
+      </p><p>
+        <code class="literal">MASTER_BIND</code> is for use on replicas having
+        multiple network interfaces, and determines which of the
+        replica's network interfaces is chosen for connecting to the
+        source.
+      </p><p>
+        The address configured with this option, if any, can be seen in
+        the <code class="literal">Master_Bind</code> column of the output from
+        <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE STATUS</code></a>. If you are
+        using a table for the source metadata repository (server started
+        with
+        <a class="link" href="replication-options-replica.html#sysvar_master_info_repository"><code class="literal">master_info_repository=TABLE</code></a>),
+        the value can also be seen as the <code class="literal">Master_bind</code>
+        column of the <code class="literal">mysql.slave_master_info</code> table.
+      </p><p>
+        The ability to bind a replica to a specific network interface is
+        also supported by NDB Cluster.
+      </p><p>
+        <code class="literal">MASTER_LOG_FILE</code> and
+        <code class="literal">MASTER_LOG_POS</code> are the coordinates at which
+        the replication I/O thread should begin reading from the source
+        the next time the thread starts.
+        <code class="literal">RELAY_LOG_FILE</code> and
+        <code class="literal">RELAY_LOG_POS</code> are the coordinates at which
+        the replication SQL thread should begin reading from the relay
+        log the next time the thread starts. If you specify any of these
+        options, you cannot specify <code class="literal">MASTER_AUTO_POSITION =
+        1</code> (described later in this section). If neither of
+        <code class="literal">MASTER_LOG_FILE</code> or
+        <code class="literal">MASTER_LOG_POS</code> is specified, the replica uses
+        the last coordinates of the <span class="emphasis"><em>replication SQL
+        thread</em></span> before <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER
+        TO</code></a> was issued. This ensures that there is no
+        discontinuity in replication, even if the replication SQL thread
+        was late compared to the replication I/O thread, when you merely
+        want to change, say, the password to use.
+      </p><p>
+        From MySQL 5.7, a <code class="literal">CHANGE MASTER TO</code> statement
+        employing <code class="literal">RELAY_LOG_FILE</code>,
+        <code class="literal">RELAY_LOG_POS</code>, or both options can be
+        executed on a running replica when the replication SQL thread is
+        stopped. Prior to MySQL 5.7.4, <code class="literal">CHANGE MASTER
+        TO</code> deletes all relay log files and starts a new one,
+        unless you specify <code class="literal">RELAY_LOG_FILE</code> or
+        <code class="literal">RELAY_LOG_POS</code>. In that case, relay log files
+        are kept; the <a class="link" href="replication-options-replica.html#sysvar_relay_log_purge"><code class="literal">relay_log_purge</code></a>
+        global variable is set silently to 0. In MySQL 5.7.4 and later,
+        relay logs are preserved if at least one of the replication SQL
+        thread and the replication I/O thread is running. If both
+        threads are stopped, all relay log files are deleted unless at
+        least one of <code class="literal">RELAY_LOG_FILE</code> or
+        <code class="literal">RELAY_LOG_POS</code> is specified. For the Group
+        Replication applier channel
+        (<code class="literal">group_replication_applier</code>), which only has
+        an SQL thread and no I/O thread, this is the case if the SQL
+        thread is stopped, but with that channel you cannot use the
+        <code class="literal">RELAY_LOG_FILE</code> and
+        <code class="literal">RELAY_LOG_POS</code> options.
+      </p><p>
+        <code class="literal">RELAY_LOG_FILE</code> can use either an absolute or
+        relative path, and uses the same base name as
+        <code class="literal">MASTER_LOG_FILE</code>. (Bug #12190)
+      </p><p>
+        When <code class="literal">MASTER_AUTO_POSITION = 1</code> is used with
+        <code class="literal">CHANGE MASTER TO</code>, the replica attempts to
+        connect to the source using the auto-positioning feature of
+        GTID-based replication, rather than a binary log file based
+        position. From MySQL 5.7, this option can be employed by
+        <code class="literal">CHANGE MASTER TO</code> only if both the replication
+        SQL thread and the replication I/O thread are stopped. Both the
+        replica and the source must have GTIDs enabled
+        (<a class="link" href="replication-options-gtids.html#sysvar_gtid_mode"><code class="literal">GTID_MODE=ON</code></a>,
+        <code class="literal">ON_PERMISSIVE,</code> or
+        <code class="literal">OFF_PERMISSIVE</code> on the replica, and
+        <a class="link" href="replication-options-gtids.html#sysvar_gtid_mode"><code class="literal">GTID_MODE=ON</code></a> on the source).
+        <code class="literal">MASTER_LOG_FILE</code>,
+        <code class="literal">MASTER_LOG_POS</code>,
+        <code class="literal">RELAY_LOG_FILE</code>, and
+        <code class="literal">RELAY_LOG_POS</code> cannot be specified together
+        with <code class="literal">MASTER_AUTO_POSITION = 1</code>. If
+        multi-source replication is enabled on the replica, you need to
+        set the <code class="literal">MASTER_AUTO_POSITION = 1</code> option for
+        each applicable replication channel.
+      </p><p>
+        With <code class="literal">MASTER_AUTO_POSITION = 1</code> set, in the
+        initial connection handshake, the replica sends a GTID set
+        containing the transactions that it has already received,
+        committed, or both. The source responds by sending all
+        transactions recorded in its binary log whose GTID is not
+        included in the GTID set sent by the replica. This exchange
+        ensures that the source only sends the transactions with a GTID
+        that the replica has not already recorded or committed. If the
+        replica receives transactions from more than one source, as in
+        the case of a diamond topology, the auto-skip function ensures
+        that the transactions are not applied twice. For details of how
+        the GTID set sent by the replica is computed, see
+        <a class="xref" href="replication-gtids-auto-positioning.html" title="16.1.3.3&nbsp;GTID Auto-Positioning">Section&nbsp;16.1.3.3, “GTID Auto-Positioning”</a>.
+      </p><p>
+        If any of the transactions that should be sent by the source
+        have been purged from the source's binary log, or added to the
+        set of GTIDs in the <a class="link" href="replication-options-gtids.html#sysvar_gtid_purged"><code class="literal">gtid_purged</code></a>
+        system variable by another method, the source sends the error
+        <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_master_has_purged_required_gtids" target="_top"><code class="literal">ER_MASTER_HAS_PURGED_REQUIRED_GTIDS</code></a>
+        to the replica, and replication does not start. Also, if during
+        the exchange of transactions it is found that the replica has
+        recorded or committed transactions with the source's UUID in the
+        GTID, but the source itself has not committed them, the source
+        sends the error
+        <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_slave_has_more_gtids_than_master" target="_top"><code class="literal">ER_SLAVE_HAS_MORE_GTIDS_THAN_MASTER</code></a>
+        to the replica and replication does not start. For information
+        on how to handle these situations, see
+        <a class="xref" href="replication-gtids-auto-positioning.html" title="16.1.3.3&nbsp;GTID Auto-Positioning">Section&nbsp;16.1.3.3, “GTID Auto-Positioning”</a>.
+      </p><p>
+        <code class="literal">IGNORE_SERVER_IDS</code> takes a comma-separated
+        list of 0 or more server IDs. Events originating from the
+        corresponding servers are ignored, with the exception of log
+        rotation and deletion events, which are still recorded in the
+        relay log.
+      </p><p>
+        In circular replication, the originating server normally acts as
+        the terminator of its own events, so that they are not applied
+        more than once. Thus, this option is useful in circular
+        replication when one of the servers in the circle is removed.
+        Suppose that you have a circular replication setup with 4
+        servers, having server IDs 1, 2, 3, and 4, and server 3 fails.
+        When bridging the gap by starting replication from server 2 to
+        server 4, you can include <code class="literal">IGNORE_SERVER_IDS =
+        (3)</code> in the <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER
+        TO</code></a> statement that you issue on server 4 to tell it to
+        use server 2 as its source instead of server 3. Doing so causes
+        it to ignore and not to propagate any statements that originated
+        with the server that is no longer in use.
+      </p><p>
+        If a <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a> statement
+        is issued without any <code class="literal">IGNORE_SERVER_IDS</code>
+        option, any existing list is preserved. To clear the list of
+        ignored servers, it is necessary to use the option with an empty
+        list:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CHANGE MASTER TO IGNORE_SERVER_IDS = ();</code></pre><p>
+        Prior to MySQL 5.7.5,
+        <a class="link" href="reset-slave.html" title="13.4.2.4&nbsp;RESET SLAVE Statement"><code class="literal">RESET SLAVE
+        ALL</code></a> has no effect on the server ID list. In MySQL
+        5.7.5 and later, <code class="literal">RESET SLAVE ALL</code> clears
+        <code class="literal">IGNORE_SERVER_IDS</code>. (Bug #18816897)
+      </p><p>
+        If <code class="literal">IGNORE_SERVER_IDS</code> contains the
+        server's own ID and the server was started with the
+        <a class="link" href="replication-options-replica.html#option_mysqld_replicate-same-server-id"><code class="option">--replicate-same-server-id</code></a> option
+        enabled, an error results.
+      </p><p>
+        The source metadata repository and the output of
+        <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE STATUS</code></a> provide the
+        list of servers that are currently ignored. For more
+        information, see <a class="xref" href="replica-logs-status.html" title="16.2.4.2&nbsp;Replication Metadata Repositories">Section&nbsp;16.2.4.2, “Replication Metadata Repositories”</a>, and
+        <a class="xref" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement">Section&nbsp;13.7.5.34, “SHOW SLAVE STATUS Statement”</a>.
+      </p><p>
+        Invoking <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a> causes
+        the previous values for <code class="literal">MASTER_HOST</code>,
+        <code class="literal">MASTER_PORT</code>,
+        <code class="literal">MASTER_LOG_FILE</code>, and
+        <code class="literal">MASTER_LOG_POS</code> to be written to the error
+        log, along with other information about the replica's state
+        prior to execution.
+      </p><p>
+        <code class="literal">CHANGE MASTER TO</code> causes an implicit commit of
+        an ongoing transaction. See <a class="xref" href="implicit-commit.html" title="13.3.3&nbsp;Statements That Cause an Implicit Commit">Section&nbsp;13.3.3, “Statements That Cause an Implicit Commit”</a>.
+      </p><p>
+        In MySQL 5.7.4 and later, the strict requirement to execute
+        <a class="link" href="stop-slave.html" title="13.4.2.7&nbsp;STOP SLAVE Statement"><code class="literal">STOP SLAVE</code></a> prior to issuing any
+        <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a> statement (and
+        <a class="link" href="start-slave.html" title="13.4.2.6&nbsp;START SLAVE Statement"><code class="literal">START SLAVE</code></a> afterward) is
+        removed. Instead of depending on whether the replica is stopped,
+        the behavior of <code class="literal">CHANGE MASTER TO</code> depends (in
+        MySQL 5.7.4 and later) on the states of the replication SQL
+        thread and the replication I/O thread; which of these threads is
+        stopped or running now determines the options that can or cannot
+        be used with a <code class="literal">CHANGE MASTER TO</code> statement at
+        a given point in time. The rules for making this determination
+        are listed here:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            If the SQL thread is stopped, you can execute
+            <code class="literal">CHANGE MASTER TO</code> using any combination
+            that is otherwise allowed of
+            <code class="literal">RELAY_LOG_FILE</code>,
+            <code class="literal">RELAY_LOG_POS</code>, and
+            <code class="literal">MASTER_DELAY</code> options, even if the
+            replication I/O thread is running. No other options may be
+            used with this statement when the I/O thread is running.
+          </p></li><li class="listitem"><p>
+            If the I/O thread is stopped, you can execute
+            <code class="literal">CHANGE MASTER TO</code> using any of the options
+            for this statement (in any allowed combination)
+            <span class="emphasis"><em>except</em></span>
+            <code class="literal">RELAY_LOG_FILE</code>,
+            <code class="literal">RELAY_LOG_POS</code>,
+            <code class="literal">MASTER_DELAY</code>, or
+            <code class="literal">MASTER_AUTO_POSITION = 1</code> even when the
+            SQL thread is running.
+          </p></li><li class="listitem"><p>
+            Both the SQL thread and the I/O thread must be stopped
+            before issuing a <code class="literal">CHANGE MASTER TO</code>
+            statement that employs <code class="literal">MASTER_AUTO_POSITION =
+            1</code>.
+</p></li></ul>
+</div>
+<p>
+        You can check the current state of the replication SQL thread
+        and the replication I/O thread using <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW
+        SLAVE STATUS</code></a>. Note that the Group Replication applier
+        channel (<code class="literal">group_replication_applier</code>) has no
+        I/O thread, only an SQL thread.
+      </p><p>
+        For more information, see
+        <a class="xref" href="replication-solutions-switch.html" title="16.3.7&nbsp;Switching Sources During Failover">Section&nbsp;16.3.7, “Switching Sources During Failover”</a>.
+      </p><p>
+        If you are using statement-based replication and temporary
+        tables, it is possible for a <code class="literal">CHANGE MASTER TO</code>
+        statement following a <code class="literal">STOP SLAVE</code> statement to
+        leave behind temporary tables on the replica. From MySQL 5.7, a
+        warning
+        (<a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_warn_open_temp_tables_must_be_zero" target="_top"><code class="literal">ER_WARN_OPEN_TEMP_TABLES_MUST_BE_ZERO</code></a>)
+        is issued whenever this occurs. You can avoid this in such cases
+        by making sure that the value of the
+        <a class="link" href="server-status-variables.html#statvar_Slave_open_temp_tables"><code class="literal">Slave_open_temp_tables</code></a> system
+        status variable is equal to 0 prior to executing such a
+        <code class="literal">CHANGE MASTER TO</code> statement.
+      </p><p>
+        <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a> is useful for
+        setting up a replica when you have the snapshot of the
+        replication source server and have recorded the source's binary
+        log coordinates corresponding to the time of the snapshot. After
+        loading the snapshot into the replica to synchronize it with the
+        source, you can run <code class="literal">CHANGE MASTER TO
+        MASTER_LOG_FILE='<em class="replaceable"><code>log_name</code></em>',
+        MASTER_LOG_POS=<em class="replaceable"><code>log_pos</code></em></code> on
+        the replica to specify the coordinates at which the replica
+        should begin reading the source's binary log.
+      </p><p>
+        The following example changes the replication source server the
+        replica uses and establishes the source's binary log coordinates
+        from which the replica begins reading. This is used when you
+        want to set up the replica to replicate the source:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CHANGE MASTER TO
+  MASTER_HOST='source2.example.com',
+  MASTER_USER='replication',
+  MASTER_PASSWORD='<em class="replaceable">password</em>',
+  MASTER_PORT=3306,
+  MASTER_LOG_FILE='source2-bin.001',
+  MASTER_LOG_POS=4,
+  MASTER_CONNECT_RETRY=10;</code></pre><p>
+        The next example shows an operation that is less frequently
+        employed. It is used when the replica has relay log files that
+        you want it to execute again for some reason. To do this, the
+        source need not be reachable. You need only use
+        <a class="link" href="change-master-to.html" title="13.4.2.1&nbsp;CHANGE MASTER TO Statement"><code class="literal">CHANGE MASTER TO</code></a> and start the
+        SQL thread (<code class="literal">START SLAVE SQL_THREAD</code>):
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CHANGE MASTER TO
+  RELAY_LOG_FILE='replica-relay-bin.006',
+  RELAY_LOG_POS=4025;</code></pre><p>
+        The following table shows the maximum permissible length for the
+        string-valued options.
+</p>
+<div class="informaltable">
+<table summary="The maximum permissible length for CHANGE MASTER TO string-valued options."><colgroup><col style="width: 50%"><col style="width: 50%"></colgroup><thead><tr>
+            <th>Option</th>
+            <th>Maximum Length</th>
+          </tr></thead><tbody><tr>
+            <td><code class="literal">MASTER_HOST</code></td>
+            <td>60</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_USER</code></td>
+            <td>96</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_PASSWORD</code></td>
+            <td>32</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_LOG_FILE</code></td>
+            <td>511</td>
+          </tr><tr>
+            <td><code class="literal">RELAY_LOG_FILE</code></td>
+            <td>511</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_SSL_CA</code></td>
+            <td>511</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_SSL_CAPATH</code></td>
+            <td>511</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_SSL_CERT</code></td>
+            <td>511</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_SSL_CRL</code></td>
+            <td>511</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_SSL_CRLPATH</code></td>
+            <td>511</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_SSL_KEY</code></td>
+            <td>511</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_SSL_CIPHER</code></td>
+            <td>511</td>
+          </tr><tr>
+            <td><code class="literal">MASTER_TLS_VERSION</code></td>
+            <td>511</td>
+</tr></tbody></table>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

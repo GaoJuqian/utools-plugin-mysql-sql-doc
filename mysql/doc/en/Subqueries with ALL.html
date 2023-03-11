@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Subqueries with ALL</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="all-subqueries"></a>13.2.10.4&nbsp;Subqueries with ALL</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852577826832"></a><a class="indexterm" name="idm45852577825344"></a><p>
+        Syntax:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql"><em class="replaceable">operand</em> <em class="replaceable">comparison_operator</em> ALL (<em class="replaceable">subquery</em>)</code></pre><p>
+        The word <code class="literal">ALL</code>, which must follow a comparison
+        operator, means <span class="quote">“<span class="quote">return <code class="literal">TRUE</code> if the
+        comparison is <code class="literal">TRUE</code> for <code class="literal">ALL</code>
+        of the values in the column that the subquery returns.</span>”</span>
+        For example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT s1 FROM t1 WHERE s1 &gt; ALL (SELECT s1 FROM t2);</code></pre><p>
+        Suppose that there is a row in table <code class="literal">t1</code>
+        containing <code class="literal">(10)</code>. The expression is
+        <code class="literal">TRUE</code> if table <code class="literal">t2</code> contains
+        <code class="literal">(-5,0,+5)</code> because <code class="literal">10</code> is
+        greater than all three values in <code class="literal">t2</code>. The
+        expression is <code class="literal">FALSE</code> if table
+        <code class="literal">t2</code> contains
+        <code class="literal">(12,6,NULL,-100)</code> because there is a single
+        value <code class="literal">12</code> in table <code class="literal">t2</code> that
+        is greater than <code class="literal">10</code>. The expression is
+        <span class="emphasis"><em>unknown</em></span> (that is, <code class="literal">NULL</code>)
+        if table <code class="literal">t2</code> contains
+        <code class="literal">(0,NULL,1)</code>.
+      </p><p>
+        Finally, the expression is <code class="literal">TRUE</code> if table
+        <code class="literal">t2</code> is empty. So, the following expression is
+        <code class="literal">TRUE</code> when table <code class="literal">t2</code> is
+        empty:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 WHERE 1 &gt; ALL (SELECT s1 FROM t2);</code></pre><p>
+        But this expression is <code class="literal">NULL</code> when table
+        <code class="literal">t2</code> is empty:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 WHERE 1 &gt; (SELECT s1 FROM t2);</code></pre><p>
+        In addition, the following expression is <code class="literal">NULL</code>
+        when table <code class="literal">t2</code> is empty:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM t1 WHERE 1 &gt; ALL (SELECT MAX(s1) FROM t2);</code></pre><p>
+        In general, <span class="emphasis"><em>tables containing <code class="literal">NULL</code>
+        values</em></span> and <span class="emphasis"><em>empty tables</em></span> are
+        <span class="quote">“<span class="quote">edge cases.</span>”</span> When writing subqueries, always
+        consider whether you have taken those two possibilities into
+        account.
+      </p><p>
+        <code class="literal">NOT IN</code> is an alias for <code class="literal">&lt;&gt;
+        ALL</code>. Thus, these two statements are the same:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT s1 FROM t1 WHERE s1 &lt;&gt; ALL (SELECT s1 FROM t2);
+SELECT s1 FROM t1 WHERE s1 NOT IN (SELECT s1 FROM t2);</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

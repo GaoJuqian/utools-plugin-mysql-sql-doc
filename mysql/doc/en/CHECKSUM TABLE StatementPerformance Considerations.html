@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CHECKSUM TABLE StatementPerformance Considerations</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="checksum-table"></a>13.7.2.3&nbsp;CHECKSUM TABLE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572390288"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CHECKSUM TABLE <em class="replaceable">tbl_name</em> [, <em class="replaceable">tbl_name</em>] ... [QUICK | EXTENDED]</code></pre><p>
+        <a class="link" href="checksum-table.html" title="13.7.2.3&nbsp;CHECKSUM TABLE Statement"><code class="literal">CHECKSUM TABLE</code></a> reports a
+        <a class="link" href="glossary.html#glos_checksum" title="checksum">checksum</a> for the contents
+        of a table. You can use this statement to verify that the
+        contents are the same before and after a backup, rollback, or
+        other operation that is intended to put the data back to a known
+        state.
+      </p><p>
+        This statement requires the
+        <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for the table.
+      </p><p>
+        This statement is not supported for views. If you run
+        <a class="link" href="checksum-table.html" title="13.7.2.3&nbsp;CHECKSUM TABLE Statement"><code class="literal">CHECKSUM TABLE</code></a> against a view,
+        the <code class="literal">Checksum</code> value is always
+        <code class="literal">NULL</code>, and a warning is returned.
+      </p><p>
+        For a nonexistent table, <a class="link" href="checksum-table.html" title="13.7.2.3&nbsp;CHECKSUM TABLE Statement"><code class="literal">CHECKSUM
+        TABLE</code></a> returns <code class="literal">NULL</code> and generates a
+        warning.
+      </p><p>
+        During the checksum operation, the table is locked with a read
+        lock for <code class="literal">InnoDB</code> and
+        <code class="literal">MyISAM</code>.
+</p>
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="checksum-table-performance-considerations"></a>Performance Considerations</h5>
+</div>
+</div>
+</div>
+<p>
+          By default, the entire table is read row by row and the
+          checksum is calculated. For large tables, this could take a
+          long time, thus you would only perform this operation
+          occasionally. This row-by-row calculation is what you get with
+          the <code class="literal">EXTENDED</code> clause, with
+          <code class="literal">InnoDB</code> and all other storage engines other
+          than <code class="literal">MyISAM</code>, and with
+          <code class="literal">MyISAM</code> tables not created with the
+          <code class="literal">CHECKSUM=1</code> clause.
+        </p><p>
+          For <code class="literal">MyISAM</code> tables created with the
+          <code class="literal">CHECKSUM=1</code> clause,
+          <a class="link" href="checksum-table.html" title="13.7.2.3&nbsp;CHECKSUM TABLE Statement"><code class="literal">CHECKSUM TABLE</code></a> or
+          <a class="link" href="checksum-table.html" title="13.7.2.3&nbsp;CHECKSUM TABLE Statement"><code class="literal">CHECKSUM TABLE
+          ... QUICK</code></a> returns the <span class="quote">“<span class="quote">live</span>”</span> table
+          checksum that can be returned very fast. If the table does not
+          meet all these conditions, the <code class="literal">QUICK</code> method
+          returns <code class="literal">NULL</code>. The <code class="literal">QUICK</code>
+          method is not supported with <code class="literal">InnoDB</code> tables.
+          See <a class="xref" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement">Section&nbsp;13.1.18, “CREATE TABLE Statement”</a> for the syntax of the
+          <code class="literal">CHECKSUM</code> clause.
+        </p><p>
+          The checksum value depends on the table row format. If the row
+          format changes, the checksum also changes. For example, the
+          storage format for temporal types such as
+          <a class="link" href="time.html" title="11.2.3&nbsp;The TIME Type"><code class="literal">TIME</code></a>,
+          <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">DATETIME</code></a>, and
+          <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">TIMESTAMP</code></a> changed in MySQL 5.6
+          prior to MySQL 5.6.5, so if a 5.5 table is upgraded to MySQL
+          5.6, the checksum value may change.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+            If the checksums for two tables are different, then it is
+            almost certain that the tables are different in some way.
+            However, because the hashing function used by
+            <a class="link" href="checksum-table.html" title="13.7.2.3&nbsp;CHECKSUM TABLE Statement"><code class="literal">CHECKSUM TABLE</code></a> is not
+            guaranteed to be collision-free, there is a slight chance
+            that two tables which are not identical can produce the same
+            checksum.
+</p>
+</div>
+
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

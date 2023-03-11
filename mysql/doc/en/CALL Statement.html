@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CALL Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="call"></a>13.2.1&nbsp;CALL Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580378448"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CALL <em class="replaceable">sp_name</em>([<em class="replaceable">parameter</em>[,...]])
+CALL <em class="replaceable">sp_name</em>[()]</code></pre><p>
+      The <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> statement invokes a stored
+      procedure that was defined previously with
+      <a class="link" href="create-procedure.html" title="13.1.16&nbsp;CREATE PROCEDURE and CREATE FUNCTION Statements"><code class="literal">CREATE PROCEDURE</code></a>.
+    </p><p>
+      Stored procedures that take no arguments can be invoked without
+      parentheses. That is, <code class="literal">CALL p()</code> and
+      <code class="literal">CALL p</code> are equivalent.
+    </p><p>
+      <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> can pass back values to its
+      caller using parameters that are declared as
+      <code class="literal">OUT</code> or <code class="literal">INOUT</code> parameters.
+      When the procedure returns, a client program can also obtain the
+      number of rows affected for the final statement executed within
+      the routine: At the SQL level, call the
+      <a class="link" href="information-functions.html#function_row-count"><code class="literal">ROW_COUNT()</code></a> function; from the C
+      API, call the
+      <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-affected-rows.html" target="_top"><code class="literal">mysql_affected_rows()</code></a> function.
+    </p><p>
+      For information about the effect of unhandled conditions on
+      procedure parameters, see
+      <a class="xref" href="conditions-and-parameters.html" title="13.6.7.8&nbsp;Condition Handling and OUT or INOUT Parameters">Section&nbsp;13.6.7.8, “Condition Handling and OUT or INOUT Parameters”</a>.
+    </p><p>
+      To get back a value from a procedure using an
+      <code class="literal">OUT</code> or <code class="literal">INOUT</code> parameter, pass
+      the parameter by means of a user variable, and then check the
+      value of the variable after the procedure returns. (If you are
+      calling the procedure from within another stored procedure or
+      function, you can also pass a routine parameter or local routine
+      variable as an <code class="literal">IN</code> or <code class="literal">INOUT</code>
+      parameter.) For an <code class="literal">INOUT</code> parameter, initialize
+      its value before passing it to the procedure. The following
+      procedure has an <code class="literal">OUT</code> parameter that the
+      procedure sets to the current server version, and an
+      <code class="literal">INOUT</code> value that the procedure increments by
+      one from its current value:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELIMITER //
+
+CREATE PROCEDURE p (OUT ver_param VARCHAR(25), INOUT incr_param INT)
+BEGIN
+  # Set value of OUT parameter
+  SELECT VERSION() INTO ver_param;
+  # Increment value of INOUT parameter
+  SET incr_param = incr_param + 1;
+END //
+
+DELIMITER ;</code></pre><p>
+      Before calling the procedure, initialize the variable to be passed
+      as the <code class="literal">INOUT</code> parameter. After calling the
+      procedure, the values of the two variables have been set or
+      modified:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SET @increment = 10;
+mysql&gt; CALL p(@version, @increment);
+mysql&gt; SELECT @version, @increment;
++----------+------------+
+| @version | @increment |
++----------+------------+
+| 5.7.41   |         11 |
++----------+------------+</code></pre><p>
+      In prepared <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> statements used
+      with <a class="link" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement"><code class="literal">PREPARE</code></a> and
+      <a class="link" href="execute.html" title="13.5.2&nbsp;EXECUTE Statement"><code class="literal">EXECUTE</code></a>, placeholders can be used
+      for <code class="literal">IN</code> parameters, <code class="literal">OUT</code>, and
+      <code class="literal">INOUT</code> parameters. These types of parameters can
+      be used as follows:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SET @increment = 10;
+mysql&gt; PREPARE s FROM 'CALL p(?, ?)';
+mysql&gt; EXECUTE s USING @version, @increment;
+mysql&gt; SELECT @version, @increment;
++----------+------------+
+| @version | @increment |
++----------+------------+
+| 5.7.41   |         11 |
++----------+------------+</code></pre><p>
+      To write C programs that use the
+      <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> SQL statement to execute
+      stored procedures that produce result sets, the
+      <code class="literal">CLIENT_MULTI_RESULTS</code> flag must be enabled. This
+      is because each <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> returns a
+      result to indicate the call status, in addition to any result sets
+      that might be returned by statements executed within the
+      procedure. <code class="literal">CLIENT_MULTI_RESULTS</code> must also be
+      enabled if <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> is used to execute
+      any stored procedure that contains prepared statements. It cannot
+      be determined when such a procedure is loaded whether those
+      statements produce result sets, so it is necessary to assume that
+      they do so.
+    </p><p>
+      <code class="literal">CLIENT_MULTI_RESULTS</code> can be enabled when you
+      call <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-real-connect.html" target="_top"><code class="literal">mysql_real_connect()</code></a>, either
+      explicitly by passing the <code class="literal">CLIENT_MULTI_RESULTS</code>
+      flag itself, or implicitly by passing
+      <code class="literal">CLIENT_MULTI_STATEMENTS</code> (which also enables
+      <code class="literal">CLIENT_MULTI_RESULTS</code>).
+      <code class="literal">CLIENT_MULTI_RESULTS</code> is enabled by default.
+    </p><p>
+      To process the result of a <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a>
+      statement executed using
+      <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-query.html" target="_top"><code class="literal">mysql_query()</code></a> or
+      <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-real-query.html" target="_top"><code class="literal">mysql_real_query()</code></a>, use a loop
+      that calls <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-next-result.html" target="_top"><code class="literal">mysql_next_result()</code></a> to
+      determine whether there are more results. For an example, see
+      <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/c-api-multiple-queries.html" target="_top">Multiple Statement Execution Support</a>.
+    </p><p>
+      C programs can use the prepared-statement interface to execute
+      <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> statements and access
+      <code class="literal">OUT</code> and <code class="literal">INOUT</code> parameters.
+      This is done by processing the result of a
+      <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> statement using a loop that
+      calls <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-stmt-next-result.html" target="_top"><code class="literal">mysql_stmt_next_result()</code></a> to
+      determine whether there are more results. For an example, see
+      <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/c-api-prepared-call-statements.html" target="_top">Prepared CALL Statement Support</a>. Languages that
+      provide a MySQL interface can use prepared
+      <a class="link" href="call.html" title="13.2.1&nbsp;CALL Statement"><code class="literal">CALL</code></a> statements to directly
+      retrieve <code class="literal">OUT</code> and <code class="literal">INOUT</code>
+      procedure parameters.
+    </p><p>
+      Metadata changes to objects referred to by stored programs are
+      detected and cause automatic reparsing of the affected statements
+      when the program is next executed. For more information, see
+      <a class="xref" href="statement-caching.html" title="8.10.4&nbsp;Caching of Prepared Statements and Stored Programs">Section&nbsp;8.10.4, “Caching of Prepared Statements and Stored Programs”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

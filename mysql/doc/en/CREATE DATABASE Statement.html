@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE DATABASE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="create-database"></a>13.1.11&nbsp;CREATE DATABASE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852584433856"></a><a class="indexterm" name="idm45852584432400"></a><a class="indexterm" name="idm45852584431328"></a><a class="indexterm" name="idm45852584430256"></a><a class="indexterm" name="idm45852584428768"></a><a class="indexterm" name="idm45852584427280"></a><a class="indexterm" name="idm45852584425792"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE {DATABASE | SCHEMA} [IF NOT EXISTS] <em class="replaceable">db_name</em>
+    [<em class="replaceable">create_option</em>] ...
+
+<em class="replaceable">create_option</em>: [DEFAULT] {
+    CHARACTER SET [=] <em class="replaceable">charset_name</em>
+  | COLLATE [=] <em class="replaceable">collation_name</em>
+}</code></pre><p>
+      <a class="link" href="create-database.html" title="13.1.11&nbsp;CREATE DATABASE Statement"><code class="literal">CREATE DATABASE</code></a> creates a database
+      with the given name. To use this statement, you need the
+      <a class="link" href="privileges-provided.html#priv_create"><code class="literal">CREATE</code></a> privilege for the database.
+      <a class="link" href="create-database.html" title="13.1.11&nbsp;CREATE DATABASE Statement"><code class="literal">CREATE
+      SCHEMA</code></a> is a synonym for <a class="link" href="create-database.html" title="13.1.11&nbsp;CREATE DATABASE Statement"><code class="literal">CREATE
+      DATABASE</code></a>.
+    </p><p>
+      An error occurs if the database exists and you did not specify
+      <code class="literal">IF NOT EXISTS</code>.
+    </p><p>
+      <a class="link" href="create-database.html" title="13.1.11&nbsp;CREATE DATABASE Statement"><code class="literal">CREATE DATABASE</code></a> is not permitted
+      within a session that has an active <a class="link" href="lock-tables.html" title="13.3.5&nbsp;LOCK TABLES and UNLOCK TABLES Statements"><code class="literal">LOCK
+      TABLES</code></a> statement.
+    </p><p>
+      Each <em class="replaceable"><code>create_option</code></em> specifies a database
+      characteristic. Database characteristics are stored in the
+      <code class="filename">db.opt</code> file in the database directory. The
+      <code class="literal">CHARACTER SET</code> option specifies the default
+      database character set. The <code class="literal">COLLATE</code> option
+      specifies the default database collation. For information about
+      character set and collation names, see <a class="xref" href="charset.html" title="Chapter&nbsp;10&nbsp;Character Sets, Collations, Unicode">Chapter&nbsp;10, <i>Character Sets, Collations, Unicode</i></a>.
+    </p><p>
+      To see the available character sets and collations, use the
+      <a class="link" href="show-character-set.html" title="13.7.5.3&nbsp;SHOW CHARACTER SET Statement"><code class="literal">SHOW CHARACTER SET</code></a> and
+      <a class="link" href="show-collation.html" title="13.7.5.4&nbsp;SHOW COLLATION Statement"><code class="literal">SHOW COLLATION</code></a> statements,
+      respectively. See <a class="xref" href="show-character-set.html" title="13.7.5.3&nbsp;SHOW CHARACTER SET Statement">Section&nbsp;13.7.5.3, “SHOW CHARACTER SET Statement”</a>, and
+      <a class="xref" href="show-collation.html" title="13.7.5.4&nbsp;SHOW COLLATION Statement">Section&nbsp;13.7.5.4, “SHOW COLLATION Statement”</a>.
+    </p><p>
+      A database in MySQL is implemented as a directory containing files
+      that correspond to tables in the database. Because there are no
+      tables in a database when it is initially created, the
+      <a class="link" href="create-database.html" title="13.1.11&nbsp;CREATE DATABASE Statement"><code class="literal">CREATE DATABASE</code></a> statement creates
+      only a directory under the MySQL data directory and the
+      <code class="filename">db.opt</code> file. Rules for permissible database
+      names are given in <a class="xref" href="identifiers.html" title="9.2&nbsp;Schema Object Names">Section&nbsp;9.2, “Schema Object Names”</a>. If a database
+      name contains special characters, the name for the database
+      directory contains encoded versions of those characters as
+      described in <a class="xref" href="identifier-mapping.html" title="9.2.4&nbsp;Mapping of Identifiers to File Names">Section&nbsp;9.2.4, “Mapping of Identifiers to File Names”</a>.
+    </p><p>
+      If you manually create a directory under the data directory (for
+      example, with <span class="command"><strong>mkdir</strong></span>), the server considers it a
+      database directory and it shows up in the output of
+      <a class="link" href="show-databases.html" title="13.7.5.14&nbsp;SHOW DATABASES Statement"><code class="literal">SHOW DATABASES</code></a>.
+    </p><p>
+      When you create a database, let the server manage the directory
+      and the files in it. Manipulating database directories and files
+      directly can cause inconsistencies and unexpected results.
+    </p><a class="indexterm" name="idm45852584392112"></a><a class="indexterm" name="idm45852584390608"></a><p>
+      MySQL has no limit on the number of databases. The underlying file
+      system may have a limit on the number of directories.
+    </p><a class="indexterm" name="idm45852584388560"></a><p>
+      You can also use the <a class="link" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program"><span class="command"><strong>mysqladmin</strong></span></a> program to
+      create databases. See <a class="xref" href="mysqladmin.html" title="4.5.2&nbsp;mysqladmin — A MySQL Server Administration Program">Section&nbsp;4.5.2, “mysqladmin — A MySQL Server Administration Program”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SIGNAL StatementSIGNAL OverviewSignal Condition Information ItemsEffect of Signals on Handlers, Cursors, and Statements</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="signal"></a>13.6.7.5&nbsp;SIGNAL Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852574526800"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SIGNAL <em class="replaceable">condition_value</em>
+    [SET <em class="replaceable">signal_information_item</em>
+    [, <em class="replaceable">signal_information_item</em>] ...]
+
+<em class="replaceable">condition_value</em>: {
+    SQLSTATE [VALUE] <em class="replaceable">sqlstate_value</em>
+  | <em class="replaceable">condition_name</em>
+}
+
+<em class="replaceable">signal_information_item</em>:
+    <em class="replaceable">condition_information_item_name</em> = <em class="replaceable">simple_value_specification</em>
+
+<em class="replaceable">condition_information_item_name</em>: {
+    CLASS_ORIGIN
+  | SUBCLASS_ORIGIN
+  | MESSAGE_TEXT
+  | MYSQL_ERRNO
+  | CONSTRAINT_CATALOG
+  | CONSTRAINT_SCHEMA
+  | CONSTRAINT_NAME
+  | CATALOG_NAME
+  | SCHEMA_NAME
+  | TABLE_NAME
+  | COLUMN_NAME
+  | CURSOR_NAME
+}
+
+<em class="replaceable">condition_name</em>, <em class="replaceable">simple_value_specification</em>:
+    (see following discussion)</code></pre><p>
+        <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> is the way to
+        <span class="quote">“<span class="quote">return</span>”</span> an error.
+        <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> provides error information
+        to a handler, to an outer portion of the application, or to the
+        client. Also, it provides control over the error's
+        characteristics (error number, <code class="literal">SQLSTATE</code>
+        value, message). Without <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a>,
+        it is necessary to resort to workarounds such as deliberately
+        referring to a nonexistent table to cause a routine to return an
+        error.
+      </p><p>
+        No privileges are required to execute the
+        <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement.
+      </p><p>
+        To retrieve information from the diagnostics area, use the
+        <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> statement (see
+        <a class="xref" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement">Section&nbsp;13.6.7.3, “GET DIAGNOSTICS Statement”</a>). For information about the
+        diagnostics area, see <a class="xref" href="diagnostics-area.html" title="13.6.7.7&nbsp;The MySQL Diagnostics Area">Section&nbsp;13.6.7.7, “The MySQL Diagnostics Area”</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="signal.html#signal-overview" title="SIGNAL Overview">SIGNAL Overview</a></p></li><li class="listitem"><p><a class="xref" href="signal.html#signal-condition-information-items" title="Signal Condition Information Items">Signal Condition Information Items</a></p></li><li class="listitem"><p><a class="xref" href="signal.html#signal-effects" title="Effect of Signals on Handlers, Cursors, and Statements">Effect of Signals on Handlers, Cursors, and Statements</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="signal-overview"></a>SIGNAL Overview</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          The <em class="replaceable"><code>condition_value</code></em> in a
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement indicates the
+          error value to be returned. It can be an
+          <code class="literal">SQLSTATE</code> value (a 5-character string
+          literal) or a <em class="replaceable"><code>condition_name</code></em> that
+          refers to a named condition previously defined with
+          <a class="link" href="declare-condition.html" title="13.6.7.1&nbsp;DECLARE ... CONDITION Statement"><code class="literal">DECLARE ...
+          CONDITION</code></a> (see <a class="xref" href="declare-condition.html" title="13.6.7.1&nbsp;DECLARE ... CONDITION Statement">Section&nbsp;13.6.7.1, “DECLARE ... CONDITION Statement”</a>).
+        </p><p>
+          An <code class="literal">SQLSTATE</code> value can indicate errors,
+          warnings, or <span class="quote">“<span class="quote">not found.</span>”</span> The first two
+          characters of the value indicate its error class, as discussed
+          in <a class="xref" href="signal.html#signal-condition-information-items" title="Signal Condition Information Items">Signal Condition Information Items</a>. Some
+          signal values cause statement termination; see
+          <a class="xref" href="signal.html#signal-effects" title="Effect of Signals on Handlers, Cursors, and Statements">Effect of Signals on Handlers, Cursors, and Statements</a>.
+        </p><p>
+          The <code class="literal">SQLSTATE</code> value for a
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement should not
+          start with <code class="literal">'00'</code> because such values
+          indicate success and are not valid for signaling an error.
+          This is true whether the <code class="literal">SQLSTATE</code> value is
+          specified directly in the
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement or in a named
+          condition referred to in the statement. If the value is
+          invalid, a <code class="literal">Bad SQLSTATE</code> error occurs.
+        </p><p>
+          To signal a generic <code class="literal">SQLSTATE</code> value, use
+          <code class="literal">'45000'</code>, which means <span class="quote">“<span class="quote">unhandled
+          user-defined exception.</span>”</span>
+        </p><p>
+          The <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement optionally
+          includes a <code class="literal">SET</code> clause that contains
+          multiple signal items, in a list of
+          <em class="replaceable"><code>condition_information_item_name</code></em> =
+          <em class="replaceable"><code>simple_value_specification</code></em>
+          assignments, separated by commas.
+        </p><p>
+          Each
+          <em class="replaceable"><code>condition_information_item_name</code></em> may
+          be specified only once in the <code class="literal">SET</code> clause.
+          Otherwise, a <code class="literal">Duplicate condition information
+          item</code> error occurs.
+        </p><p>
+          Valid <em class="replaceable"><code>simple_value_specification</code></em>
+          designators can be specified using stored procedure or
+          function parameters, stored program local variables declared
+          with <a class="link" href="declare.html" title="13.6.3&nbsp;DECLARE Statement"><code class="literal">DECLARE</code></a>, user-defined
+          variables, system variables, or literals. A character literal
+          may include a <em class="replaceable"><code>_charset</code></em> introducer.
+        </p><p>
+          For information about permissible
+          <em class="replaceable"><code>condition_information_item_name</code></em>
+          values, see
+          <a class="xref" href="signal.html#signal-condition-information-items" title="Signal Condition Information Items">Signal Condition Information Items</a>.
+        </p><p>
+          The following procedure signals an error or warning depending
+          on the value of <code class="literal">pval</code>, its input parameter:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p (pval INT)
+BEGIN
+  DECLARE specialty CONDITION FOR SQLSTATE '45000';
+  IF pval = 0 THEN
+    SIGNAL SQLSTATE '01000';
+  ELSEIF pval = 1 THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'An error occurred';
+  ELSEIF pval = 2 THEN
+    SIGNAL specialty
+      SET MESSAGE_TEXT = 'An error occurred';
+  ELSE
+    SIGNAL SQLSTATE '01000'
+      SET MESSAGE_TEXT = 'A warning occurred', MYSQL_ERRNO = 1000;
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'An error occurred', MYSQL_ERRNO = 1001;
+  END IF;
+END;</code></pre><p>
+          If <code class="literal">pval</code> is 0, <code class="literal">p()</code>
+          signals a warning because <code class="literal">SQLSTATE</code> values
+          that begin with <code class="literal">'01'</code> are signals in the
+          warning class. The warning does not terminate the procedure,
+          and can be seen with <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW
+          WARNINGS</code></a> after the procedure returns.
+        </p><p>
+          If <code class="literal">pval</code> is 1, <code class="literal">p()</code>
+          signals an error and sets the <code class="literal">MESSAGE_TEXT</code>
+          condition information item. The error terminates the
+          procedure, and the text is returned with the error
+          information.
+        </p><p>
+          If <code class="literal">pval</code> is 2, the same error is signaled,
+          although the <code class="literal">SQLSTATE</code> value is specified
+          using a named condition in this case.
+        </p><p>
+          If <code class="literal">pval</code> is anything else,
+          <code class="literal">p()</code> first signals a warning and sets the
+          message text and error number condition information items.
+          This warning does not terminate the procedure, so execution
+          continues and <code class="literal">p()</code> then signals an error.
+          The error does terminate the procedure. The message text and
+          error number set by the warning are replaced by the values set
+          by the error, which are returned with the error information.
+        </p><p>
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> is typically used within
+          stored programs, but it is a MySQL extension that it is
+          permitted outside handler context. For example, if you invoke
+          the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> client program, you can enter any
+          of these statements at the prompt:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SIGNAL SQLSTATE '77777';
+
+CREATE TRIGGER t_bi BEFORE INSERT ON t
+  FOR EACH ROW SIGNAL SQLSTATE '77777';
+
+CREATE EVENT e ON SCHEDULE EVERY 1 SECOND
+  DO SIGNAL SQLSTATE '77777';</code></pre><p>
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> executes according to
+          the following rules:
+        </p><p>
+          If the <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement
+          indicates a particular <code class="literal">SQLSTATE</code> value, that
+          value is used to signal the condition specified. Example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p (divisor INT)
+BEGIN
+  IF divisor = 0 THEN
+    SIGNAL SQLSTATE '22012';
+  END IF;
+END;</code></pre><p>
+          If the <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement uses a
+          named condition, the condition must be declared in some scope
+          that applies to the <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a>
+          statement, and must be defined using an
+          <code class="literal">SQLSTATE</code> value, not a MySQL error number.
+          Example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p (divisor INT)
+BEGIN
+  DECLARE divide_by_zero CONDITION FOR SQLSTATE '22012';
+  IF divisor = 0 THEN
+    SIGNAL divide_by_zero;
+  END IF;
+END;</code></pre><p>
+          If the named condition does not exist in the scope of the
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement, an
+          <code class="literal">Undefined CONDITION</code> error occurs.
+        </p><p>
+          If <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> refers to a named
+          condition that is defined with a MySQL error number rather
+          than an <code class="literal">SQLSTATE</code> value, a
+          <code class="literal">SIGNAL/RESIGNAL can only use a CONDITION defined with
+          SQLSTATE</code> error occurs. The following statements
+          cause that error because the named condition is associated
+          with a MySQL error number:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE no_such_table CONDITION FOR 1051;
+SIGNAL no_such_table;</code></pre><p>
+          If a condition with a given name is declared multiple times in
+          different scopes, the declaration with the most local scope
+          applies. Consider the following procedure:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p (divisor INT)
+BEGIN
+  DECLARE my_error CONDITION FOR SQLSTATE '45000';
+  IF divisor = 0 THEN
+    BEGIN
+      DECLARE my_error CONDITION FOR SQLSTATE '22012';
+      SIGNAL my_error;
+    END;
+  END IF;
+  SIGNAL my_error;
+END;</code></pre><p>
+          If <code class="literal">divisor</code> is 0, the first
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement executes. The
+          innermost <code class="literal">my_error</code> condition declaration
+          applies, raising <code class="literal">SQLSTATE</code>
+          <code class="literal">'22012'</code>.
+        </p><p>
+          If <code class="literal">divisor</code> is not 0, the second
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement executes. The
+          outermost <code class="literal">my_error</code> condition declaration
+          applies, raising <code class="literal">SQLSTATE</code>
+          <code class="literal">'45000'</code>.
+        </p><p>
+          For information about how the server chooses handlers when a
+          condition occurs, see <a class="xref" href="handler-scope.html" title="13.6.7.6&nbsp;Scope Rules for Handlers">Section&nbsp;13.6.7.6, “Scope Rules for Handlers”</a>.
+        </p><p>
+          Signals can be raised within exception handlers:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE p ()
+BEGIN
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    SIGNAL SQLSTATE VALUE '99999'
+      SET MESSAGE_TEXT = 'An error occurred';
+  END;
+  DROP TABLE no_such_table;
+END;</code></pre><p>
+          <code class="literal">CALL p()</code> reaches the
+          <a class="link" href="drop-table.html" title="13.1.29&nbsp;DROP TABLE Statement"><code class="literal">DROP TABLE</code></a> statement. There is
+          no table named <code class="literal">no_such_table</code>, so the error
+          handler is activated. The error handler destroys the original
+          error (<span class="quote">“<span class="quote">no such table</span>”</span>) and makes a new error
+          with <code class="literal">SQLSTATE</code> <code class="literal">'99999'</code>
+          and message <code class="literal">An error occurred</code>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="signal-condition-information-items"></a>Signal Condition Information Items</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          The following table lists the names of diagnostics area
+          condition information items that can be set in a
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> (or
+          <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a>) statement. All items
+          are standard SQL except <code class="literal">MYSQL_ERRNO</code>, which
+          is a MySQL extension. For more information about these items
+          see <a class="xref" href="diagnostics-area.html" title="13.6.7.7&nbsp;The MySQL Diagnostics Area">Section&nbsp;13.6.7.7, “The MySQL Diagnostics Area”</a>.
+        </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">Item Name             Definition
+---------             ----------
+CLASS_ORIGIN          VARCHAR(64)
+SUBCLASS_ORIGIN       VARCHAR(64)
+CONSTRAINT_CATALOG    VARCHAR(64)
+CONSTRAINT_SCHEMA     VARCHAR(64)
+CONSTRAINT_NAME       VARCHAR(64)
+CATALOG_NAME          VARCHAR(64)
+SCHEMA_NAME           VARCHAR(64)
+TABLE_NAME            VARCHAR(64)
+COLUMN_NAME           VARCHAR(64)
+CURSOR_NAME           VARCHAR(64)
+MESSAGE_TEXT          VARCHAR(128)
+MYSQL_ERRNO           SMALLINT UNSIGNED</code></pre><p>
+          The character set for character items is UTF-8.
+        </p><p>
+          It is illegal to assign <code class="literal">NULL</code> to a condition
+          information item in a <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a>
+          statement.
+        </p><p>
+          A <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement always
+          specifies an <code class="literal">SQLSTATE</code> value, either
+          directly, or indirectly by referring to a named condition
+          defined with an <code class="literal">SQLSTATE</code> value. The first
+          two characters of an <code class="literal">SQLSTATE</code> value are its
+          class, and the class determines the default value for the
+          condition information items:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Class = <code class="literal">'00'</code> (success)
+            </p><p>
+              Illegal. <code class="literal">SQLSTATE</code> values that begin
+              with <code class="literal">'00'</code> indicate success and are not
+              valid for <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a>.
+            </p></li><li class="listitem"><p>
+              Class = <code class="literal">'01'</code> (warning)
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">MESSAGE_TEXT = 'Unhandled user-defined warning condition';
+MYSQL_ERRNO = ER_SIGNAL_WARN</code></pre></li><li class="listitem"><p>
+              Class = <code class="literal">'02'</code> (not found)
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">MESSAGE_TEXT = 'Unhandled user-defined not found condition';
+MYSQL_ERRNO = ER_SIGNAL_NOT_FOUND</code></pre></li><li class="listitem"><p>
+              Class &gt; <code class="literal">'02'</code> (exception)
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">MESSAGE_TEXT = 'Unhandled user-defined exception condition';
+MYSQL_ERRNO = ER_SIGNAL_EXCEPTION</code></pre></li></ul>
+</div>
+<p>
+          For legal classes, the other condition information items are
+          set as follows:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CLASS_ORIGIN = SUBCLASS_ORIGIN = '';
+CONSTRAINT_CATALOG = CONSTRAINT_SCHEMA = CONSTRAINT_NAME = '';
+CATALOG_NAME = SCHEMA_NAME = TABLE_NAME = COLUMN_NAME = '';
+CURSOR_NAME = '';</code></pre><p>
+          The error values that are accessible after
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> executes are the
+          <code class="literal">SQLSTATE</code> value raised by the
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> statement and the
+          <code class="literal">MESSAGE_TEXT</code> and
+          <code class="literal">MYSQL_ERRNO</code> items. These values are
+          available from the C API:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-sqlstate.html" target="_top"><code class="literal">mysql_sqlstate()</code></a> returns
+              the <code class="literal">SQLSTATE</code> value.
+            </p></li><li class="listitem"><p>
+              <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-errno.html" target="_top"><code class="literal">mysql_errno()</code></a> returns the
+              <code class="literal">MYSQL_ERRNO</code> value.
+            </p></li><li class="listitem"><p>
+              <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-error.html" target="_top"><code class="literal">mysql_error()</code></a> returns the
+              <code class="literal">MESSAGE_TEXT</code> value.
+</p></li></ul>
+</div>
+<p>
+          At the SQL level, the output from <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW
+          WARNINGS</code></a> and <a class="link" href="show-errors.html" title="13.7.5.17&nbsp;SHOW ERRORS Statement"><code class="literal">SHOW
+          ERRORS</code></a> indicates the <code class="literal">MYSQL_ERRNO</code>
+          and <code class="literal">MESSAGE_TEXT</code> values in the
+          <code class="literal">Code</code> and <code class="literal">Message</code>
+          columns.
+        </p><p>
+          To retrieve information from the diagnostics area, use the
+          <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> statement (see
+          <a class="xref" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement">Section&nbsp;13.6.7.3, “GET DIAGNOSTICS Statement”</a>). For information about the
+          diagnostics area, see <a class="xref" href="diagnostics-area.html" title="13.6.7.7&nbsp;The MySQL Diagnostics Area">Section&nbsp;13.6.7.7, “The MySQL Diagnostics Area”</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="signal-effects"></a>Effect of Signals on Handlers, Cursors, and Statements</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          Signals have different effects on statement execution
+          depending on the signal class. The class determines how severe
+          an error is. MySQL ignores the value of the
+          <a class="link" href="server-system-variables.html#sysvar_sql_mode"><code class="literal">sql_mode</code></a> system variable; in
+          particular, strict SQL mode does not matter. MySQL also
+          ignores <code class="literal">IGNORE</code>: The intent of
+          <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> is to raise a
+          user-generated error explicitly, so a signal is never ignored.
+        </p><p>
+          In the following descriptions, <span class="quote">“<span class="quote">unhandled</span>”</span> means
+          that no handler for the signaled <code class="literal">SQLSTATE</code>
+          value has been defined with
+          <a class="link" href="declare-handler.html" title="13.6.7.2&nbsp;DECLARE ... HANDLER Statement"><code class="literal">DECLARE ...
+          HANDLER</code></a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Class = <code class="literal">'00'</code> (success)
+            </p><p>
+              Illegal. <code class="literal">SQLSTATE</code> values that begin
+              with <code class="literal">'00'</code> indicate success and are not
+              valid for <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a>.
+            </p></li><li class="listitem"><p>
+              Class = <code class="literal">'01'</code> (warning)
+            </p><p>
+              The value of the
+              <a class="link" href="server-system-variables.html#sysvar_warning_count"><code class="literal">warning_count</code></a> system
+              variable goes up. <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW
+              WARNINGS</code></a> shows the signal.
+              <code class="literal">SQLWARNING</code> handlers catch the signal.
+            </p><p>
+              Warnings cannot be returned from stored functions because
+              the <a class="link" href="return.html" title="13.6.5.7&nbsp;RETURN Statement"><code class="literal">RETURN</code></a> statement that
+              causes the function to return clears the diagnostic area.
+              The statement thus clears any warnings that may have been
+              present there (and resets
+              <a class="link" href="server-system-variables.html#sysvar_warning_count"><code class="literal">warning_count</code></a> to 0).
+            </p></li><li class="listitem"><p>
+              Class = <code class="literal">'02'</code> (not found)
+            </p><p>
+              <code class="literal">NOT FOUND</code> handlers catch the signal.
+              There is no effect on cursors. If the signal is unhandled
+              in a stored function, statements end.
+            </p></li><li class="listitem"><p>
+              Class &gt; <code class="literal">'02'</code> (exception)
+            </p><p>
+              <code class="literal">SQLEXCEPTION</code> handlers catch the signal.
+              If the signal is unhandled in a stored function,
+              statements end.
+            </p></li><li class="listitem"><p>
+              Class = <code class="literal">'40'</code>
+            </p><p>
+              Treated as an ordinary exception.
+</p></li></ul>
+</div>
+
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW CREATE PROCEDURE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-create-procedure"></a>13.7.5.9&nbsp;SHOW CREATE PROCEDURE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571296560"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW CREATE PROCEDURE <em class="replaceable">proc_name</em></code></pre><p>
+        This statement is a MySQL extension. It returns the exact string
+        that can be used to re-create the named stored procedure. A
+        similar statement, <a class="link" href="show-create-function.html" title="13.7.5.8&nbsp;SHOW CREATE FUNCTION Statement"><code class="literal">SHOW CREATE
+        FUNCTION</code></a>, displays information about stored functions
+        (see <a class="xref" href="show-create-function.html" title="13.7.5.8&nbsp;SHOW CREATE FUNCTION Statement">Section&nbsp;13.7.5.8, “SHOW CREATE FUNCTION Statement”</a>).
+      </p><p>
+        To use either statement, you must be the user named in the
+        routine <code class="literal">DEFINER</code> clause or have
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> access to the
+        <code class="literal">mysql.proc</code> table. If you do not have
+        privileges for the routine itself, the value displayed for the
+        <code class="literal">Create Procedure</code> or <code class="literal">Create
+        Function</code> column is <code class="literal">NULL</code>.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW CREATE PROCEDURE test.citycount\G
+*************************** 1. row ***************************
+           Procedure: citycount
+            sql_mode: ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,
+                      NO_ZERO_IN_DATE,NO_ZERO_DATE,
+                      ERROR_FOR_DIVISION_BY_ZERO,
+                      NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+    Create Procedure: CREATE DEFINER=`me`@`localhost`
+                      PROCEDURE `citycount`(IN country CHAR(3), OUT cities INT)
+                      BEGIN
+                        SELECT COUNT(*) INTO cities FROM world.city
+                        WHERE CountryCode = country;
+                      END
+character_set_client: utf8
+collation_connection: utf8_general_ci
+  Database Collation: latin1_swedish_ci
+
+mysql&gt; SHOW CREATE FUNCTION test.hello\G
+*************************** 1. row ***************************
+            Function: hello
+            sql_mode: ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,
+                      NO_ZERO_IN_DATE,NO_ZERO_DATE,
+                      ERROR_FOR_DIVISION_BY_ZERO,
+                      NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+     Create Function: CREATE DEFINER=`me`@`localhost`
+                      FUNCTION `hello`(s CHAR(20))
+                      RETURNS char(50) CHARSET latin1
+                      DETERMINISTIC
+                      RETURN CONCAT('Hello, ',s,'!')
+character_set_client: utf8
+collation_connection: utf8_general_ci
+  Database Collation: latin1_swedish_ci</code></pre><p>
+        <code class="literal">character_set_client</code> is the session value of
+        the <a class="link" href="server-system-variables.html#sysvar_character_set_client"><code class="literal">character_set_client</code></a> system
+        variable when the routine was created.
+        <code class="literal">collation_connection</code> is the session value of
+        the <a class="link" href="server-system-variables.html#sysvar_collation_connection"><code class="literal">collation_connection</code></a> system
+        variable when the routine was created. <code class="literal">Database
+        Collation</code> is the collation of the database with which
+        the routine is associated.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

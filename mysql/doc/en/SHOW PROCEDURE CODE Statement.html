@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW PROCEDURE CODE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-procedure-code"></a>13.7.5.27&nbsp;SHOW PROCEDURE CODE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852570472656"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW PROCEDURE CODE <em class="replaceable">proc_name</em></code></pre><p>
+        This statement is a MySQL extension that is available only for
+        servers that have been built with debugging support. It displays
+        a representation of the internal implementation of the named
+        stored procedure. A similar statement, <a class="link" href="show-function-code.html" title="13.7.5.19&nbsp;SHOW FUNCTION CODE Statement"><code class="literal">SHOW
+        FUNCTION CODE</code></a>, displays information about stored
+        functions (see <a class="xref" href="show-function-code.html" title="13.7.5.19&nbsp;SHOW FUNCTION CODE Statement">Section&nbsp;13.7.5.19, “SHOW FUNCTION CODE Statement”</a>).
+      </p><p>
+        To use either statement, you must be the owner of the routine or
+        have <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> access to the
+        <code class="literal">mysql.proc</code> table.
+      </p><p>
+        If the named routine is available, each statement produces a
+        result set. Each row in the result set corresponds to one
+        <span class="quote">“<span class="quote">instruction</span>”</span> in the routine. The first column is
+        <code class="literal">Pos</code>, which is an ordinal number beginning
+        with 0. The second column is <code class="literal">Instruction</code>,
+        which contains an SQL statement (usually changed from the
+        original source), or a directive which has meaning only to the
+        stored-routine handler.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; DELIMITER //
+mysql&gt; CREATE PROCEDURE p1 ()
+       BEGIN
+         DECLARE fanta INT DEFAULT 55;
+         DROP TABLE t2;
+         LOOP
+           INSERT INTO t3 VALUES (fanta);
+           END LOOP;
+         END//
+Query OK, 0 rows affected (0.01 sec)
+
+mysql&gt; SHOW PROCEDURE CODE p1//
++-----+----------------------------------------+
+| Pos | Instruction                            |
++-----+----------------------------------------+
+|   0 | set fanta@0 55                         |
+|   1 | stmt 9 "DROP TABLE t2"                 |
+|   2 | stmt 5 "INSERT INTO t3 VALUES (fanta)" |
+|   3 | jump 2                                 |
++-----+----------------------------------------+
+4 rows in set (0.00 sec)
+
+mysql&gt; CREATE FUNCTION test.hello (s CHAR(20))
+       RETURNS CHAR(50) DETERMINISTIC
+       RETURN CONCAT('Hello, ',s,'!');
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; SHOW FUNCTION CODE test.hello;
++-----+---------------------------------------+
+| Pos | Instruction                           |
++-----+---------------------------------------+
+|   0 | freturn 254 concat('Hello, ',s@0,'!') |
++-----+---------------------------------------+
+1 row in set (0.00 sec)</code></pre><p>
+        In this example, the nonexecutable <code class="literal">BEGIN</code> and
+        <code class="literal">END</code> statements have disappeared, and for the
+        <code class="literal">DECLARE
+        <em class="replaceable"><code>variable_name</code></em></code> statement,
+        only the executable part appears (the part where the default is
+        assigned). For each statement that is taken from source, there
+        is a code word <code class="literal">stmt</code> followed by a type (9
+        means <code class="literal">DROP</code>, 5 means
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>, and so on). The final row
+        contains an instruction <code class="literal">jump 2</code>, meaning
+        <code class="literal">GOTO instruction #2</code>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

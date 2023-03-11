@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Optimizing Subqueries</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="optimizing-subqueries"></a>13.2.10.10&nbsp;Optimizing Subqueries</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        Development is ongoing, so no optimization tip is reliable for
+        the long term. The following list provides some interesting
+        tricks that you might want to play with. See also
+        <a class="xref" href="subquery-optimization.html" title="8.2.2&nbsp;Optimizing Subqueries, Derived Tables, and View References">Section&nbsp;8.2.2, “Optimizing Subqueries, Derived Tables, and View References”</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Use subquery clauses that affect the number or order of the
+            rows in the subquery. For example:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1 WHERE t1.column1 IN
+  (SELECT column1 FROM t2 ORDER BY column1);
+SELECT * FROM t1 WHERE t1.column1 IN
+  (SELECT DISTINCT column1 FROM t2);
+SELECT * FROM t1 WHERE EXISTS
+  (SELECT * FROM t2 LIMIT 1);</code></pre></li><li class="listitem"><p>
+            Replace a join with a subquery. For example, try this:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT DISTINCT column1 FROM t1 WHERE t1.column1 IN (
+  SELECT column1 FROM t2);</code></pre><p>
+            Instead of this:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT DISTINCT t1.column1 FROM t1, t2
+  WHERE t1.column1 = t2.column1;</code></pre></li><li class="listitem"><p>
+            Some subqueries can be transformed to joins for
+            compatibility with older versions of MySQL that do not
+            support subqueries. However, in some cases, converting a
+            subquery to a join may improve performance. See
+            <a class="xref" href="rewriting-subqueries.html" title="13.2.10.11&nbsp;Rewriting Subqueries as Joins">Section&nbsp;13.2.10.11, “Rewriting Subqueries as Joins”</a>.
+          </p></li><li class="listitem"><p>
+            Move clauses from outside to inside the subquery. For
+            example, use this query:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1
+  WHERE s1 IN (SELECT s1 FROM t1 UNION ALL SELECT s1 FROM t2);</code></pre><p>
+            Instead of this query:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1
+  WHERE s1 IN (SELECT s1 FROM t1) OR s1 IN (SELECT s1 FROM t2);</code></pre><p>
+            For another example, use this query:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT (SELECT column1 + 5 FROM t1) FROM t2;</code></pre><p>
+            Instead of this query:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT (SELECT column1 FROM t1) + 5 FROM t2;</code></pre></li><li class="listitem"><p>
+            Use a row subquery instead of a correlated subquery. For
+            example, use this query:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1
+  WHERE (column1,column2) IN (SELECT column1,column2 FROM t2);</code></pre><p>
+            Instead of this query:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1
+  WHERE EXISTS (SELECT * FROM t2 WHERE t2.column1=t1.column1
+                AND t2.column2=t1.column2);</code></pre></li><li class="listitem"><p>
+            Use <code class="literal">NOT (a = ANY (...))</code> rather than
+            <code class="literal">a &lt;&gt; ALL (...)</code>.
+          </p></li><li class="listitem"><p>
+            Use <code class="literal">x = ANY (<em class="replaceable"><code>table containing
+            (1,2)</code></em>)</code> rather than <code class="literal">x=1 OR
+            x=2</code>.
+          </p></li><li class="listitem"><p>
+            Use <code class="literal">= ANY</code> rather than
+            <code class="literal">EXISTS</code>.
+          </p></li><li class="listitem"><p>
+            For uncorrelated subqueries that always return one row,
+            <code class="literal">IN</code> is always slower than
+            <code class="literal">=</code>. For example, use this query:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1
+  WHERE t1.<em class="replaceable">col_name</em> = (SELECT a FROM t2 WHERE b = <em class="replaceable">some_const</em>);</code></pre><p>
+            Instead of this query:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1
+  WHERE t1.<em class="replaceable">col_name</em> IN (SELECT a FROM t2 WHERE b = <em class="replaceable">some_const</em>);</code></pre></li></ul>
+</div>
+<p>
+        These tricks might cause programs to go faster or slower. Using
+        MySQL facilities like the
+        <a class="link" href="information-functions.html#function_benchmark"><code class="literal">BENCHMARK()</code></a> function, you can get
+        an idea about what helps in your own situation. See
+        <a class="xref" href="information-functions.html" title="12.16&nbsp;Information Functions">Section&nbsp;12.16, “Information Functions”</a>.
+      </p><p>
+        Some optimizations that MySQL itself makes are:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            MySQL executes uncorrelated subqueries only once. Use
+            <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> to make sure that a
+            given subquery really is uncorrelated.
+          </p></li><li class="listitem"><p>
+            MySQL rewrites <code class="literal">IN</code>,
+            <code class="literal">ALL</code>, <code class="literal">ANY</code>, and
+            <code class="literal">SOME</code> subqueries in an attempt to take
+            advantage of the possibility that the select-list columns in
+            the subquery are indexed.
+          </p></li><li class="listitem"><p>
+            MySQL replaces subqueries of the following form with an
+            index-lookup function, which
+            <a class="link" href="explain.html" title="13.8.2&nbsp;EXPLAIN Statement"><code class="literal">EXPLAIN</code></a> describes as a
+            special join type
+            (<a class="link" href="explain-output.html#jointype_unique_subquery"><code class="literal">unique_subquery</code></a> or
+            <a class="link" href="explain-output.html#jointype_index_subquery"><code class="literal">index_subquery</code></a>):
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">... IN (SELECT <em class="replaceable">indexed_column</em> FROM <em class="replaceable">single_table</em> ...)</code></pre></li><li class="listitem"><p>
+            MySQL enhances expressions of the following form with an
+            expression involving <a class="link" href="aggregate-functions.html#function_min"><code class="literal">MIN()</code></a> or
+            <a class="link" href="aggregate-functions.html#function_max"><code class="literal">MAX()</code></a>, unless
+            <code class="literal">NULL</code> values or empty sets are involved:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql"><em class="replaceable">value</em> {ALL|ANY|SOME} {&gt; | &lt; | &gt;= | &lt;=} (<em class="replaceable">uncorrelated subquery</em>)</code></pre><p>
+            For example, this <code class="literal">WHERE</code> clause:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">WHERE 5 &gt; ALL (SELECT x FROM t)</code></pre><p>
+            might be treated by the optimizer like this:
+          </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">WHERE 5 &gt; (SELECT MAX(x) FROM t)</code></pre></li></ul>
+</div>
+<p>
+        See also
+        <a class="ulink" href="https://dev.mysql.com/doc/internals/en/transformations.html" target="_top">MySQL
+        Internals: How MySQL Transforms Subqueries</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

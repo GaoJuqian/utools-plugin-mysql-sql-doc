@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>ALTER INSTANCE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="alter-instance"></a>13.1.4&nbsp;ALTER INSTANCE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852585643872"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER INSTANCE ROTATE INNODB MASTER KEY</code></pre><p>
+      <code class="literal">ALTER INSTANCE</code>, introduced in MySQL 5.7.11,
+      defines actions applicable to a MySQL server instance. The
+      statement supports these actions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a name="alter-instance-rotate-innodb-master-key"></a>
+          <code class="literal">ALTER INSTANCE ROTATE INNODB MASTER KEY</code>
+        </p><p>
+          This action rotates the master encryption key used for
+          <code class="literal">InnoDB</code> tablespace encryption. Key rotation
+          requires the <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege.
+          To perform this action, a keyring plugin must be installed and
+          configured. For instructions, see <a class="xref" href="keyring.html" title="6.4.4&nbsp;The MySQL Keyring">Section&nbsp;6.4.4, “The MySQL Keyring”</a>.
+        </p><p>
+          <code class="literal">ALTER INSTANCE ROTATE INNODB MASTER KEY</code>
+          supports concurrent DML. However, it cannot be run
+          concurrently with
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE ...
+          ENCRYPTION</code></a> or
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE ...
+          ENCRYPTION</code></a> operations, and locks are taken to
+          prevent conflicts that could arise from concurrent execution
+          of these statements. If one of the conflicting statements is
+          running, it must complete before another can proceed.
+        </p><p>
+          <code class="literal">ALTER INSTANCE</code> actions are written to the
+          binary log so that they can be executed on replicated servers.
+        </p><p>
+          For additional <code class="literal">ALTER INSTANCE ROTATE INNODB MASTER
+          KEY</code> usage information, see
+          <a class="xref" href="innodb-data-encryption.html" title="14.14&nbsp;InnoDB Data-at-Rest Encryption">Section&nbsp;14.14, “InnoDB Data-at-Rest Encryption”</a>. For information
+          about keyring plugins, see <a class="xref" href="keyring.html" title="6.4.4&nbsp;The MySQL Keyring">Section&nbsp;6.4.4, “The MySQL Keyring”</a>.
+</p></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

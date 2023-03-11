@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DEALLOCATE PREPARE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="deallocate-prepare"></a>13.5.3&nbsp;DEALLOCATE PREPARE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575415456"></a><a class="indexterm" name="idm45852575414416"></a><a class="indexterm" name="idm45852575413344"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">{DEALLOCATE | DROP} PREPARE <em class="replaceable">stmt_name</em></code></pre><p>
+      To deallocate a prepared statement produced with
+      <a class="link" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement"><code class="literal">PREPARE</code></a>, use a
+      <a class="link" href="deallocate-prepare.html" title="13.5.3&nbsp;DEALLOCATE PREPARE Statement"><code class="literal">DEALLOCATE PREPARE</code></a> statement that
+      refers to the prepared statement name. Attempting to execute a
+      prepared statement after deallocating it results in an error. If
+      too many prepared statements are created and not deallocated by
+      either the <code class="literal">DEALLOCATE PREPARE</code> statement or the
+      end of the session, you might encounter the upper limit enforced
+      by the <a class="link" href="server-system-variables.html#sysvar_max_prepared_stmt_count"><code class="literal">max_prepared_stmt_count</code></a>
+      system variable.
+    </p><p>
+      For examples, see <a class="xref" href="sql-prepared-statements.html" title="13.5&nbsp;Prepared Statements">Section&nbsp;13.5, “Prepared Statements”</a>.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE INDEX StatementColumn Prefix Key PartsUnique IndexesFull-Text IndexesSpatial IndexesIndex OptionsTable Copying and Locking Options</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="create-index"></a>13.1.14&nbsp;CREATE INDEX Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852584204512"></a><a class="indexterm" name="idm45852584203440"></a><a class="indexterm" name="idm45852584202368"></a><a class="indexterm" name="idm45852584200880"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE [UNIQUE | FULLTEXT | SPATIAL] INDEX <em class="replaceable">index_name</em>
+    [<em class="replaceable">index_type</em>]
+    ON <em class="replaceable">tbl_name</em> (<em class="replaceable">key_part</em>,...)
+    [<em class="replaceable">index_option</em>]
+    [<em class="replaceable">algorithm_option</em> | <em class="replaceable">lock_option</em>] ...
+
+<em class="replaceable">key_part</em>:
+    <em class="replaceable">col_name</em> [(<em class="replaceable">length</em>)] [ASC | DESC]
+
+<em class="replaceable">index_option</em>: {
+    KEY_BLOCK_SIZE [=] <em class="replaceable">value</em>
+  | <em class="replaceable">index_type</em>
+  | WITH PARSER <em class="replaceable">parser_name</em>
+  | COMMENT '<em class="replaceable">string</em>'
+}
+
+<em class="replaceable">index_type</em>:
+    USING {BTREE | HASH}
+
+<em class="replaceable">algorithm_option</em>:
+    ALGORITHM [=] {DEFAULT | INPLACE | COPY}
+
+<em class="replaceable">lock_option</em>:
+    LOCK [=] {DEFAULT | NONE | SHARED | EXCLUSIVE}</code></pre><p>
+      Normally, you create all indexes on a table at the time the table
+      itself is created with <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+      TABLE</code></a>. See <a class="xref" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement">Section&nbsp;13.1.18, “CREATE TABLE Statement”</a>. This
+      guideline is especially important for
+      <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tables, where the primary key
+      determines the physical layout of rows in the data file.
+      <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE INDEX</code></a> enables you to add
+      indexes to existing tables.
+    </p><p>
+      <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE INDEX</code></a> is mapped to an
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement to create
+      indexes. See <a class="xref" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement">Section&nbsp;13.1.8, “ALTER TABLE Statement”</a>.
+      <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE INDEX</code></a> cannot be used to
+      create a <code class="literal">PRIMARY KEY</code>; use
+      <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> instead. For more
+      information about indexes, see <a class="xref" href="mysql-indexes.html" title="8.3.1&nbsp;How MySQL Uses Indexes">Section&nbsp;8.3.1, “How MySQL Uses Indexes”</a>.
+    </p><p>
+      <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> supports secondary indexes on
+      virtual columns. For more information, see
+      <a class="xref" href="create-table-secondary-indexes.html" title="13.1.18.8&nbsp;Secondary Indexes and Generated Columns">Section&nbsp;13.1.18.8, “Secondary Indexes and Generated Columns”</a>.
+    </p><p>
+      When the <a class="link" href="innodb-parameters.html#sysvar_innodb_stats_persistent"><code class="literal">innodb_stats_persistent</code></a>
+      setting is enabled, run the <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE
+      TABLE</code></a> statement for an
+      <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> table after creating an index
+      on that table.
+    </p><p>
+      An index specification of the form
+      <code class="literal">(<em class="replaceable"><code>key_part1</code></em>,
+      <em class="replaceable"><code>key_part2</code></em>, ...)</code> creates an
+      index with multiple key parts. Index key values are formed by
+      concatenating the values of the given key parts. For example
+      <code class="literal">(col1, col2, col3)</code> specifies a multiple-column
+      index with index keys consisting of values from
+      <code class="literal">col1</code>, <code class="literal">col2</code>, and
+      <code class="literal">col3</code>.
+    </p><p>
+      A <em class="replaceable"><code>key_part</code></em> specification can end with
+      <code class="literal">ASC</code> or <code class="literal">DESC</code>. These keywords
+      are permitted for future extensions for specifying ascending or
+      descending index value storage. Currently, they are parsed but
+      ignored; index values are always stored in ascending order.
+    </p><p>
+      The following sections describe different aspects of the
+      <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE INDEX</code></a> statement:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="create-index.html#create-index-column-prefixes" title="Column Prefix Key Parts">Column Prefix Key Parts</a></p></li><li class="listitem"><p><a class="xref" href="create-index.html#create-index-unique" title="Unique Indexes">Unique Indexes</a></p></li><li class="listitem"><p><a class="xref" href="create-index.html#create-index-fulltext" title="Full-Text Indexes">Full-Text Indexes</a></p></li><li class="listitem"><p><a class="xref" href="create-index.html#create-index-spatial" title="Spatial Indexes">Spatial Indexes</a></p></li><li class="listitem"><p><a class="xref" href="create-index.html#create-index-options" title="Index Options">Index Options</a></p></li><li class="listitem"><p><a class="xref" href="create-index.html#create-index-copying" title="Table Copying and Locking Options">Table Copying and Locking Options</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h4 class="title"><a name="create-index-column-prefixes"></a>Column Prefix Key Parts</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        For string columns, indexes can be created that use only the
+        leading part of column values, using
+        <code class="literal"><em class="replaceable"><code>col_name</code></em>(<em class="replaceable"><code>length</code></em>)</code>
+        syntax to specify an index prefix length:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Prefixes can be specified for
+            <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+            <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>,
+            <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a>, and
+            <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a> key parts.
+          </p></li><li class="listitem"><p>
+            Prefixes <span class="emphasis"><em>must</em></span> be specified for
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> and
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> key parts. Additionally,
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> and
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns can be indexed
+            only for <code class="literal">InnoDB</code>,
+            <code class="literal">MyISAM</code>, and <code class="literal">BLACKHOLE</code>
+            tables.
+          </p><a class="indexterm" name="idm45852584135232"></a><a class="indexterm" name="idm45852584133744"></a><a class="indexterm" name="idm45852584132256"></a><a class="indexterm" name="idm45852584130768"></a></li><li class="listitem"><p>
+            Prefix <span class="emphasis"><em>limits</em></span> are measured in bytes.
+            However, prefix <span class="emphasis"><em>lengths</em></span> for index
+            specifications in <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+            TABLE</code></a>, <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>,
+            and <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE INDEX</code></a> statements
+            are interpreted as number of characters for nonbinary string
+            types (<a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+            <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>,
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a>) and number of bytes for
+            binary string types (<a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a>,
+            <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a>,
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>). Take this into account
+            when specifying a prefix length for a nonbinary string
+            column that uses a multibyte character set.
+          </p><p>
+            Prefix support and lengths of prefixes (where supported) are
+            storage engine dependent. For example, a prefix can be up to
+            767 bytes long for <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a>
+            tables or 3072 bytes if the
+            <a class="link" href="innodb-parameters.html#sysvar_innodb_large_prefix"><code class="literal">innodb_large_prefix</code></a> option
+            is enabled. For <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> tables,
+            the prefix length limit is 1000 bytes. The
+            <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage engine does not
+            support prefixes (see
+            <a class="xref" href="mysql-cluster-limitations-unsupported.html" title="21.2.7.6&nbsp;Unsupported or Missing Features in NDB Cluster">Section&nbsp;21.2.7.6, “Unsupported or Missing Features in NDB Cluster”</a>).
+</p></li></ul>
+</div>
+<p>
+        As of MySQL 5.7.17, if a specified index prefix exceeds the
+        maximum column data type size, <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE
+        INDEX</code></a> handles the index as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            For a nonunique index, either an error occurs (if strict SQL
+            mode is enabled), or the index length is reduced to lie
+            within the maximum column data type size and a warning is
+            produced (if strict SQL mode is not enabled).
+          </p></li><li class="listitem"><p>
+            For a unique index, an error occurs regardless of SQL mode
+            because reducing the index length might enable insertion of
+            nonunique entries that do not meet the specified uniqueness
+            requirement.
+</p></li></ul>
+</div>
+<p>
+        The statement shown here creates an index using the first 10
+        characters of the <code class="literal">name</code> column (assuming that
+        <code class="literal">name</code> has a nonbinary string type):
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE INDEX part_of_name ON customer (name(10));</code></pre><p>
+        If names in the column usually differ in the first 10
+        characters, lookups performed using this index should not be
+        much slower than using an index created from the entire
+        <code class="literal">name</code> column. Also, using column prefixes for
+        indexes can make the index file much smaller, which could save a
+        lot of disk space and might also speed up
+        <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> operations.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="create-index-unique"></a>Unique Indexes</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        A <code class="literal">UNIQUE</code> index creates a constraint such that
+        all values in the index must be distinct. An error occurs if you
+        try to add a new row with a key value that matches an existing
+        row. If you specify a prefix value for a column in a
+        <code class="literal">UNIQUE</code> index, the column values must be
+        unique within the prefix length. A <code class="literal">UNIQUE</code>
+        index permits multiple <code class="literal">NULL</code> values for
+        columns that can contain <code class="literal">NULL</code>.
+      </p><a class="indexterm" name="idm45852584093856"></a><p>
+        If a table has a <code class="literal">PRIMARY KEY</code> or
+        <code class="literal">UNIQUE NOT NULL</code> index that consists of a
+        single column that has an integer type, you can use
+        <code class="literal">_rowid</code> to refer to the indexed column in
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements, as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">_rowid</code> refers to the <code class="literal">PRIMARY
+            KEY</code> column if there is a <code class="literal">PRIMARY
+            KEY</code> consisting of a single integer column. If
+            there is a <code class="literal">PRIMARY KEY</code> but it does not
+            consist of a single integer column,
+            <code class="literal">_rowid</code> cannot be used.
+          </p></li><li class="listitem"><p>
+            Otherwise, <code class="literal">_rowid</code> refers to the column in
+            the first <code class="literal">UNIQUE NOT NULL</code> index if that
+            index consists of a single integer column. If the first
+            <code class="literal">UNIQUE NOT NULL</code> index does not consist of
+            a single integer column, <code class="literal">_rowid</code> cannot be
+            used.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="create-index-fulltext"></a>Full-Text Indexes</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        <code class="literal">FULLTEXT</code> indexes are supported only for
+        <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> and
+        <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> tables and can include only
+        <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+        <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>, and
+        <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns. Indexing always
+        happens over the entire column; column prefix indexing is not
+        supported and any prefix length is ignored if specified. See
+        <a class="xref" href="fulltext-search.html" title="12.10&nbsp;Full-Text Search Functions">Section&nbsp;12.10, “Full-Text Search Functions”</a>, for details of operation.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="create-index-spatial"></a>Spatial Indexes</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        The <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a>,
+        <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a>,
+        <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a>, and
+        <a class="link" href="archive-storage-engine.html" title="15.5&nbsp;The ARCHIVE Storage Engine"><code class="literal">ARCHIVE</code></a> storage engines support
+        spatial columns such as <a class="link" href="spatial-type-overview.html" title="11.4.1&nbsp;Spatial Data Types"><code class="literal">POINT</code></a> and
+        <a class="link" href="spatial-type-overview.html" title="11.4.1&nbsp;Spatial Data Types"><code class="literal">GEOMETRY</code></a>.
+        (<a class="xref" href="spatial-types.html" title="11.4&nbsp;Spatial Data Types">Section&nbsp;11.4, “Spatial Data Types”</a>, describes the spatial data
+        types.) However, support for spatial column indexing varies
+        among engines. Spatial and nonspatial indexes on spatial columns
+        are available according to the following rules.
+      </p><p>
+        Spatial indexes on spatial columns (created using
+        <code class="literal">SPATIAL INDEX</code>) have these characteristics:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Available only for <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> and
+            <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tables. Specifying
+            <code class="literal">SPATIAL INDEX</code> for other storage engines
+            results in an error.
+          </p></li><li class="listitem"><p>
+            Indexed columns must be <code class="literal">NOT NULL</code>.
+          </p></li><li class="listitem"><p>
+            Column prefix lengths are prohibited. The full width of each
+            column is indexed.
+</p></li></ul>
+</div>
+<p>
+        Nonspatial indexes on spatial columns (created with
+        <code class="literal">INDEX</code>, <code class="literal">UNIQUE</code>, or
+        <code class="literal">PRIMARY KEY</code>) have these characteristics:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Permitted for any storage engine that supports spatial
+            columns except <a class="link" href="archive-storage-engine.html" title="15.5&nbsp;The ARCHIVE Storage Engine"><code class="literal">ARCHIVE</code></a>.
+          </p></li><li class="listitem"><p>
+            Columns can be <code class="literal">NULL</code> unless the index is a
+            primary key.
+          </p></li><li class="listitem"><p>
+            For each spatial column in a non-<code class="literal">SPATIAL</code>
+            index except <a class="link" href="spatial-type-overview.html" title="11.4.1&nbsp;Spatial Data Types"><code class="literal">POINT</code></a> columns, a
+            column prefix length must be specified. (This is the same
+            requirement as for indexed
+            <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> columns.) The prefix
+            length is given in bytes.
+          </p></li><li class="listitem"><p>
+            The index type for a non-<code class="literal">SPATIAL</code> index
+            depends on the storage engine. Currently, B-tree is used.
+          </p></li><li class="listitem"><p>
+            Permitted for a column that can have <code class="literal">NULL</code>
+            values only for <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a>,
+            <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a>, and
+            <a class="link" href="memory-storage-engine.html" title="15.3&nbsp;The MEMORY Storage Engine"><code class="literal">MEMORY</code></a> tables.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="create-index-options"></a>Index Options</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        Following the key part list, index options can be given. An
+        <em class="replaceable"><code>index_option</code></em> value can be any of the
+        following:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">KEY_BLOCK_SIZE [=]
+            <em class="replaceable"><code>value</code></em></code>
+          </p><p>
+            For <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> tables,
+            <code class="literal">KEY_BLOCK_SIZE</code> optionally specifies the
+            size in bytes to use for index key blocks. The value is
+            treated as a hint; a different size could be used if
+            necessary. A <code class="literal">KEY_BLOCK_SIZE</code> value
+            specified for an individual index definition overrides a
+            table-level <code class="literal">KEY_BLOCK_SIZE</code> value.
+          </p><p>
+            <code class="literal">KEY_BLOCK_SIZE</code> is not supported at the
+            index level for <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tables.
+            See <a class="xref" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement">Section&nbsp;13.1.18, “CREATE TABLE Statement”</a>.
+          </p></li><li class="listitem"><p>
+            <em class="replaceable"><code>index_type</code></em>
+          </p><p>
+            Some storage engines permit you to specify an index type
+            when creating an index. For example:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE lookup (id INT) ENGINE = MEMORY;
+CREATE INDEX id_index ON lookup (id) USING BTREE;</code></pre><p>
+            <a class="xref" href="create-index.html#create-index-storage-engine-index-types" title="Table&nbsp;13.1&nbsp;Index Types Per Storage Engine">Table&nbsp;13.1, “Index Types Per Storage Engine”</a>
+            shows the permissible index type values supported by
+            different storage engines. Where multiple index types are
+            listed, the first one is the default when no index type
+            specifier is given. Storage engines not listed in the table
+            do not support an <em class="replaceable"><code>index_type</code></em>
+            clause in index definitions.
+</p>
+<div class="table">
+<a name="create-index-storage-engine-index-types"></a><p class="title"><b>Table&nbsp;13.1&nbsp;Index Types Per Storage Engine</b></p>
+<div class="table-contents">
+<table summary="Permissible index types by storage engine."><colgroup><col style="width: 20%"><col style="width: 50%"></colgroup><thead><tr>
+                <th>Storage Engine</th>
+                <th>Permissible Index Types</th>
+              </tr></thead><tbody><tr>
+                <td><a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a></td>
+                <td><code class="literal">BTREE</code></td>
+              </tr><tr>
+                <td><a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a></td>
+                <td><code class="literal">BTREE</code></td>
+              </tr><tr>
+                <td><a class="link" href="memory-storage-engine.html" title="15.3&nbsp;The MEMORY Storage Engine"><code class="literal">MEMORY</code></a>/<code class="literal">HEAP</code></td>
+                <td><code class="literal">HASH</code>, <code class="literal">BTREE</code></td>
+              </tr><tr>
+                <td><a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a></td>
+                <td><code class="literal">HASH</code>, <code class="literal">BTREE</code> (see note in text)</td>
+</tr></tbody></table>
+</div>
+
+</div>
+<br class="table-break"><p>
+            The <em class="replaceable"><code>index_type</code></em> clause cannot be
+            used for <code class="literal">FULLTEXT INDEX</code> or
+            <code class="literal">SPATIAL INDEX</code> specifications. Full-text
+            index implementation is storage engine dependent. Spatial
+            indexes are implemented as R-tree indexes.
+          </p><p>
+            <code class="literal">BTREE</code> indexes are implemented by the
+            <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage engine as T-tree
+            indexes.
+</p><a class="indexterm" name="idm45852583991360"></a><a class="indexterm" name="idm45852583989872"></a>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              For indexes on <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> table
+              columns, the <code class="literal">USING</code> option can be
+              specified only for a unique index or primary key.
+              <code class="literal">USING HASH</code> prevents the creation of an
+              ordered index; otherwise, creating a unique index or
+              primary key on an <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> table
+              automatically results in the creation of both an ordered
+              index and a hash index, each of which indexes the same set
+              of columns.
+            </p><p>
+              For unique indexes that include one or more
+              <code class="literal">NULL</code> columns of an
+              <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> table, the hash index can
+              be used only to look up literal values, which means that
+              <code class="literal">IS [NOT] NULL</code> conditions require a full
+              scan of the table. One workaround is to make sure that a
+              unique index using one or more <code class="literal">NULL</code>
+              columns on such a table is always created in such a way
+              that it includes the ordered index; that is, avoid
+              employing <code class="literal">USING HASH</code> when creating the
+              index.
+</p>
+</div>
+<p>
+            If you specify an index type that is not valid for a given
+            storage engine, but another index type is available that the
+            engine can use without affecting query results, the engine
+            uses the available type. The parser recognizes
+            <code class="literal">RTREE</code> as a type name, but currently this
+            cannot be specified for any storage engine.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+              Use of the <em class="replaceable"><code>index_type</code></em> option
+              before the <code class="literal">ON
+              <em class="replaceable"><code>tbl_name</code></em></code> clause is
+              deprecated; you should expect support for use of the
+              option in this position to be removed in a future MySQL
+              release. If an <em class="replaceable"><code>index_type</code></em>
+              option is given in both the earlier and later positions,
+              the final option applies.
+</p>
+</div>
+<p>
+            <code class="literal">TYPE <em class="replaceable"><code>type_name</code></em></code>
+            is recognized as a synonym for <code class="literal">USING
+            <em class="replaceable"><code>type_name</code></em></code>. However,
+            <code class="literal">USING</code> is the preferred form.
+          </p><p>
+            The following tables show index characteristics for the
+            storage engines that support the
+            <em class="replaceable"><code>index_type</code></em> option.
+</p>
+<div class="table">
+<a name="innodb-storage-engine-index-characteristics"></a><p class="title"><b>Table&nbsp;13.2&nbsp;InnoDB Storage Engine Index Characteristics</b></p>
+<div class="table-contents">
+<table summary="Index characteristics of the InnoDB storage engine."><colgroup><col style="width: 15%"><col style="width: 10%"><col style="width: 15%"><col style="width: 20%"><col style="width: 20%"><col style="width: 20%"></colgroup><thead><tr>
+                <th scope="col">Index Class</th>
+                <th scope="col">Index Type</th>
+                <th scope="col">Stores NULL VALUES</th>
+                <th scope="col">Permits Multiple NULL Values</th>
+                <th scope="col">IS NULL Scan Type</th>
+                <th scope="col">IS NOT NULL Scan Type</th>
+              </tr></thead><tbody><tr>
+                <th scope="row">Primary key</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>No</td>
+                <td>No</td>
+                <td>N/A</td>
+                <td>N/A</td>
+              </tr><tr>
+                <th scope="row">Unique</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Index</td>
+                <td>Index</td>
+              </tr><tr>
+                <th scope="row">Key</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Index</td>
+                <td>Index</td>
+              </tr><tr>
+                <th scope="row"><code class="literal">FULLTEXT</code></th>
+                <td>N/A</td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Table</td>
+                <td>Table</td>
+              </tr><tr>
+                <th scope="row"><code class="literal">SPATIAL</code></th>
+                <td>N/A</td>
+                <td>No</td>
+                <td>No</td>
+                <td>N/A</td>
+                <td>N/A</td>
+</tr></tbody></table>
+</div>
+
+</div>
+<br class="table-break">
+<div class="table">
+<a name="myisam-storage-engine-index-characteristics"></a><p class="title"><b>Table&nbsp;13.3&nbsp;MyISAM Storage Engine Index Characteristics</b></p>
+<div class="table-contents">
+<table summary="Index characteristics of the MyISAM storage engine."><colgroup><col style="width: 15%"><col style="width: 10%"><col style="width: 15%"><col style="width: 20%"><col style="width: 20%"><col style="width: 20%"></colgroup><thead><tr>
+                <th scope="col">Index Class</th>
+                <th scope="col">Index Type</th>
+                <th scope="col">Stores NULL VALUES</th>
+                <th scope="col">Permits Multiple NULL Values</th>
+                <th scope="col">IS NULL Scan Type</th>
+                <th scope="col">IS NOT NULL Scan Type</th>
+              </tr></thead><tbody><tr>
+                <th scope="row">Primary key</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>No</td>
+                <td>No</td>
+                <td>N/A</td>
+                <td>N/A</td>
+              </tr><tr>
+                <th scope="row">Unique</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Index</td>
+                <td>Index</td>
+              </tr><tr>
+                <th scope="row">Key</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Index</td>
+                <td>Index</td>
+              </tr><tr>
+                <th scope="row"><code class="literal">FULLTEXT</code></th>
+                <td>N/A</td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Table</td>
+                <td>Table</td>
+              </tr><tr>
+                <th scope="row"><code class="literal">SPATIAL</code></th>
+                <td>N/A</td>
+                <td>No</td>
+                <td>No</td>
+                <td>N/A</td>
+                <td>N/A</td>
+</tr></tbody></table>
+</div>
+
+</div>
+<br class="table-break">
+<div class="table">
+<a name="memory-storage-engine-index-characteristics"></a><p class="title"><b>Table&nbsp;13.4&nbsp;MEMORY Storage Engine Index Characteristics</b></p>
+<div class="table-contents">
+<table summary="Index characteristics of the Memory storage engine."><colgroup><col style="width: 15%"><col style="width: 10%"><col style="width: 15%"><col style="width: 20%"><col style="width: 20%"><col style="width: 20%"></colgroup><thead><tr>
+                <th scope="col">Index Class</th>
+                <th scope="col">Index Type</th>
+                <th scope="col">Stores NULL VALUES</th>
+                <th scope="col">Permits Multiple NULL Values</th>
+                <th scope="col">IS NULL Scan Type</th>
+                <th scope="col">IS NOT NULL Scan Type</th>
+              </tr></thead><tbody><tr>
+                <th scope="row">Primary key</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>No</td>
+                <td>No</td>
+                <td>N/A</td>
+                <td>N/A</td>
+              </tr><tr>
+                <th scope="row">Unique</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Index</td>
+                <td>Index</td>
+              </tr><tr>
+                <th scope="row">Key</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Index</td>
+                <td>Index</td>
+              </tr><tr>
+                <th scope="row">Primary key</th>
+                <td><code class="literal">HASH</code></td>
+                <td>No</td>
+                <td>No</td>
+                <td>N/A</td>
+                <td>N/A</td>
+              </tr><tr>
+                <th scope="row">Unique</th>
+                <td><code class="literal">HASH</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Index</td>
+                <td>Index</td>
+              </tr><tr>
+                <th scope="row">Key</th>
+                <td><code class="literal">HASH</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Index</td>
+                <td>Index</td>
+</tr></tbody></table>
+</div>
+
+</div>
+<br class="table-break">
+<div class="table">
+<a name="ndb-storage-engine-index-characteristics"></a><p class="title"><b>Table&nbsp;13.5&nbsp;NDB Storage Engine Index Characteristics</b></p>
+<div class="table-contents">
+<table summary="Index characteristics of the NDB storage engine."><colgroup><col style="width: 15%"><col style="width: 10%"><col style="width: 15%"><col style="width: 20%"><col style="width: 20%"><col style="width: 20%"></colgroup><thead><tr>
+                <th scope="col">Index Class</th>
+                <th scope="col">Index Type</th>
+                <th scope="col">Stores NULL VALUES</th>
+                <th scope="col">Permits Multiple NULL Values</th>
+                <th scope="col">IS NULL Scan Type</th>
+                <th scope="col">IS NOT NULL Scan Type</th>
+              </tr></thead><tbody><tr>
+                <th scope="row">Primary key</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>No</td>
+                <td>No</td>
+                <td>Index</td>
+                <td>Index</td>
+              </tr><tr>
+                <th scope="row">Unique</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Index</td>
+                <td>Index</td>
+              </tr><tr>
+                <th scope="row">Key</th>
+                <td><code class="literal">BTREE</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Index</td>
+                <td>Index</td>
+              </tr><tr>
+                <th scope="row">Primary key</th>
+                <td><code class="literal">HASH</code></td>
+                <td>No</td>
+                <td>No</td>
+                <td>Table (see note 1)</td>
+                <td>Table (see note 1)</td>
+              </tr><tr>
+                <th scope="row">Unique</th>
+                <td><code class="literal">HASH</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Table (see note 1)</td>
+                <td>Table (see note 1)</td>
+              </tr><tr>
+                <th scope="row">Key</th>
+                <td><code class="literal">HASH</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Table (see note 1)</td>
+                <td>Table (see note 1)</td>
+</tr></tbody></table>
+</div>
+
+</div>
+<br class="table-break"><p>
+            Table note:
+          </p><p>
+            1. If <code class="literal">USING HASH</code> is specified that
+            prevents creation of an implicit ordered index.
+          </p></li><li class="listitem"><p>
+            <code class="literal">WITH PARSER
+            <em class="replaceable"><code>parser_name</code></em></code>
+          </p><p>
+            This option can be used only with
+            <code class="literal">FULLTEXT</code> indexes. It associates a parser
+            plugin with the index if full-text indexing and searching
+            operations need special handling.
+            <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> and
+            <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> support full-text parser
+            plugins. If you have a <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a>
+            table with an associated full-text parser plugin, you can
+            convert the table to <code class="literal">InnoDB</code> using
+            <code class="literal">ALTER TABLE</code>. See
+            <a class="ulink" href="https://dev.mysql.com/doc/extending-mysql/5.7/en/plugin-types.html#full-text-plugin-type" target="_top">Full-Text Parser Plugins</a> and
+            <a class="ulink" href="https://dev.mysql.com/doc/extending-mysql/5.7/en/writing-full-text-plugins.html" target="_top">Writing Full-Text Parser Plugins</a> for more
+            information.
+          </p></li><li class="listitem"><p>
+            <code class="literal">COMMENT
+            '<em class="replaceable"><code>string</code></em>'</code>
+          </p><p>
+            Index definitions can include an optional comment of up to
+            1024 characters.
+          </p><p>
+            The
+            <a class="link" href="index-page-merge-threshold.html" title="14.8.12&nbsp;Configuring the Merge Threshold for Index Pages"><code class="literal">MERGE_THRESHOLD</code></a>
+            for index pages can be configured for individual indexes
+            using the <em class="replaceable"><code>index_option</code></em>
+            <code class="literal">COMMENT</code> clause of the
+            <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE INDEX</code></a> statement. For
+            example:
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (id INT);
+CREATE INDEX id_index ON t1 (id) COMMENT 'MERGE_THRESHOLD=40';</code></pre><p>
+            If the page-full percentage for an index page falls below
+            the <code class="literal">MERGE_THRESHOLD</code> value when a row is
+            deleted or when a row is shortened by an update operation,
+            <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> attempts to merge the
+            index page with a neighboring index page. The default
+            <code class="literal">MERGE_THRESHOLD</code> value is 50, which is the
+            previously hardcoded value.
+          </p><p>
+            <code class="literal">MERGE_THRESHOLD</code> can also be defined at
+            the index level and table level using
+            <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> and
+            <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statements. For
+            more information, see
+            <a class="xref" href="index-page-merge-threshold.html" title="14.8.12&nbsp;Configuring the Merge Threshold for Index Pages">Section&nbsp;14.8.12, “Configuring the Merge Threshold for Index Pages”</a>.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h4 class="title"><a name="create-index-copying"></a>Table Copying and Locking Options</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        <code class="literal">ALGORITHM</code> and <code class="literal">LOCK</code> clauses
+        may be given to influence the table copying method and level of
+        concurrency for reading and writing the table while its indexes
+        are being modified. They have the same meaning as for the
+        <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement. For more
+        information, see <a class="xref" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement">Section&nbsp;13.1.8, “ALTER TABLE Statement”</a>
+      </p><p>
+        NDB Cluster formerly supported online <code class="literal">CREATE
+        INDEX</code> operations using an alternative syntax that is
+        no longer supported. NDB Cluster now supports online operations
+        using the same <code class="literal">ALGORITHM=INPLACE</code> syntax used
+        with the standard MySQL Server. See
+        <a class="xref" href="mysql-cluster-online-operations.html" title="21.6.12&nbsp;Online Operations with ALTER TABLE in NDB Cluster">Section&nbsp;21.6.12, “Online Operations with ALTER TABLE in NDB Cluster”</a>, for more
+        information.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

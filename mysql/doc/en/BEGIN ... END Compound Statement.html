@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>BEGIN ... END Compound Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="begin-end"></a>13.6.1&nbsp;BEGIN ... END Compound Statement</h3>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852575388400"></a><a class="indexterm" name="idm45852575387360"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">[<em class="replaceable">begin_label</em>:] BEGIN
+    [<em class="replaceable">statement_list</em>]
+END [<em class="replaceable">end_label</em>]</code></pre><p>
+      <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ... END</code></a>
+      syntax is used for writing compound statements, which can appear
+      within stored programs (stored procedures and functions, triggers,
+      and events). A compound statement can contain multiple statements,
+      enclosed by the <code class="literal">BEGIN</code> and
+      <code class="literal">END</code> keywords.
+      <em class="replaceable"><code>statement_list</code></em> represents a list of one
+      or more statements, each terminated by a semicolon
+      (<code class="literal">;</code>) statement delimiter. The
+      <em class="replaceable"><code>statement_list</code></em> itself is optional, so
+      the empty compound statement (<code class="literal">BEGIN END</code>) is
+      legal.
+    </p><p>
+      <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ... END</code></a>
+      blocks can be nested.
+    </p><p>
+      Use of multiple statements requires that a client is able to send
+      statement strings containing the <code class="literal">;</code> statement
+      delimiter. In the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> command-line client,
+      this is handled with the <code class="literal">delimiter</code> command.
+      Changing the <code class="literal">;</code> end-of-statement delimiter (for
+      example, to <code class="literal">//</code>) permit <code class="literal">;</code> to
+      be used in a program body. For an example, see
+      <a class="xref" href="stored-programs-defining.html" title="23.1&nbsp;Defining Stored Programs">Section&nbsp;23.1, “Defining Stored Programs”</a>.
+    </p><p>
+      A <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+      END</code></a> block can be labeled. See
+      <a class="xref" href="statement-labels.html" title="13.6.2&nbsp;Statement Labels">Section&nbsp;13.6.2, “Statement Labels”</a>.
+    </p><p>
+      The optional <code class="literal">[NOT] ATOMIC</code> clause is not
+      supported. This means that no transactional savepoint is set at
+      the start of the instruction block and the
+      <code class="literal">BEGIN</code> clause used in this context has no effect
+      on the current transaction.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        Within all stored programs, the parser treats
+        <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">BEGIN [WORK]</code></a>
+        as the beginning of a
+        <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+        END</code></a> block. To begin a transaction in this context, use
+        <a class="link" href="commit.html" title="13.3.1&nbsp;START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="literal">START
+        TRANSACTION</code></a> instead.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>FOREIGN KEY ConstraintsIdentifiersConditions and RestrictionsReferential ActionsForeign Key Constraint ExamplesAdding Foreign Key ConstraintsDropping Foreign Key ConstraintsForeign Key ChecksForeign Key Definitions and MetadataForeign Key Errors</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="create-table-foreign-keys"></a>13.1.18.5&nbsp;FOREIGN KEY Constraints</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852582042016"></a><a class="indexterm" name="idm45852582040944"></a><p>
+        MySQL supports foreign keys, which permit cross-referencing
+        related data across tables, and foreign key constraints, which
+        help keep the related data consistent.
+      </p><p>
+        A foreign key relationship involves a parent table that holds
+        the initial column values, and a child table with column values
+        that reference the parent column values. A foreign key
+        constraint is defined on the child table.
+      </p><p>
+        The essential syntax for a defining a foreign key constraint in
+        a <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> or
+        <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement includes
+        the following:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">[CONSTRAINT [<em class="replaceable">symbol</em>]] FOREIGN KEY
+    [<em class="replaceable">index_name</em>] (<em class="replaceable">col_name</em>, ...)
+    REFERENCES <em class="replaceable">tbl_name</em> (<em class="replaceable">col_name</em>,...)
+    [ON DELETE <em class="replaceable">reference_option</em>]
+    [ON UPDATE <em class="replaceable">reference_option</em>]
+
+<em class="replaceable">reference_option</em>:
+    RESTRICT | CASCADE | SET NULL | NO ACTION | SET DEFAULT</code></pre><p>
+        Foreign key constraint usage is described under the following
+        topics in this section:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="create-table-foreign-keys.html#foreign-key-identifiers" title="Identifiers">Identifiers</a></p></li><li class="listitem"><p><a class="xref" href="create-table-foreign-keys.html#foreign-key-restrictions" title="Conditions and Restrictions">Conditions and Restrictions</a></p></li><li class="listitem"><p><a class="xref" href="create-table-foreign-keys.html#foreign-key-referential-actions" title="Referential Actions">Referential Actions</a></p></li><li class="listitem"><p><a class="xref" href="create-table-foreign-keys.html#foreign-key-examples" title="Foreign Key Constraint Examples">Foreign Key Constraint Examples</a></p></li><li class="listitem"><p><a class="xref" href="create-table-foreign-keys.html#foreign-key-adding" title="Adding Foreign Key Constraints">Adding Foreign Key Constraints</a></p></li><li class="listitem"><p><a class="xref" href="create-table-foreign-keys.html#foreign-key-dropping" title="Dropping Foreign Key Constraints">Dropping Foreign Key Constraints</a></p></li><li class="listitem"><p><a class="xref" href="create-table-foreign-keys.html#foreign-key-checks" title="Foreign Key Checks">Foreign Key Checks</a></p></li><li class="listitem"><p><a class="xref" href="create-table-foreign-keys.html#foreign-key-metadata" title="Foreign Key Definitions and Metadata">Foreign Key Definitions and Metadata</a></p></li><li class="listitem"><p><a class="xref" href="create-table-foreign-keys.html#foreign-key-errors" title="Foreign Key Errors">Foreign Key Errors</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="foreign-key-identifiers"></a>Identifiers</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          Foreign key constraint naming is governed by the following
+          rules:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              The <code class="literal">CONSTRAINT</code>
+              <em class="replaceable"><code>symbol</code></em> value is used, if
+              defined.
+            </p></li><li class="listitem"><p>
+              If the <code class="literal">CONSTRAINT</code>
+              <em class="replaceable"><code>symbol</code></em> clause is not defined,
+              or a symbol is not included following the
+              <code class="literal">CONSTRAINT</code> keyword:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                  For <code class="literal">InnoDB</code> tables, a constraint
+                  name is generated automatically.
+                </p></li><li class="listitem"><p>
+                  For <code class="literal">NDB</code> tables, the
+                  <code class="literal">FOREIGN KEY</code>
+                  <em class="replaceable"><code>index_name</code></em> value is used,
+                  if defined. Otherwise, a constraint name is generated
+                  automatically.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+              The <code class="literal">CONSTRAINT
+              <em class="replaceable"><code>symbol</code></em></code> value, if
+              defined, must be unique in the database. A duplicate
+              <em class="replaceable"><code>symbol</code></em> results in an error
+              similar to: <span class="errortext">ERROR 1005 (HY000): Can't create
+              table 'test.fk1' (errno: 121)</span>.
+</p></li></ul>
+</div>
+<p>
+          Table and column identifiers in a <code class="literal">FOREIGN KEY ...
+          REFERENCES</code> clause can be quoted within backticks
+          (<code class="literal">`</code>). Alternatively, double quotation marks
+          (<code class="literal">"</code>) can be used if the
+          <a class="link" href="sql-mode.html#sqlmode_ansi_quotes"><code class="literal">ANSI_QUOTES</code></a> SQL mode is
+          enabled. The
+          <a class="link" href="server-system-variables.html#sysvar_lower_case_table_names"><code class="literal">lower_case_table_names</code></a> system
+          variable setting is also taken into account.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="foreign-key-restrictions"></a>Conditions and Restrictions</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          Foreign key constraints are subject to the following
+          conditions and restrictions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Parent and child tables must use the same storage engine,
+              and they cannot be defined as temporary tables.
+            </p></li><li class="listitem"><p>
+              Creating a foreign key constraint requires the
+              <a class="link" href="privileges-provided.html#priv_references"><code class="literal">REFERENCES</code></a> privilege on the
+              parent table.
+            </p></li><li class="listitem"><p>
+              Corresponding columns in the foreign key and the
+              referenced key must have similar data types. <span class="emphasis"><em>The
+              size and sign of fixed precision types such as
+              <a class="link" href="integer-types.html" title="11.1.2&nbsp;Integer Types (Exact Value) - INTEGER, INT, SMALLINT, TINYINT, MEDIUMINT, BIGINT"><code class="literal">INTEGER</code></a> and
+              <a class="link" href="fixed-point-types.html" title="11.1.3&nbsp;Fixed-Point Types (Exact Value) - DECIMAL, NUMERIC"><code class="literal">DECIMAL</code></a> must be the
+              same</em></span>. The length of string types need not be
+              the same. For nonbinary (character) string columns, the
+              character set and collation must be the same.
+            </p></li><li class="listitem"><p>
+              MySQL supports foreign key references between one column
+              and another within a table. (A column cannot have a
+              foreign key reference to itself.) In these cases, a
+              <span class="quote">“<span class="quote">child table record</span>”</span> refers to a dependent
+              record within the same table.
+            </p></li><li class="listitem"><p>
+              MySQL requires indexes on foreign keys and referenced keys
+              so that foreign key checks can be fast and not require a
+              table scan. In the referencing table, there must be an
+              index where the foreign key columns are listed as the
+              <span class="emphasis"><em>first</em></span> columns in the same order. Such
+              an index is created on the referencing table automatically
+              if it does not exist. This index might be silently dropped
+              later if you create another index that can be used to
+              enforce the foreign key constraint.
+              <em class="replaceable"><code>index_name</code></em>, if given, is used
+              as described previously.
+            </p></li><li class="listitem"><p>
+              <code class="literal">InnoDB</code> permits a foreign key to
+              reference any index column or group of columns. However,
+              in the referenced table, there must be an index where the
+              referenced columns are the <span class="emphasis"><em>first</em></span>
+              columns in the same order. Hidden columns that
+              <code class="literal">InnoDB</code> adds to an index are also
+              considered (see <a class="xref" href="innodb-index-types.html" title="14.6.2.1&nbsp;Clustered and Secondary Indexes">Section&nbsp;14.6.2.1, “Clustered and Secondary Indexes”</a>).
+            </p><p>
+              <code class="literal">NDB</code> requires an explicit unique key (or
+              primary key) on any column referenced as a foreign key.
+              <code class="literal">InnoDB</code> does not, which is an extension
+              of standard SQL.
+            </p></li><li class="listitem"><p>
+              Index prefixes on foreign key columns are not supported.
+              Consequently, <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> and
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns cannot be
+              included in a foreign key because indexes on those columns
+              must always include a prefix length.
+            </p></li><li class="listitem"><p>
+              <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> does not currently
+              support foreign keys for tables with user-defined
+              partitioning. This includes both parent and child tables.
+            </p><p>
+              This restriction does not apply for
+              <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables that are
+              partitioned by <code class="literal">KEY</code> or <code class="literal">LINEAR
+              KEY</code> (the only user partitioning types supported
+              by the <code class="literal">NDB</code> storage engine); these may
+              have foreign key references or be the targets of such
+              references.
+            </p></li><li class="listitem"><p>
+              A table in a foreign key relationship cannot be altered to
+              use another storage engine. To change the storage engine,
+              you must drop any foreign key constraints first.
+            </p></li><li class="listitem"><p>
+              A foreign key constraint cannot reference a virtual
+              generated column.
+            </p></li><li class="listitem"><p>
+              Prior to 5.7.16, a foreign key constraint cannot reference
+              a secondary index defined on a virtual generated column.
+</p></li></ul>
+</div>
+<p>
+          For information about how the MySQL implementation of foreign
+          key constraints differs from the SQL standard, see
+          <a class="xref" href="ansi-diff-foreign-keys.html" title="1.6.2.3&nbsp;FOREIGN KEY Constraint Differences">Section&nbsp;1.6.2.3, “FOREIGN KEY Constraint Differences”</a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="foreign-key-referential-actions"></a>Referential Actions</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          When an <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> or
+          <a class="link" href="delete.html" title="13.2.2&nbsp;DELETE Statement"><code class="literal">DELETE</code></a> operation affects a key
+          value in the parent table that has matching rows in the child
+          table, the result depends on the <span class="emphasis"><em>referential
+          action</em></span> specified by <code class="literal">ON UPDATE</code>
+          and <code class="literal">ON DELETE</code> subclauses of the
+          <code class="literal">FOREIGN KEY</code> clause. Referential actions
+          include:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              <code class="literal">CASCADE</code>: Delete or update the row from
+              the parent table and automatically delete or update the
+              matching rows in the child table. Both <code class="literal">ON DELETE
+              CASCADE</code> and <code class="literal">ON UPDATE CASCADE</code>
+              are supported. Between two tables, do not define several
+              <code class="literal">ON UPDATE CASCADE</code> clauses that act on
+              the same column in the parent table or in the child table.
+            </p><p>
+              If a <code class="literal">FOREIGN KEY</code> clause is defined on
+              both tables in a foreign key relationship, making both
+              tables a parent and child, an <code class="literal">ON UPDATE
+              CASCADE</code> or <code class="literal">ON DELETE CASCADE</code>
+              subclause defined for one <code class="literal">FOREIGN KEY</code>
+              clause must be defined for the other in order for
+              cascading operations to succeed. If an <code class="literal">ON UPDATE
+              CASCADE</code> or <code class="literal">ON DELETE CASCADE</code>
+              subclause is only defined for one <code class="literal">FOREIGN
+              KEY</code> clause, cascading operations fail with an
+              error.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+                Cascaded foreign key actions do not activate triggers.
+</p>
+</div>
+</li><li class="listitem"><p>
+              <code class="literal">SET NULL</code>: Delete or update the row from
+              the parent table and set the foreign key column or columns
+              in the child table to <code class="literal">NULL</code>. Both
+              <code class="literal">ON DELETE SET NULL</code> and <code class="literal">ON
+              UPDATE SET NULL</code> clauses are supported.
+            </p><p>
+              If you specify a <code class="literal">SET NULL</code> action,
+              <span class="emphasis"><em>make sure that you have not declared the columns
+              in the child table as <code class="literal">NOT
+              NULL</code></em></span>.
+            </p></li><li class="listitem"><p>
+              <code class="literal">RESTRICT</code>: Rejects the delete or update
+              operation for the parent table. Specifying
+              <code class="literal">RESTRICT</code> (or <code class="literal">NO
+              ACTION</code>) is the same as omitting the <code class="literal">ON
+              DELETE</code> or <code class="literal">ON UPDATE</code> clause.
+            </p></li><li class="listitem"><p>
+              <code class="literal">NO ACTION</code>: A keyword from standard SQL.
+              In MySQL, equivalent to <code class="literal">RESTRICT</code>. The
+              MySQL Server rejects the delete or update operation for
+              the parent table if there is a related foreign key value
+              in the referenced table. Some database systems have
+              deferred checks, and <code class="literal">NO ACTION</code> is a
+              deferred check. In MySQL, foreign key constraints are
+              checked immediately, so <code class="literal">NO ACTION</code> is
+              the same as <code class="literal">RESTRICT</code>.
+            </p></li><li class="listitem"><p>
+              <code class="literal">SET DEFAULT</code>: This action is recognized
+              by the MySQL parser, but both
+              <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> and
+              <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> reject table definitions
+              containing <code class="literal">ON DELETE SET DEFAULT</code> or
+              <code class="literal">ON UPDATE SET DEFAULT</code> clauses.
+</p></li></ul>
+</div>
+<p>
+          For storage engines that support foreign keys, MySQL rejects
+          any <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a> or
+          <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> operation that attempts
+          to create a foreign key value in a child table if there is no
+          matching candidate key value in the parent table.
+        </p><p>
+          For an <code class="literal">ON DELETE</code> or <code class="literal">ON
+          UPDATE</code> that is not specified, the default action is
+          always <code class="literal">RESTRICT</code>.
+        </p><p>
+          For <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables, <code class="literal">ON
+          UPDATE CASCADE</code> is not supported where the reference
+          is to the parent table's primary key.
+        </p><p>
+          As of NDB 7.5.14 and NDB 7.6.10: For
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables, <code class="literal">ON DELETE
+          CASCADE</code> is not supported where the child table
+          contains one or more columns of any of the
+          <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> or
+          <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> types. (Bug #89511, Bug
+          #27484882)
+        </p><p>
+          <code class="literal">InnoDB</code> performs cascading operations using
+          a depth-first search algorithm on the records of the index
+          that corresponds to the foreign key constraint.
+        </p><p>
+          A foreign key constraint on a stored generated column cannot
+          use <code class="literal">CASCADE</code>, <code class="literal">SET NULL</code>,
+          or <code class="literal">SET DEFAULT</code> as <code class="literal">ON
+          UPDATE</code> referential actions, nor can it use
+          <code class="literal">SET NULL</code> or <code class="literal">SET DEFAULT</code>
+          as <code class="literal">ON DELETE</code> referential actions.
+        </p><p>
+          A foreign key constraint on the base column of a stored
+          generated column cannot use <code class="literal">CASCADE</code>,
+          <code class="literal">SET NULL</code>, or <code class="literal">SET DEFAULT</code>
+          as <code class="literal">ON UPDATE</code> or <code class="literal">ON
+          DELETE</code> referential actions.
+        </p><p>
+          In MySQL 5.7.13 and earlier, <code class="literal">InnoDB</code> does
+          not permit defining a foreign key constraint with a cascading
+          referential action on the
+          <a class="link" href="glossary.html#glos_base_column" title="base column">base column</a> of an
+          indexed virtual generated column. This restriction is lifted
+          in MySQL 5.7.14.
+        </p><p>
+          In MySQL 5.7.13 and earlier, <code class="literal">InnoDB</code> does
+          not permit defining cascading referential actions on
+          non-virtual foreign key columns that are explicitly included
+          in a <a class="link" href="glossary.html#glos_virtual_index" title="virtual index">virtual index</a>.
+          This restriction is lifted in MySQL 5.7.14.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="foreign-key-examples"></a>Foreign Key Constraint Examples</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          This simple example relates <code class="literal">parent</code> and
+          <code class="literal">child</code> tables through a single-column
+          foreign key:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE parent (
+    id INT NOT NULL,
+    PRIMARY KEY (id)
+) ENGINE=INNODB;
+
+CREATE TABLE child (
+    id INT,
+    parent_id INT,
+    INDEX par_ind (parent_id),
+    FOREIGN KEY (parent_id)
+        REFERENCES parent(id)
+        ON DELETE CASCADE
+) ENGINE=INNODB;</code></pre><p>
+          This is a more complex example in which a
+          <code class="literal">product_order</code> table has foreign keys for
+          two other tables. One foreign key references a two-column
+          index in the <code class="literal">product</code> table. The other
+          references a single-column index in the
+          <code class="literal">customer</code> table:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE product (
+    category INT NOT NULL, id INT NOT NULL,
+    price DECIMAL,
+    PRIMARY KEY(category, id)
+)   ENGINE=INNODB;
+
+CREATE TABLE customer (
+    id INT NOT NULL,
+    PRIMARY KEY (id)
+)   ENGINE=INNODB;
+
+CREATE TABLE product_order (
+    no INT NOT NULL AUTO_INCREMENT,
+    product_category INT NOT NULL,
+    product_id INT NOT NULL,
+    customer_id INT NOT NULL,
+
+    PRIMARY KEY(no),
+    INDEX (product_category, product_id),
+    INDEX (customer_id),
+
+    FOREIGN KEY (product_category, product_id)
+      REFERENCES product(category, id)
+      ON UPDATE CASCADE ON DELETE RESTRICT,
+
+    FOREIGN KEY (customer_id)
+      REFERENCES customer(id)
+)   ENGINE=INNODB;</code></pre>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="foreign-key-adding"></a>Adding Foreign Key Constraints</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          You can add a foreign key constraint to an existing table
+          using the following <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+          syntax:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER TABLE <em class="replaceable">tbl_name</em>
+    ADD [CONSTRAINT [<em class="replaceable">symbol</em>]] FOREIGN KEY
+    [<em class="replaceable">index_name</em>] (<em class="replaceable">col_name</em>, ...)
+    REFERENCES <em class="replaceable">tbl_name</em> (<em class="replaceable">col_name</em>,...)
+    [ON DELETE <em class="replaceable">reference_option</em>]
+    [ON UPDATE <em class="replaceable">reference_option</em>]</code></pre><p>
+          The foreign key can be self referential (referring to the same
+          table). When you add a foreign key constraint to a table using
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>, <span class="emphasis"><em>remember
+          to first create an index on the column(s) referenced by the
+          foreign key.</em></span>
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="foreign-key-dropping"></a>Dropping Foreign Key Constraints</h5>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852581876768"></a><a class="indexterm" name="idm45852581875728"></a><a class="indexterm" name="idm45852581874240"></a><p>
+          You can drop a foreign key constraint using the following
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> syntax:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">ALTER TABLE <em class="replaceable">tbl_name</em> DROP FOREIGN KEY <em class="replaceable">fk_symbol</em>;</code></pre><p>
+          If the <code class="literal">FOREIGN KEY</code> clause defined a
+          <code class="literal">CONSTRAINT</code> name when you created the
+          constraint, you can refer to that name to drop the foreign key
+          constraint. Otherwise, a constraint name was generated
+          internally, and you must use that value. To determine the
+          foreign key constraint name, use <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW
+          CREATE TABLE</code></a>:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW CREATE TABLE child\G
+*************************** 1. row ***************************
+       Table: child
+Create Table: CREATE TABLE `child` (
+  `id` int(11) DEFAULT NULL,
+  `parent_id` int(11) DEFAULT NULL,
+  KEY `par_ind` (`parent_id`),
+  CONSTRAINT `child_ibfk_1` FOREIGN KEY (`parent_id`)
+  REFERENCES `parent` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+
+mysql&gt; ALTER TABLE child DROP FOREIGN KEY `child_ibfk_1`;</code></pre><p>
+          Adding and dropping a foreign key in the same
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement is
+          supported for
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE ...
+          ALGORITHM=INPLACE</code></a>. It is not supported for
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE ...
+          ALGORITHM=COPY</code></a>.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="foreign-key-checks"></a>Foreign Key Checks</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          In MySQL, InnoDB and NDB tables support checking of foreign
+          key constraints. Foreign key checking is controlled by the
+          <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a> variable,
+          which is enabled by default. Typically, you leave this
+          variable enabled during normal operation to enforce
+          referential integrity. The
+          <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a> variable
+          has the same effect on <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables
+          as it does for <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tables.
+        </p><p>
+          The <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a>
+          variable is dynamic and supports both global and session
+          scopes. For information about using system variables, see
+          <a class="xref" href="using-system-variables.html" title="5.1.8&nbsp;Using System Variables">Section&nbsp;5.1.8, “Using System Variables”</a>.
+        </p><p>
+          Disabling foreign key checking is useful when:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Dropping a table that is referenced by a foreign key
+              constraint. A referenced table can only be dropped after
+              <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a> is
+              disabled. When you drop a table, constraints defined on
+              the table are also dropped.
+            </p></li><li class="listitem"><p>
+              Reloading tables in different order than required by their
+              foreign key relationships. For example,
+              <a class="link" href="mysqldump.html" title="4.5.4&nbsp;mysqldump — A Database Backup Program"><span class="command"><strong>mysqldump</strong></span></a> produces correct definitions
+              of tables in the dump file, including foreign key
+              constraints for child tables. To make it easier to reload
+              dump files for tables with foreign key relationships,
+              <a class="link" href="mysqldump.html" title="4.5.4&nbsp;mysqldump — A Database Backup Program"><span class="command"><strong>mysqldump</strong></span></a> automatically includes a
+              statement in the dump output that disables
+              <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a>. This
+              enables you to import the tables in any order in case the
+              dump file contains tables that are not correctly ordered
+              for foreign keys. Disabling
+              <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a> also
+              speeds up the import operation by avoiding foreign key
+              checks.
+            </p></li><li class="listitem"><p>
+              Executing <a class="link" href="load-data.html" title="13.2.6&nbsp;LOAD DATA Statement"><code class="literal">LOAD DATA</code></a>
+              operations, to avoid foreign key checking.
+            </p></li><li class="listitem"><p>
+              Performing an <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+              operation on a table that has a foreign key relationship.
+</p></li></ul>
+</div>
+<p>
+          When <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a> is
+          disabled, foreign key constraints are ignored, with the
+          following exceptions:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              Recreating a table that was previously dropped returns an
+              error if the table definition does not conform to the
+              foreign key constraints that reference the table. The
+              table must have the correct column names and types. It
+              must also have indexes on the referenced keys. If these
+              requirements are not satisfied, MySQL returns Error 1005
+              that refers to errno: 150 in the error message, which
+              means that a foreign key constraint was not correctly
+              formed.
+            </p></li><li class="listitem"><p>
+              Altering a table returns an error (errno: 150) if a
+              foreign key definition is incorrectly formed for the
+              altered table.
+            </p></li><li class="listitem"><p>
+              Dropping an index required by a foreign key constraint.
+              The foreign key constraint must be removed before dropping
+              the index.
+            </p></li><li class="listitem"><p>
+              Creating a foreign key constraint where a column
+              references a nonmatching column type.
+</p></li></ul>
+</div>
+<p>
+          Disabling <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a>
+          has these additional implications:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              It is permitted to drop a database that contains tables
+              with foreign keys that are referenced by tables outside
+              the database.
+            </p></li><li class="listitem"><p>
+              It is permitted to drop a table with foreign keys
+              referenced by other tables.
+            </p></li><li class="listitem"><p>
+              Enabling
+              <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a> does
+              not trigger a scan of table data, which means that rows
+              added to a table while
+              <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a> is
+              disabled are not checked for consistency when
+              <a class="link" href="server-system-variables.html#sysvar_foreign_key_checks"><code class="literal">foreign_key_checks</code></a> is
+              re-enabled.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="foreign-key-metadata"></a>Foreign Key Definitions and Metadata</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          To view a foreign key definition, use
+          <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE TABLE</code></a>:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW CREATE TABLE child\G
+*************************** 1. row ***************************
+       Table: child
+Create Table: CREATE TABLE `child` (
+  `id` int(11) DEFAULT NULL,
+  `parent_id` int(11) DEFAULT NULL,
+  KEY `par_ind` (`parent_id`),
+  CONSTRAINT `child_ibfk_1` FOREIGN KEY (`parent_id`)
+  REFERENCES `parent` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1</code></pre><p>
+          You can obtain information about foreign keys from the
+          Information Schema
+          <a class="link" href="information-schema-key-column-usage-table.html" title="24.3.12&nbsp;The INFORMATION_SCHEMA KEY_COLUMN_USAGE Table"><code class="literal">KEY_COLUMN_USAGE</code></a> table. An
+          example of a query against this table is shown here:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME
+       FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+       WHERE REFERENCED_TABLE_SCHEMA IS NOT NULL;
++--------------+------------+-------------+-----------------+
+| TABLE_SCHEMA | TABLE_NAME | COLUMN_NAME | CONSTRAINT_NAME |
++--------------+------------+-------------+-----------------+
+| test         | child      | parent_id   | child_ibfk_1    |
++--------------+------------+-------------+-----------------+</code></pre><p>
+          You can obtain information specific to
+          <code class="literal">InnoDB</code> foreign keys from the
+          <a class="link" href="information-schema-innodb-sys-foreign-table.html" title="24.4.20&nbsp;The INFORMATION_SCHEMA INNODB_SYS_FOREIGN Table"><code class="literal">INNODB_SYS_FOREIGN</code></a> and
+          <a class="link" href="information-schema-innodb-sys-foreign-cols-table.html" title="24.4.21&nbsp;The INFORMATION_SCHEMA INNODB_SYS_FOREIGN_COLS Table"><code class="literal">INNODB_SYS_FOREIGN_COLS</code></a> tables.
+          Example queries are show here:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM INFORMATION_SCHEMA.INNODB_SYS_FOREIGN \G
+*************************** 1. row ***************************
+      ID: test/child_ibfk_1
+FOR_NAME: test/child
+REF_NAME: test/parent
+  N_COLS: 1
+    TYPE: 1
+
+mysql&gt; SELECT * FROM INFORMATION_SCHEMA.INNODB_SYS_FOREIGN_COLS \G
+*************************** 1. row ***************************
+          ID: test/child_ibfk_1
+FOR_COL_NAME: parent_id
+REF_COL_NAME: id
+         POS: 0</code></pre>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="foreign-key-errors"></a>Foreign Key Errors</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          In the event of a foreign key error involving
+          <code class="literal">InnoDB</code> tables (usually Error 150 in the
+          MySQL Server), information about the latest foreign key error
+          can be obtained by checking
+          <a class="link" href="show-engine.html" title="13.7.5.15&nbsp;SHOW ENGINE Statement"><code class="literal">SHOW ENGINE
+          INNODB STATUS</code></a> output.
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW ENGINE INNODB STATUS\G
+...
+------------------------
+LATEST FOREIGN KEY ERROR
+------------------------
+2014-10-16 18:35:18 0x7fc2a95c1700 Transaction:
+TRANSACTION 1814, ACTIVE 0 sec inserting
+mysql tables in use 1, locked 1
+4 lock struct(s), heap size 1136, 3 row lock(s), undo log entries 3
+MySQL thread id 2, OS thread handle 140474041767680, query id 74 localhost
+root update
+INSERT INTO child VALUES
+    (NULL, 1)
+    , (NULL, 2)
+    , (NULL, 3)
+    , (NULL, 4)
+    , (NULL, 5)
+    , (NULL, 6)
+Foreign key constraint fails for table `mysql`.`child`:
+,
+  CONSTRAINT `child_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `parent`
+  (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+Trying to add in child table, in index par_ind tuple:
+DATA TUPLE: 2 fields;
+ 0: len 4; hex 80000003; asc     ;;
+ 1: len 4; hex 80000003; asc     ;;
+
+But in parent table `mysql`.`parent`, in index PRIMARY,
+the closest match we can find is record:
+PHYSICAL RECORD: n_fields 3; compact format; info bits 0
+ 0: len 4; hex 80000004; asc     ;;
+ 1: len 6; hex 00000000070a; asc       ;;
+ 2: len 7; hex aa0000011d0134; asc       4;;
+...</code></pre>
+<div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Warning
+</div>
+<p>
+            <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_no_referenced_row_2" target="_top"><code class="literal">ER_NO_REFERENCED_ROW_2</code></a> and
+            <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html#error_er_row_is_referenced_2" target="_top"><code class="literal">ER_ROW_IS_REFERENCED_2</code></a> error
+            messages for foreign key operations expose information about
+            parent tables, even if the user has no parent table access
+            privileges. To hide information about parent tables, include
+            the appropriate condition handlers in application code and
+            stored programs.
+</p>
+</div>
+
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

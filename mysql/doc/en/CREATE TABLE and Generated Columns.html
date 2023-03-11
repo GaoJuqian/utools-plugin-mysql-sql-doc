@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE TABLE and Generated Columns</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="create-table-generated-columns"></a>13.1.18.7&nbsp;CREATE TABLE and Generated Columns</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852581748704"></a><p>
+        <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> supports the
+        specification of generated columns. Values of a generated column
+        are computed from an expression included in the column
+        definition.
+      </p><p>
+        Generated columns are supported by the
+        <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage engine beginning with
+        MySQL NDB Cluster 7.5.3.
+      </p><p>
+        The following simple example shows a table that stores the
+        lengths of the sides of right triangles in the
+        <code class="literal">sidea</code> and <code class="literal">sideb</code> columns,
+        and computes the length of the hypotenuse in
+        <code class="literal">sidec</code> (the square root of the sums of the
+        squares of the other sides):
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE triangle (
+  sidea DOUBLE,
+  sideb DOUBLE,
+  sidec DOUBLE AS (SQRT(sidea * sidea + sideb * sideb))
+);
+INSERT INTO triangle (sidea, sideb) VALUES(1,1),(3,4),(6,8);</code></pre><p>
+        Selecting from the table yields this result:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SELECT * FROM triangle;
++-------+-------+--------------------+
+| sidea | sideb | sidec              |
++-------+-------+--------------------+
+|     1 |     1 | 1.4142135623730951 |
+|     3 |     4 |                  5 |
+|     6 |     8 |                 10 |
++-------+-------+--------------------+</code></pre><p>
+        Any application that uses the <code class="literal">triangle</code> table
+        has access to the hypotenuse values without having to specify
+        the expression that calculates them.
+      </p><p>
+        Generated column definitions have this syntax:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql"><em class="replaceable">col_name</em> <em class="replaceable">data_type</em> [GENERATED ALWAYS] AS (<em class="replaceable">expr</em>)
+  [VIRTUAL | STORED] [NOT NULL | NULL]
+  [UNIQUE [KEY]] [[PRIMARY] KEY]
+  [COMMENT '<em class="replaceable">string</em>']</code></pre><p>
+        <code class="literal">AS (<em class="replaceable"><code>expr</code></em>)</code>
+        indicates that the column is generated and defines the
+        expression used to compute column values. <code class="literal">AS</code>
+        may be preceded by <code class="literal">GENERATED ALWAYS</code> to make
+        the generated nature of the column more explicit. Constructs
+        that are permitted or prohibited in the expression are discussed
+        later.
+      </p><p>
+        The <code class="literal">VIRTUAL</code> or <code class="literal">STORED</code>
+        keyword indicates how column values are stored, which has
+        implications for column use:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">VIRTUAL</code>: Column values are not stored,
+            but are evaluated when rows are read, immediately after any
+            <code class="literal">BEFORE</code> triggers. A virtual column takes
+            no storage.
+          </p><p>
+            <code class="literal">InnoDB</code> supports secondary indexes on
+            virtual columns. See
+            <a class="xref" href="create-table-secondary-indexes.html" title="13.1.18.8&nbsp;Secondary Indexes and Generated Columns">Section&nbsp;13.1.18.8, “Secondary Indexes and Generated Columns”</a>.
+          </p></li><li class="listitem"><p>
+            <code class="literal">STORED</code>: Column values are evaluated and
+            stored when rows are inserted or updated. A stored column
+            does require storage space and can be indexed.
+</p></li></ul>
+</div>
+<p>
+        The default is <code class="literal">VIRTUAL</code> if neither keyword is
+        specified.
+      </p><p>
+        It is permitted to mix <code class="literal">VIRTUAL</code> and
+        <code class="literal">STORED</code> columns within a table.
+      </p><p>
+        Other attributes may be given to indicate whether the column is
+        indexed or can be <code class="literal">NULL</code>, or provide a comment.
+      </p><p>
+        Generated column expressions must adhere to the following rules.
+        An error occurs if an expression contains disallowed constructs.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Literals, deterministic built-in functions, and operators
+            are permitted. A function is deterministic if, given the
+            same data in tables, multiple invocations produce the same
+            result, independently of the connected user. Examples of
+            functions that are nondeterministic and fail this
+            definition: <a class="link" href="information-functions.html#function_connection-id"><code class="literal">CONNECTION_ID()</code></a>,
+            <a class="link" href="information-functions.html#function_current-user"><code class="literal">CURRENT_USER()</code></a>,
+            <a class="link" href="date-and-time-functions.html#function_now"><code class="literal">NOW()</code></a>.
+          </p></li><li class="listitem"><p>
+            Stored functions and loadable functions are not permitted.
+          </p></li><li class="listitem"><p>
+            Stored procedure and function parameters are not permitted.
+          </p></li><li class="listitem"><p>
+            Variables (system variables, user-defined variables, and
+            stored program local variables) are not permitted.
+          </p></li><li class="listitem"><p>
+            Subqueries are not permitted.
+          </p></li><li class="listitem"><p>
+            A generated column definition can refer to other generated
+            columns, but only those occurring earlier in the table
+            definition. A generated column definition can refer to any
+            base (nongenerated) column in the table whether its
+            definition occurs earlier or later.
+          </p></li><li class="listitem"><p>
+            The <code class="literal">AUTO_INCREMENT</code> attribute cannot be
+            used in a generated column definition.
+          </p></li><li class="listitem"><p>
+            An <code class="literal">AUTO_INCREMENT</code> column cannot be used
+            as a base column in a generated column definition.
+          </p></li><li class="listitem"><p>
+            As of MySQL 5.7.10, if expression evaluation causes
+            truncation or provides incorrect input to a function, the
+            <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement
+            terminates with an error and the DDL operation is rejected.
+</p></li></ul>
+</div>
+<p>
+        If the expression evaluates to a data type that differs from the
+        declared column type, implicit coercion to the declared type
+        occurs according to the usual MySQL type-conversion rules. See
+        <a class="xref" href="type-conversion.html" title="12.3&nbsp;Type Conversion in Expression Evaluation">Section&nbsp;12.3, “Type Conversion in Expression Evaluation”</a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          If any component of the expression depends on the SQL mode,
+          different results may occur for different uses of the table
+          unless the SQL mode is the same during all uses.
+</p>
+</div>
+<p>
+        For <a class="link" href="create-table-like.html" title="13.1.18.3&nbsp;CREATE TABLE ... LIKE Statement"><code class="literal">CREATE
+        TABLE ... LIKE</code></a>, the destination table preserves
+        generated column information from the original table.
+      </p><p>
+        For <a class="link" href="create-table-select.html" title="13.1.18.4&nbsp;CREATE TABLE ... SELECT Statement"><code class="literal">CREATE
+        TABLE ... SELECT</code></a>, the destination table does not
+        preserve information about whether columns in the selected-from
+        table are generated columns. The
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> part of the statement
+        cannot assign values to generated columns in the destination
+        table.
+      </p><p>
+        Partitioning by generated columns is permitted. See
+        <a class="xref" href="create-table.html#create-table-partitioning" title="Table Partitioning">Table Partitioning</a>.
+      </p><p>
+        A foreign key constraint on a stored generated column cannot use
+        <code class="literal">CASCADE</code>, <code class="literal">SET NULL</code>, or
+        <code class="literal">SET DEFAULT</code> as <code class="literal">ON UPDATE</code>
+        referential actions, nor can it use <code class="literal">SET NULL</code>
+        or <code class="literal">SET DEFAULT</code> as <code class="literal">ON
+        DELETE</code> referential actions.
+      </p><p>
+        A foreign key constraint on the base column of a stored
+        generated column cannot use <code class="literal">CASCADE</code>,
+        <code class="literal">SET NULL</code>, or <code class="literal">SET DEFAULT</code>
+        as <code class="literal">ON UPDATE</code> or <code class="literal">ON DELETE</code>
+        referential actions.
+      </p><p>
+        A foreign key constraint cannot reference a virtual generated
+        column.
+      </p><p>
+        Triggers cannot use
+        <code class="literal">NEW.<em class="replaceable"><code>col_name</code></em></code> or
+        use <code class="literal">OLD.<em class="replaceable"><code>col_name</code></em></code>
+        to refer to generated columns.
+      </p><p>
+        For <a class="link" href="insert.html" title="13.2.5&nbsp;INSERT Statement"><code class="literal">INSERT</code></a>,
+        <a class="link" href="replace.html" title="13.2.8&nbsp;REPLACE Statement"><code class="literal">REPLACE</code></a>, and
+        <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a>, if a generated column is
+        inserted into, replaced, or updated explicitly, the only
+        permitted value is <code class="literal">DEFAULT</code>.
+      </p><p>
+        A generated column in a view is considered updatable because it
+        is possible to assign to it. However, if such a column is
+        updated explicitly, the only permitted value is
+        <code class="literal">DEFAULT</code>.
+      </p><p>
+        Generated columns have several use cases, such as these:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            Virtual generated columns can be used as a way to simplify
+            and unify queries. A complicated condition can be defined as
+            a generated column and referred to from multiple queries on
+            the table to ensure that all of them use exactly the same
+            condition.
+          </p></li><li class="listitem"><p>
+            Stored generated columns can be used as a materialized cache
+            for complicated conditions that are costly to calculate on
+            the fly.
+          </p></li><li class="listitem"><p>
+            Generated columns can simulate functional indexes: Use a
+            generated column to define a functional expression and index
+            it. This can be useful for working with columns of types
+            that cannot be indexed directly, such as
+            <a class="link" href="json.html" title="11.5&nbsp;The JSON Data Type"><code class="literal">JSON</code></a> columns; see
+            <a class="xref" href="create-table-secondary-indexes.html#json-column-indirect-index" title="Indexing a Generated Column to Provide a JSON Column Index">Indexing a Generated Column to Provide a JSON Column Index</a>, for a detailed
+            example.
+          </p><p>
+            For stored generated columns, the disadvantage of this
+            approach is that values are stored twice; once as the value
+            of the generated column and once in the index.
+          </p></li><li class="listitem"><p>
+            If a generated column is indexed, the optimizer recognizes
+            query expressions that match the column definition and uses
+            indexes from the column as appropriate during query
+            execution, even if a query does not refer to the column
+            directly by name. For details, see
+            <a class="xref" href="generated-column-index-optimizations.html" title="8.3.10&nbsp;Optimizer Use of Generated Column Indexes">Section&nbsp;8.3.10, “Optimizer Use of Generated Column Indexes”</a>.
+</p></li></ul>
+</div>
+<p>
+        Example:
+      </p><p>
+        Suppose that a table <code class="literal">t1</code> contains
+        <code class="literal">first_name</code> and <code class="literal">last_name</code>
+        columns and that applications frequently construct the full name
+        using an expression like this:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT CONCAT(first_name,' ',last_name) AS full_name FROM t1;</code></pre><p>
+        One way to avoid writing out the expression is to create a view
+        <code class="literal">v1</code> on <code class="literal">t1</code>, which simplifies
+        applications by enabling them to select
+        <code class="literal">full_name</code> directly without using an
+        expression:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE VIEW v1 AS
+SELECT *, CONCAT(first_name,' ',last_name) AS full_name FROM t1;
+
+SELECT full_name FROM v1;</code></pre><p>
+        A generated column also enables applications to select
+        <code class="literal">full_name</code> directly without the need to define
+        a view:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (
+  first_name VARCHAR(10),
+  last_name VARCHAR(10),
+  full_name VARCHAR(255) AS (CONCAT(first_name,' ',last_name))
+);
+
+SELECT full_name FROM t1;</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

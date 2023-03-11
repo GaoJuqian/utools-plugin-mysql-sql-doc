@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CASE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="case"></a>13.6.5.1&nbsp;CASE Statement</h4>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852575234816"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CASE <em class="replaceable">case_value</em>
+    WHEN <em class="replaceable">when_value</em> THEN <em class="replaceable">statement_list</em>
+    [WHEN <em class="replaceable">when_value</em> THEN <em class="replaceable">statement_list</em>] ...
+    [ELSE <em class="replaceable">statement_list</em>]
+END CASE</code></pre><p>
+        Or:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CASE
+    WHEN <em class="replaceable">search_condition</em> THEN <em class="replaceable">statement_list</em>
+    [WHEN <em class="replaceable">search_condition</em> THEN <em class="replaceable">statement_list</em>] ...
+    [ELSE <em class="replaceable">statement_list</em>]
+END CASE</code></pre><p>
+        The <a class="link" href="case.html" title="13.6.5.1&nbsp;CASE Statement"><code class="literal">CASE</code></a> statement for stored
+        programs implements a complex conditional construct.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          There is also a <a class="link" href="flow-control-functions.html#operator_case"><code class="literal">CASE</code></a>
+          <span class="emphasis"><em>operator</em></span>, which differs from the
+          <a class="link" href="case.html" title="13.6.5.1&nbsp;CASE Statement"><code class="literal">CASE</code></a>
+          <span class="emphasis"><em>statement</em></span> described here. See
+          <a class="xref" href="flow-control-functions.html" title="12.5&nbsp;Flow Control Functions">Section&nbsp;12.5, “Flow Control Functions”</a>. The
+          <a class="link" href="case.html" title="13.6.5.1&nbsp;CASE Statement"><code class="literal">CASE</code></a> statement cannot have an
+          <code class="literal">ELSE NULL</code> clause, and it is terminated with
+          <code class="literal">END CASE</code> instead of <code class="literal">END</code>.
+</p>
+</div>
+<p>
+        For the first syntax, <em class="replaceable"><code>case_value</code></em> is
+        an expression. This value is compared to the
+        <em class="replaceable"><code>when_value</code></em> expression in each
+        <code class="literal">WHEN</code> clause until one of them is equal. When
+        an equal <em class="replaceable"><code>when_value</code></em> is found, the
+        corresponding <code class="literal">THEN</code> clause
+        <em class="replaceable"><code>statement_list</code></em> executes. If no
+        <em class="replaceable"><code>when_value</code></em> is equal, the
+        <code class="literal">ELSE</code> clause
+        <em class="replaceable"><code>statement_list</code></em> executes, if there is
+        one.
+      </p><p>
+        This syntax cannot be used to test for equality with
+        <code class="literal">NULL</code> because <code class="literal">NULL = NULL</code>
+        is false. See <a class="xref" href="working-with-null.html" title="3.3.4.6&nbsp;Working with NULL Values">Section&nbsp;3.3.4.6, “Working with NULL Values”</a>.
+      </p><p>
+        For the second syntax, each <code class="literal">WHEN</code> clause
+        <em class="replaceable"><code>search_condition</code></em> expression is
+        evaluated until one is true, at which point its corresponding
+        <code class="literal">THEN</code> clause
+        <em class="replaceable"><code>statement_list</code></em> executes. If no
+        <em class="replaceable"><code>search_condition</code></em> is equal, the
+        <code class="literal">ELSE</code> clause
+        <em class="replaceable"><code>statement_list</code></em> executes, if there is
+        one.
+      </p><p>
+        If no <em class="replaceable"><code>when_value</code></em> or
+        <em class="replaceable"><code>search_condition</code></em> matches the value
+        tested and the <a class="link" href="case.html" title="13.6.5.1&nbsp;CASE Statement"><code class="literal">CASE</code></a> statement
+        contains no <code class="literal">ELSE</code> clause, a <span class="errortext">Case
+        not found for CASE statement</span> error results.
+      </p><p>
+        Each <em class="replaceable"><code>statement_list</code></em> consists of one
+        or more SQL statements; an empty
+        <em class="replaceable"><code>statement_list</code></em> is not permitted.
+      </p><p>
+        To handle situations where no value is matched by any
+        <code class="literal">WHEN</code> clause, use an <code class="literal">ELSE</code>
+        containing an empty
+        <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+        END</code></a> block, as shown in this example. (The indentation
+        used here in the <code class="literal">ELSE</code> clause is for purposes
+        of clarity only, and is not otherwise significant.)
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELIMITER |
+
+CREATE PROCEDURE p()
+  BEGIN
+    DECLARE v INT DEFAULT 1;
+
+    CASE v
+      WHEN 2 THEN SELECT v;
+      WHEN 3 THEN SELECT 0;
+      ELSE
+        BEGIN
+        END;
+    END CASE;
+  END;
+  |</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

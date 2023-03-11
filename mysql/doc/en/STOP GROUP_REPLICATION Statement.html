@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>STOP GROUP_REPLICATION Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="stop-group-replication"></a>13.4.3.2&nbsp;STOP GROUP_REPLICATION Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575584192"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">STOP GROUP_REPLICATION</code></pre><p>
+        Stops Group Replication. This statement requires the
+        <a class="ulink" href="https://dev.mysql.com/doc/refman/8.0/en/privileges-provided.html#priv_group-replication-admin" target="_top"><code class="literal">GROUP_REPLICATION_ADMIN</code></a> or
+        <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege. As soon as you
+        issue <a class="link" href="stop-group-replication.html" title="13.4.3.2&nbsp;STOP GROUP_REPLICATION Statement"><code class="literal">STOP GROUP_REPLICATION</code></a> the
+        member is set to
+        <a class="link" href="server-system-variables.html#sysvar_super_read_only"><code class="literal">super_read_only=ON</code></a>, which
+        ensures that no writes can be made to the member while Group
+        Replication stops. Any other replication channels running on the
+        member are also stopped.
+</p>
+<div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Warning
+</div>
+<p>
+          Use this statement with extreme caution because it removes the
+          server instance from the group, meaning it is no longer
+          protected by Group Replication's consistency guarantee
+          mechanisms. To be completely safe, ensure that your
+          applications can no longer connect to the instance before
+          issuing this statement to avoid any chance of stale reads.
+</p>
+</div>
+
+</div>
+
+<br>
+        
+</body>
+</html>

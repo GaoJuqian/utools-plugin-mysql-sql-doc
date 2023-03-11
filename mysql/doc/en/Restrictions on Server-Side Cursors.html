@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Restrictions on Server-Side Cursors</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="cursor-restrictions"></a>13.6.6.5&nbsp;Restrictions on Server-Side Cursors</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852574984128"></a><a class="indexterm" name="idm45852574982672"></a><p>
+        Server-side cursors are implemented in the C API using the
+        <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-stmt-attr-set.html" target="_top"><code class="literal">mysql_stmt_attr_set()</code></a> function.
+        The same implementation is used for cursors in stored routines.
+        A server-side cursor enables a result set to be generated on the
+        server side, but not transferred to the client except for those
+        rows that the client requests. For example, if a client executes
+        a query but is only interested in the first row, the remaining
+        rows are not transferred.
+      </p><p>
+        In MySQL, a server-side cursor is materialized into an internal
+        temporary table. Initially, this is a <code class="literal">MEMORY</code>
+        table, but is converted to a <code class="literal">MyISAM</code> table
+        when its size exceeds the minimum value of the
+        <a class="link" href="server-system-variables.html#sysvar_max_heap_table_size"><code class="literal">max_heap_table_size</code></a> and
+        <a class="link" href="server-system-variables.html#sysvar_tmp_table_size"><code class="literal">tmp_table_size</code></a> system
+        variables. The same restrictions apply to internal temporary
+        tables created to hold the result set for a cursor as for other
+        uses of internal temporary tables. See
+        <a class="xref" href="internal-temporary-tables.html" title="8.4.4&nbsp;Internal Temporary Table Use in MySQL">Section&nbsp;8.4.4, “Internal Temporary Table Use in MySQL”</a>. One limitation of
+        the implementation is that for a large result set, retrieving
+        its rows through a cursor might be slow.
+      </p><p>
+        Cursors are read only; you cannot use a cursor to update rows.
+      </p><p>
+        <code class="literal">UPDATE WHERE CURRENT OF</code> and <code class="literal">DELETE
+        WHERE CURRENT OF</code> are not implemented, because
+        updatable cursors are not supported.
+      </p><p>
+        Cursors are nonholdable (not held open after a commit).
+      </p><p>
+        Cursors are asensitive.
+      </p><p>
+        Cursors are nonscrollable.
+      </p><p>
+        Cursors are not named. The statement handler acts as the cursor
+        ID.
+      </p><p>
+        You can have open only a single cursor per prepared statement.
+        If you need several cursors, you must prepare several
+        statements.
+      </p><p>
+        You cannot use a cursor for a statement that generates a result
+        set if the statement is not supported in prepared mode. This
+        includes statements such as <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK
+        TABLE</code></a>, <code class="literal">HANDLER READ</code>, and
+        <a class="link" href="show-binlog-events.html" title="13.7.5.2&nbsp;SHOW BINLOG EVENTS Statement"><code class="literal">SHOW BINLOG EVENTS</code></a>.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

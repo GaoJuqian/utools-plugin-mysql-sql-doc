@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>ALTER PROCEDURE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="alter-procedure"></a>13.1.6&nbsp;ALTER PROCEDURE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852585572784"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER PROCEDURE <em class="replaceable">proc_name</em> [<em class="replaceable">characteristic</em> ...]
+
+<em class="replaceable">characteristic</em>: {
+    COMMENT '<em class="replaceable">string</em>'
+  | LANGUAGE SQL
+  | { CONTAINS SQL | NO SQL | READS SQL DATA | MODIFIES SQL DATA }
+  | SQL SECURITY { DEFINER | INVOKER }
+}</code></pre><p>
+      This statement can be used to change the characteristics of a
+      stored procedure. More than one change may be specified in an
+      <a class="link" href="alter-procedure.html" title="13.1.6&nbsp;ALTER PROCEDURE Statement"><code class="literal">ALTER PROCEDURE</code></a> statement. However,
+      you cannot change the parameters or body of a stored procedure
+      using this statement; to make such changes, you must drop and
+      re-create the procedure using <a class="link" href="drop-procedure.html" title="13.1.27&nbsp;DROP PROCEDURE and DROP FUNCTION Statements"><code class="literal">DROP
+      PROCEDURE</code></a> and <a class="link" href="create-procedure.html" title="13.1.16&nbsp;CREATE PROCEDURE and CREATE FUNCTION Statements"><code class="literal">CREATE
+      PROCEDURE</code></a>.
+    </p><p>
+      You must have the <a class="link" href="privileges-provided.html#priv_alter-routine"><code class="literal">ALTER ROUTINE</code></a>
+      privilege for the procedure. By default, that privilege is granted
+      automatically to the procedure creator. This behavior can be
+      changed by disabling the
+      <a class="link" href="server-system-variables.html#sysvar_automatic_sp_privileges"><code class="literal">automatic_sp_privileges</code></a> system
+      variable. See <a class="xref" href="stored-routines-privileges.html" title="23.2.2&nbsp;Stored Routines and MySQL Privileges">Section&nbsp;23.2.2, “Stored Routines and MySQL Privileges”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CREATE TABLE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="create-table"></a>13.1.18&nbsp;CREATE TABLE Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="create-table-files.html">13.1.18.1 Files Created by CREATE TABLE</a></span></dt><dt><span class="section"><a href="create-temporary-table.html">13.1.18.2 CREATE TEMPORARY TABLE Statement</a></span></dt><dt><span class="section"><a href="create-table-like.html">13.1.18.3 CREATE TABLE ... LIKE Statement</a></span></dt><dt><span class="section"><a href="create-table-select.html">13.1.18.4 CREATE TABLE ... SELECT Statement</a></span></dt><dt><span class="section"><a href="create-table-foreign-keys.html">13.1.18.5 FOREIGN KEY Constraints</a></span></dt><dt><span class="section"><a href="silent-column-changes.html">13.1.18.6 Silent Column Specification Changes</a></span></dt><dt><span class="section"><a href="create-table-generated-columns.html">13.1.18.7 CREATE TABLE and Generated Columns</a></span></dt><dt><span class="section"><a href="create-table-secondary-indexes.html">13.1.18.8 Secondary Indexes and Generated Columns</a></span></dt><dt><span class="section"><a href="create-table-ndb-comment-options.html">13.1.18.9 Setting NDB Comment Options</a></span></dt></dl>
+</div>
+<a class="indexterm" name="idm45852583403104"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE [TEMPORARY] TABLE [IF NOT EXISTS] <em class="replaceable">tbl_name</em>
+    (<em class="replaceable">create_definition</em>,...)
+    [<em class="replaceable">table_options</em>]
+    [<em class="replaceable">partition_options</em>]
+
+CREATE [TEMPORARY] TABLE [IF NOT EXISTS] <em class="replaceable">tbl_name</em>
+    [(<em class="replaceable">create_definition</em>,...)]
+    [<em class="replaceable">table_options</em>]
+    [<em class="replaceable">partition_options</em>]
+    [IGNORE | REPLACE]
+    [AS] <em class="replaceable">query_expression</em>
+
+CREATE [TEMPORARY] TABLE [IF NOT EXISTS] <em class="replaceable">tbl_name</em>
+    { LIKE <em class="replaceable">old_tbl_name</em> | (LIKE <em class="replaceable">old_tbl_name</em>) }
+
+<em class="replaceable">create_definition</em>: {
+    <em class="replaceable">col_name</em> <em class="replaceable">column_definition</em>
+  | {INDEX | KEY} [<em class="replaceable">index_name</em>] [<em class="replaceable">index_type</em>] (<em class="replaceable">key_part</em>,...)
+      [<em class="replaceable">index_option</em>] ...
+  | {FULLTEXT | SPATIAL} [INDEX | KEY] [<em class="replaceable">index_name</em>] (<em class="replaceable">key_part</em>,...)
+      [<em class="replaceable">index_option</em>] ...
+  | [CONSTRAINT [<em class="replaceable">symbol</em>]] PRIMARY KEY
+      [<em class="replaceable">index_type</em>] (<em class="replaceable">key_part</em>,...)
+      [<em class="replaceable">index_option</em>] ...
+  | [CONSTRAINT [<em class="replaceable">symbol</em>]] UNIQUE [INDEX | KEY]
+      [<em class="replaceable">index_name</em>] [<em class="replaceable">index_type</em>] (<em class="replaceable">key_part</em>,...)
+      [<em class="replaceable">index_option</em>] ...
+  | [CONSTRAINT [<em class="replaceable">symbol</em>]] FOREIGN KEY
+      [<em class="replaceable">index_name</em>] (<em class="replaceable">col_name</em>,...)
+      <em class="replaceable">reference_definition</em>
+  | CHECK (<em class="replaceable">expr</em>)
+}
+
+<em class="replaceable">column_definition</em>: {
+    <em class="replaceable">data_type</em> [NOT NULL | NULL] [DEFAULT <em class="replaceable">default_value</em>]
+      [AUTO_INCREMENT] [UNIQUE [KEY]] [[PRIMARY] KEY]
+      [COMMENT '<em class="replaceable">string</em>']
+      [COLLATE <em class="replaceable">collation_name</em>]
+      [COLUMN_FORMAT {FIXED | DYNAMIC | DEFAULT}]
+      [STORAGE {DISK | MEMORY}]
+      [<em class="replaceable">reference_definition</em>]
+  | <em class="replaceable">data_type</em>
+      [COLLATE <em class="replaceable">collation_name</em>]
+      [GENERATED ALWAYS] AS (<em class="replaceable">expr</em>)
+      [VIRTUAL | STORED] [NOT NULL | NULL]
+      [UNIQUE [KEY]] [[PRIMARY] KEY]
+      [COMMENT '<em class="replaceable">string</em>']
+      [<em class="replaceable">reference_definition</em>]
+}
+
+<em class="replaceable">data_type</em>:
+    (see Chapter&nbsp;11, Data Types)
+
+<em class="replaceable">key_part</em>:
+    <em class="replaceable">col_name</em> [(<em class="replaceable">length</em>)] [ASC | DESC]
+
+<em class="replaceable">index_type</em>:
+    USING {BTREE | HASH}
+
+<em class="replaceable">index_option</em>: {
+    KEY_BLOCK_SIZE [=] <em class="replaceable">value</em>
+  | <em class="replaceable">index_type</em>
+  | WITH PARSER <em class="replaceable">parser_name</em>
+  | COMMENT '<em class="replaceable">string</em>'
+}
+
+<em class="replaceable">reference_definition</em>:
+    REFERENCES <em class="replaceable">tbl_name</em> (<em class="replaceable">key_part</em>,...)
+      [MATCH FULL | MATCH PARTIAL | MATCH SIMPLE]
+      [ON DELETE <em class="replaceable">reference_option</em>]
+      [ON UPDATE <em class="replaceable">reference_option</em>]
+
+<em class="replaceable">reference_option</em>:
+    RESTRICT | CASCADE | SET NULL | NO ACTION | SET DEFAULT
+
+<em class="replaceable">table_options</em>:
+    <em class="replaceable">table_option</em> [[,] <em class="replaceable">table_option</em>] ...
+
+<em class="replaceable">table_option</em>: {
+    AUTO_INCREMENT [=] <em class="replaceable">value</em>
+  | AVG_ROW_LENGTH [=] <em class="replaceable">value</em>
+  | [DEFAULT] CHARACTER SET [=] <em class="replaceable">charset_name</em>
+  | CHECKSUM [=] {0 | 1}
+  | [DEFAULT] COLLATE [=] <em class="replaceable">collation_name</em>
+  | COMMENT [=] '<em class="replaceable">string</em>'
+  | COMPRESSION [=] {'ZLIB' | 'LZ4' | 'NONE'}
+  | CONNECTION [=] '<em class="replaceable">connect_string</em>'
+  | {DATA | INDEX} DIRECTORY [=] '<em class="replaceable">absolute path to directory</em>'
+  | DELAY_KEY_WRITE [=] {0 | 1}
+  | ENCRYPTION [=] {'Y' | 'N'}
+  | ENGINE [=] <em class="replaceable">engine_name</em>
+  | INSERT_METHOD [=] { NO | FIRST | LAST }
+  | KEY_BLOCK_SIZE [=] <em class="replaceable">value</em>
+  | MAX_ROWS [=] <em class="replaceable">value</em>
+  | MIN_ROWS [=] <em class="replaceable">value</em>
+  | PACK_KEYS [=] {0 | 1 | DEFAULT}
+  | PASSWORD [=] '<em class="replaceable">string</em>'
+  | ROW_FORMAT [=] {DEFAULT | DYNAMIC | FIXED | COMPRESSED | REDUNDANT | COMPACT}
+  | STATS_AUTO_RECALC [=] {DEFAULT | 0 | 1}
+  | STATS_PERSISTENT [=] {DEFAULT | 0 | 1}
+  | STATS_SAMPLE_PAGES [=] <em class="replaceable">value</em>
+  | <em class="replaceable">tablespace_option</em>
+  | UNION [=] (<em class="replaceable">tbl_name</em>[,<em class="replaceable">tbl_name</em>]...)
+}
+
+<em class="replaceable">partition_options</em>:
+    PARTITION BY
+        { [LINEAR] HASH(<em class="replaceable">expr</em>)
+        | [LINEAR] KEY [ALGORITHM={1 | 2}] (<em class="replaceable">column_list</em>)
+        | RANGE{(<em class="replaceable">expr</em>) | COLUMNS(<em class="replaceable">column_list</em>)}
+        | LIST{(<em class="replaceable">expr</em>) | COLUMNS(<em class="replaceable">column_list</em>)} }
+    [PARTITIONS <em class="replaceable">num</em>]
+    [SUBPARTITION BY
+        { [LINEAR] HASH(<em class="replaceable">expr</em>)
+        | [LINEAR] KEY [ALGORITHM={1 | 2}] (<em class="replaceable">column_list</em>) }
+      [SUBPARTITIONS <em class="replaceable">num</em>]
+    ]
+    [(<em class="replaceable">partition_definition</em> [, <em class="replaceable">partition_definition</em>] ...)]
+
+<em class="replaceable">partition_definition</em>:
+    PARTITION <em class="replaceable">partition_name</em>
+        [VALUES
+            {LESS THAN {(<em class="replaceable">expr</em> | <em class="replaceable">value_list</em>) | MAXVALUE}
+            |
+            IN (<em class="replaceable">value_list</em>)}]
+        [[STORAGE] ENGINE [=] <em class="replaceable">engine_name</em>]
+        [COMMENT [=] '<em class="replaceable">string</em>' ]
+        [DATA DIRECTORY [=] '<em class="replaceable">data_dir</em>']
+        [INDEX DIRECTORY [=] '<em class="replaceable">index_dir</em>']
+        [MAX_ROWS [=] <em class="replaceable">max_number_of_rows</em>]
+        [MIN_ROWS [=] <em class="replaceable">min_number_of_rows</em>]
+        [TABLESPACE [=] tablespace_name]
+        [(<em class="replaceable">subpartition_definition</em> [, <em class="replaceable">subpartition_definition</em>] ...)]
+
+<em class="replaceable">subpartition_definition</em>:
+    SUBPARTITION <em class="replaceable">logical_name</em>
+        [[STORAGE] ENGINE [=] <em class="replaceable">engine_name</em>]
+        [COMMENT [=] '<em class="replaceable">string</em>' ]
+        [DATA DIRECTORY [=] '<em class="replaceable">data_dir</em>']
+        [INDEX DIRECTORY [=] '<em class="replaceable">index_dir</em>']
+        [MAX_ROWS [=] <em class="replaceable">max_number_of_rows</em>]
+        [MIN_ROWS [=] <em class="replaceable">min_number_of_rows</em>]
+        [TABLESPACE [=] tablespace_name]
+
+<em class="replaceable">tablespace_option</em>:
+    TABLESPACE <em class="replaceable">tablespace_name</em> [STORAGE DISK]
+  | [TABLESPACE <em class="replaceable">tablespace_name</em>] STORAGE MEMORY
+
+<em class="replaceable">query_expression:</em>
+    SELECT ...   (<em class="replaceable">Some valid select or union statement</em>)</code></pre><p>
+      <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> creates a table with
+      the given name. You must have the
+      <a class="link" href="privileges-provided.html#priv_create"><code class="literal">CREATE</code></a> privilege for the table.
+    </p><p>
+      By default, tables are created in the default database, using the
+      <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> storage engine. An error
+      occurs if the table exists, if there is no default database, or if
+      the database does not exist.
+    </p><a class="indexterm" name="idm45852583334800"></a><a class="indexterm" name="idm45852583333296"></a><p>
+      MySQL has no limit on the number of tables. The underlying file
+      system may have a limit on the number of files that represent
+      tables. Individual storage engines may impose engine-specific
+      constraints. <code class="literal">InnoDB</code> permits up to 4 billion
+      tables.
+    </p><p>
+      For information about the physical representation of a table, see
+      <a class="xref" href="create-table-files.html" title="13.1.18.1&nbsp;Files Created by CREATE TABLE">Section&nbsp;13.1.18.1, “Files Created by CREATE TABLE”</a>.
+    </p><p>
+      There are several aspects to the <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+      TABLE</code></a> statement, described under the following topics in
+      this section:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="create-table.html#create-table-name" title="Table Name">Table Name</a></p></li><li class="listitem"><p><a class="xref" href="create-table.html#create-table-temporary-tables" title="Temporary Tables">Temporary Tables</a></p></li><li class="listitem"><p><a class="xref" href="create-table.html#create-table-clone-copy" title="Table Cloning and Copying">Table Cloning and Copying</a></p></li><li class="listitem"><p><a class="xref" href="create-table.html#create-table-types-attributes" title="Column Data Types and Attributes">Column Data Types and Attributes</a></p></li><li class="listitem"><p><a class="xref" href="create-table.html#create-table-indexes-keys" title="Indexes and Foreign Keys">Indexes and Foreign Keys</a></p></li><li class="listitem"><p><a class="xref" href="create-table.html#create-table-options" title="Table Options">Table Options</a></p></li><li class="listitem"><p><a class="xref" href="create-table.html#create-table-partitioning" title="Table Partitioning">Table Partitioning</a></p></li></ul>
+</div>
+<h4><a name="create-table-name"></a>Table Name</h4>
+
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal"><em class="replaceable"><code>tbl_name</code></em></code>
+        </p><p>
+          The table name can be specified as
+          <em class="replaceable"><code>db_name.tbl_name</code></em> to create the
+          table in a specific database. This works regardless of whether
+          there is a default database, assuming that the database
+          exists. If you use quoted identifiers, quote the database and
+          table names separately. For example, write
+          <code class="literal">`mydb`.`mytbl`</code>, not
+          <code class="literal">`mydb.mytbl`</code>.
+        </p><p>
+          Rules for permissible table names are given in
+          <a class="xref" href="identifiers.html" title="9.2&nbsp;Schema Object Names">Section&nbsp;9.2, “Schema Object Names”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">IF NOT EXISTS</code>
+        </p><p>
+          Prevents an error from occurring if the table exists. However,
+          there is no verification that the existing table has a
+          structure identical to that indicated by the
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement.
+</p></li></ul>
+</div>
+<h4><a name="create-table-temporary-tables"></a>Temporary Tables</h4>
+<p>
+      You can use the <code class="literal">TEMPORARY</code> keyword when creating
+      a table. A <code class="literal">TEMPORARY</code> table is visible only
+      within the current session, and is dropped automatically when the
+      session is closed. For more information, see
+      <a class="xref" href="create-temporary-table.html" title="13.1.18.2&nbsp;CREATE TEMPORARY TABLE Statement">Section&nbsp;13.1.18.2, “CREATE TEMPORARY TABLE Statement”</a>.
+</p>
+<h4><a name="create-table-clone-copy"></a>Table Cloning and Copying</h4>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">LIKE</code>
+        </p><p>
+          Use <code class="literal">CREATE TABLE ... LIKE</code> to create an
+          empty table based on the definition of another table,
+          including any column attributes and indexes defined in the
+          original table:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE <em class="replaceable">new_tbl</em> LIKE <em class="replaceable">orig_tbl</em>;</code></pre><p>
+          For more information, see <a class="xref" href="create-table-like.html" title="13.1.18.3&nbsp;CREATE TABLE ... LIKE Statement">Section&nbsp;13.1.18.3, “CREATE TABLE ... LIKE Statement”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">[AS]
+          <em class="replaceable"><code>query_expression</code></em></code>
+        </p><p>
+          To create one table from another, add a
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement at the end of
+          the <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE <em class="replaceable">new_tbl</em> AS SELECT * FROM <em class="replaceable">orig_tbl</em>;</code></pre><p>
+          For more information, see
+          <a class="xref" href="create-table-select.html" title="13.1.18.4&nbsp;CREATE TABLE ... SELECT Statement">Section&nbsp;13.1.18.4, “CREATE TABLE ... SELECT Statement”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">IGNORE | REPLACE</code>
+        </p><p>
+          The <code class="literal">IGNORE</code> and <code class="literal">REPLACE</code>
+          options indicate how to handle rows that duplicate unique key
+          values when copying a table using a
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement.
+        </p><p>
+          For more information, see
+          <a class="xref" href="create-table-select.html" title="13.1.18.4&nbsp;CREATE TABLE ... SELECT Statement">Section&nbsp;13.1.18.4, “CREATE TABLE ... SELECT Statement”</a>.
+</p></li></ul>
+</div>
+<h4><a name="create-table-types-attributes"></a>Column Data Types and Attributes</h4>
+<p>
+      There is a hard limit of 4096 columns per table, but the effective
+      maximum may be less for a given table and depends on the factors
+      discussed in <a class="xref" href="column-count-limit.html" title="8.4.7&nbsp;Limits on Table Column Count and Row Size">Section&nbsp;8.4.7, “Limits on Table Column Count and Row Size”</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal"><em class="replaceable"><code>data_type</code></em></code>
+        </p><p>
+          <em class="replaceable"><code>data_type</code></em> represents the data type
+          in a column definition. For a full description of the syntax
+          available for specifying column data types, as well as
+          information about the properties of each type, see
+          <a class="xref" href="data-types.html" title="Chapter&nbsp;11&nbsp;Data Types">Chapter&nbsp;11, <i>Data Types</i></a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              Some attributes do not apply to all data types.
+              <code class="literal">AUTO_INCREMENT</code> applies only to integer
+              and floating-point types. <code class="literal">DEFAULT</code> does
+              not apply to the <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>,
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a>,
+              <code class="literal">GEOMETRY</code>, and
+              <a class="link" href="json.html" title="11.5&nbsp;The JSON Data Type"><code class="literal">JSON</code></a> types.
+            </p></li><li class="listitem"><p>
+              Character data types (<a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+              <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>, the
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> types,
+              <a class="link" href="enum.html" title="11.3.5&nbsp;The ENUM Type"><code class="literal">ENUM</code></a>,
+              <a class="link" href="set.html" title="11.3.6&nbsp;The SET Type"><code class="literal">SET</code></a>, and any synonyms) can
+              include <code class="literal">CHARACTER SET</code> to specify the
+              character set for the column. <code class="literal">CHARSET</code>
+              is a synonym for <code class="literal">CHARACTER SET</code>. A
+              collation for the character set can be specified with the
+              <code class="literal">COLLATE</code> attribute, along with any other
+              attributes. For details, see <a class="xref" href="charset.html" title="Chapter&nbsp;10&nbsp;Character Sets, Collations, Unicode">Chapter&nbsp;10, <i>Character Sets, Collations, Unicode</i></a>.
+              Example:
+            </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE t (c CHAR(20) CHARACTER SET utf8 COLLATE utf8_bin);</code></pre><p>
+              MySQL 5.7 interprets length specifications in
+              character column definitions in characters. Lengths for
+              <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a> and
+              <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a> are in bytes.
+            </p></li><li class="listitem"><p>
+              For <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+              <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>,
+              <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a>, and
+              <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a> columns, indexes
+              can be created that use only the leading part of column
+              values, using
+              <code class="literal"><em class="replaceable"><code>col_name</code></em>(<em class="replaceable"><code>length</code></em>)</code>
+              syntax to specify an index prefix length.
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> and
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns also can be
+              indexed, but a prefix length <span class="emphasis"><em>must</em></span> be
+              given. Prefix lengths are given in characters for
+              nonbinary string types and in bytes for binary string
+              types. That is, index entries consist of the first
+              <em class="replaceable"><code>length</code></em> characters of each
+              column value for <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+              <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>, and
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns, and the first
+              <em class="replaceable"><code>length</code></em> bytes of each column
+              value for <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a>,
+              <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a>, and
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> columns. Indexing only
+              a prefix of column values like this can make the index
+              file much smaller. For additional information about index
+              prefixes, see <a class="xref" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement">Section&nbsp;13.1.14, “CREATE INDEX Statement”</a>.
+            </p><a class="indexterm" name="idm45852583237152"></a><a class="indexterm" name="idm45852583235664"></a><a class="indexterm" name="idm45852583234176"></a><a class="indexterm" name="idm45852583232688"></a><p>
+              Only the <code class="literal">InnoDB</code> and
+              <code class="literal">MyISAM</code> storage engines support indexing
+              on <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a> and
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns. For example:
+            </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE test (blob_col BLOB, INDEX(blob_col(10)));</code></pre><p>
+              As of MySQL 5.7.17, if a specified index prefix exceeds
+              the maximum column data type size,
+              <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> handles the
+              index as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: square; "><li class="listitem"><p>
+                  For a nonunique index, either an error occurs (if
+                  strict SQL mode is enabled), or the index length is
+                  reduced to lie within the maximum column data type
+                  size and a warning is produced (if strict SQL mode is
+                  not enabled).
+                </p></li><li class="listitem"><p>
+                  For a unique index, an error occurs regardless of SQL
+                  mode because reducing the index length might enable
+                  insertion of nonunique entries that do not meet the
+                  specified uniqueness requirement.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+              <a class="link" href="json.html" title="11.5&nbsp;The JSON Data Type"><code class="literal">JSON</code></a> columns cannot be
+              indexed. You can work around this restriction by creating
+              an index on a generated column that extracts a scalar
+              value from the <code class="literal">JSON</code> column. See
+              <a class="xref" href="create-table-secondary-indexes.html#json-column-indirect-index" title="Indexing a Generated Column to Provide a JSON Column Index">Indexing a Generated Column to Provide a JSON Column Index</a>, for a
+              detailed example.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal">NOT NULL | NULL</code>
+        </p><p>
+          If neither <code class="literal">NULL</code> nor <code class="literal">NOT
+          NULL</code> is specified, the column is treated as though
+          <code class="literal">NULL</code> had been specified.
+        </p><a class="indexterm" name="idm45852583213136"></a><a class="indexterm" name="idm45852583211648"></a><p>
+          In MySQL 5.7, only the <code class="literal">InnoDB</code>,
+          <code class="literal">MyISAM</code>, and <code class="literal">MEMORY</code>
+          storage engines support indexes on columns that can have
+          <code class="literal">NULL</code> values. In other cases, you must
+          declare indexed columns as <code class="literal">NOT NULL</code> or an
+          error results.
+        </p></li><li class="listitem"><p>
+          <code class="literal">DEFAULT</code>
+        </p><a class="indexterm" name="idm45852583204528"></a><a class="indexterm" name="idm45852583203456"></a><p>
+          Specifies a default value for a column. For more information
+          about default value handling, including the case that a column
+          definition includes no explicit <code class="literal">DEFAULT</code>
+          value, see <a class="xref" href="data-type-defaults.html" title="11.6&nbsp;Data Type Default Values">Section&nbsp;11.6, “Data Type Default Values”</a>.
+        </p><p>
+          If the <a class="link" href="sql-mode.html#sqlmode_no_zero_date"><code class="literal">NO_ZERO_DATE</code></a> or
+          <a class="link" href="sql-mode.html#sqlmode_no_zero_in_date"><code class="literal">NO_ZERO_IN_DATE</code></a> SQL mode is
+          enabled and a date-valued default is not correct according to
+          that mode, <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>
+          produces a warning if strict SQL mode is not enabled and an
+          error if strict mode is enabled. For example, with
+          <a class="link" href="sql-mode.html#sqlmode_no_zero_in_date"><code class="literal">NO_ZERO_IN_DATE</code></a> enabled,
+          <code class="literal">c1 DATE DEFAULT '2010-00-00'</code> produces a
+          warning.
+        </p></li><li class="listitem"><p>
+          <code class="literal">AUTO_INCREMENT</code>
+        </p><p>
+          An integer or floating-point column can have the additional
+          attribute <code class="literal">AUTO_INCREMENT</code>. When you insert a
+          value of <code class="literal">NULL</code> (recommended) or
+          <code class="literal">0</code> into an indexed
+          <code class="literal">AUTO_INCREMENT</code> column, the column is set to
+          the next sequence value. Typically this is
+          <code class="literal"><em class="replaceable"><code>value</code></em>+1</code>, where
+          <em class="replaceable"><code>value</code></em> is the largest value for the
+          column currently in the table.
+          <code class="literal">AUTO_INCREMENT</code> sequences begin with
+          <code class="literal">1</code>.
+        </p><p>
+          To retrieve an <code class="literal">AUTO_INCREMENT</code> value after
+          inserting a row, use the
+          <a class="link" href="information-functions.html#function_last-insert-id"><code class="literal">LAST_INSERT_ID()</code></a> SQL function
+          or the <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-insert-id.html" target="_top"><code class="literal">mysql_insert_id()</code></a> C API
+          function. See <a class="xref" href="information-functions.html" title="12.16&nbsp;Information Functions">Section&nbsp;12.16, “Information Functions”</a>, and
+          <a class="ulink" href="https://dev.mysql.com/doc/c-api/5.7/en/mysql-insert-id.html" target="_top">mysql_insert_id()</a>.
+        </p><p>
+          If the <a class="link" href="sql-mode.html#sqlmode_no_auto_value_on_zero"><code class="literal">NO_AUTO_VALUE_ON_ZERO</code></a>
+          SQL mode is enabled, you can store <code class="literal">0</code> in
+          <code class="literal">AUTO_INCREMENT</code> columns as
+          <code class="literal">0</code> without generating a new sequence value.
+          See <a class="xref" href="sql-mode.html" title="5.1.10&nbsp;Server SQL Modes">Section&nbsp;5.1.10, “Server SQL Modes”</a>.
+        </p><p>
+          There can be only one <code class="literal">AUTO_INCREMENT</code> column
+          per table, it must be indexed, and it cannot have a
+          <code class="literal">DEFAULT</code> value. An
+          <code class="literal">AUTO_INCREMENT</code> column works properly only
+          if it contains only positive values. Inserting a negative
+          number is regarded as inserting a very large positive number.
+          This is done to avoid precision problems when numbers
+          <span class="quote">“<span class="quote">wrap</span>”</span> over from positive to negative and also to
+          ensure that you do not accidentally get an
+          <code class="literal">AUTO_INCREMENT</code> column that contains
+          <code class="literal">0</code>.
+        </p><p>
+          For <code class="literal">MyISAM</code> tables, you can specify an
+          <code class="literal">AUTO_INCREMENT</code> secondary column in a
+          multiple-column key. See
+          <a class="xref" href="example-auto-increment.html" title="3.6.9&nbsp;Using AUTO_INCREMENT">Section&nbsp;3.6.9, “Using AUTO_INCREMENT”</a>.
+        </p><p>
+          To make MySQL compatible with some ODBC applications, you can
+          find the <code class="literal">AUTO_INCREMENT</code> value for the last
+          inserted row with the following query:
+        </p><a class="indexterm" name="idm45852583167792"></a><a class="indexterm" name="idm45852583166720"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT * FROM <em class="replaceable">tbl_name</em> WHERE <em class="replaceable">auto_col</em> IS NULL</code></pre><p>
+          This method requires that
+          <a class="link" href="server-system-variables.html#sysvar_sql_auto_is_null"><code class="literal">sql_auto_is_null</code></a> variable is
+          not set to 0. See <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>.
+        </p><p>
+          For information about <code class="literal">InnoDB</code> and
+          <code class="literal">AUTO_INCREMENT</code>, see
+          <a class="xref" href="innodb-auto-increment-handling.html" title="14.6.1.6&nbsp;AUTO_INCREMENT Handling in InnoDB">Section&nbsp;14.6.1.6, “AUTO_INCREMENT Handling in InnoDB”</a>. For
+          information about <code class="literal">AUTO_INCREMENT</code> and MySQL
+          Replication, see
+          <a class="xref" href="replication-features-auto-increment.html" title="16.4.1.1&nbsp;Replication and AUTO_INCREMENT">Section&nbsp;16.4.1.1, “Replication and AUTO_INCREMENT”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">COMMENT</code>
+        </p><a class="indexterm" name="idm45852583155472"></a><p>
+          A comment for a column can be specified with the
+          <code class="literal">COMMENT</code> option, up to 1024 characters long.
+          The comment is displayed by the <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW
+          CREATE TABLE</code></a> and
+          <a class="link" href="show-columns.html" title="13.7.5.5&nbsp;SHOW COLUMNS Statement"><code class="literal">SHOW FULL
+          COLUMNS</code></a> statements. It is also shown in the
+          <code class="literal">COLUMN_COMMENT</code> column of the Information
+          Schema <a class="link" href="information-schema-columns-table.html" title="24.3.5&nbsp;The INFORMATION_SCHEMA COLUMNS Table"><code class="literal">COLUMNS</code></a> table.
+        </p></li><li class="listitem"><p>
+          <code class="literal">COLUMN_FORMAT</code>
+        </p><a class="indexterm" name="idm45852583147152"></a><p>
+          In NDB Cluster, it is also possible to specify a data storage
+          format for individual columns of
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables using
+          <code class="literal">COLUMN_FORMAT</code>. Permissible column formats
+          are <code class="literal">FIXED</code>, <code class="literal">DYNAMIC</code>, and
+          <code class="literal">DEFAULT</code>. <code class="literal">FIXED</code> is used
+          to specify fixed-width storage, <code class="literal">DYNAMIC</code>
+          permits the column to be variable-width, and
+          <code class="literal">DEFAULT</code> causes the column to use
+          fixed-width or variable-width storage as determined by the
+          column's data type (possibly overridden by a
+          <code class="literal">ROW_FORMAT</code> specifier).
+        </p><p>
+          Beginning with MySQL NDB Cluster 7.5.4, for
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables, the default value for
+          <code class="literal">COLUMN_FORMAT</code> is <code class="literal">FIXED</code>.
+          (The default had been switched to <code class="literal">DYNAMIC</code>
+          in MySQL NDB Cluster 7.5.1, but this change was reverted to
+          maintain backwards compatibility with existing GA release
+          series.) (Bug #24487363)
+        </p><p>
+          In NDB Cluster, the maximum possible offset for a column
+          defined with <code class="literal">COLUMN_FORMAT=FIXED</code> is 8188
+          bytes. For more information and possible workarounds, see
+          <a class="xref" href="mysql-cluster-limitations-database-objects.html" title="21.2.7.5&nbsp;Limits Associated with Database Objects in NDB Cluster">Section&nbsp;21.2.7.5, “Limits Associated with Database Objects in NDB Cluster”</a>.
+        </p><p>
+          <code class="literal">COLUMN_FORMAT</code> currently has no effect on
+          columns of tables using storage engines other than
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a>. In MySQL 5.7
+          and later, <code class="literal">COLUMN_FORMAT</code> is silently
+          ignored.
+        </p></li><li class="listitem"><p>
+          <code class="literal">STORAGE</code>
+        </p><a class="indexterm" name="idm45852583127760"></a><p>
+          For <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables, it is possible to
+          specify whether the column is stored on disk or in memory by
+          using a <code class="literal">STORAGE</code> clause. <code class="literal">STORAGE
+          DISK</code> causes the column to be stored on disk, and
+          <code class="literal">STORAGE MEMORY</code> causes in-memory storage to
+          be used. The <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>
+          statement used must still include a
+          <code class="literal">TABLESPACE</code> clause:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; CREATE TABLE t1 (
+    -&gt;     c1 INT STORAGE DISK,
+    -&gt;     c2 INT STORAGE MEMORY
+    -&gt; ) ENGINE NDB;
+ERROR 1005 (HY000): Can't create table 'c.t1' (errno: 140)
+
+mysql&gt; CREATE TABLE t1 (
+    -&gt;     c1 INT STORAGE DISK,
+    -&gt;     c2 INT STORAGE MEMORY
+    -&gt; ) TABLESPACE ts_1 ENGINE NDB;
+Query OK, 0 rows affected (1.06 sec)</code></pre><p>
+          For <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables, <code class="literal">STORAGE
+          DEFAULT</code> is equivalent to <code class="literal">STORAGE
+          MEMORY</code>.
+        </p><p>
+          The <code class="literal">STORAGE</code> clause has no effect on tables
+          using storage engines other than
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a>. The
+          <code class="literal">STORAGE</code> keyword is supported only in the
+          build of <a class="link" href="mysqld.html" title="4.3.1&nbsp;mysqld — The MySQL Server"><span class="command"><strong>mysqld</strong></span></a> that is supplied with NDB
+          Cluster; it is not recognized in any other version of MySQL,
+          where any attempt to use the <code class="literal">STORAGE</code>
+          keyword causes a syntax error.
+        </p></li><li class="listitem"><p>
+          <code class="literal">GENERATED ALWAYS</code>
+        </p><p>
+          Used to specify a generated column expression. For information
+          about <a class="link" href="glossary.html#glos_generated_column" title="generated column">generated
+          columns</a>, see
+          <a class="xref" href="create-table-generated-columns.html" title="13.1.18.7&nbsp;CREATE TABLE and Generated Columns">Section&nbsp;13.1.18.7, “CREATE TABLE and Generated Columns”</a>.
+        </p><p>
+          <a class="link" href="glossary.html#glos_stored_generated_column" title="stored generated column">Stored generated
+          columns</a> can be indexed. <code class="literal">InnoDB</code>
+          supports secondary indexes on
+          <a class="link" href="glossary.html#glos_virtual_generated_column" title="virtual generated column">virtual
+          generated columns</a>. See
+          <a class="xref" href="create-table-secondary-indexes.html" title="13.1.18.8&nbsp;Secondary Indexes and Generated Columns">Section&nbsp;13.1.18.8, “Secondary Indexes and Generated Columns”</a>.
+</p></li></ul>
+</div>
+<h4><a name="create-table-indexes-keys"></a>Indexes and Foreign Keys</h4>
+<p>
+      Several keywords apply to creation of indexes and foreign keys.
+      For general background in addition to the following descriptions,
+      see <a class="xref" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement">Section&nbsp;13.1.14, “CREATE INDEX Statement”</a>, and
+      <a class="xref" href="create-table-foreign-keys.html" title="13.1.18.5&nbsp;FOREIGN KEY Constraints">Section&nbsp;13.1.18.5, “FOREIGN KEY Constraints”</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">CONSTRAINT
+          <em class="replaceable"><code>symbol</code></em></code>
+        </p><p>
+          The <code class="literal">CONSTRAINT
+          <em class="replaceable"><code>symbol</code></em></code> clause may be
+          given to name a constraint. If the clause is not given, or a
+          <em class="replaceable"><code>symbol</code></em> is not included following
+          the <code class="literal">CONSTRAINT</code> keyword, MySQL automatically
+          generates a constraint name, with the exception noted below.
+          The <em class="replaceable"><code>symbol</code></em> value, if used, must be
+          unique per schema (database), per constraint type. A duplicate
+          <em class="replaceable"><code>symbol</code></em> results in an error. See
+          also the discussion about length limits of generated
+          constraint identifiers at <a class="xref" href="identifier-length.html" title="9.2.1&nbsp;Identifier Length Limits">Section&nbsp;9.2.1, “Identifier Length Limits”</a>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            If the <code class="literal">CONSTRAINT
+            <em class="replaceable"><code>symbol</code></em></code> clause is not
+            given in a foreign key definition, or a
+            <em class="replaceable"><code>symbol</code></em> is not included following
+            the <code class="literal">CONSTRAINT</code> keyword,
+            <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> uses the foreign key index
+            name.
+</p>
+</div>
+<p>
+          The SQL standard specifies that all types of constraints
+          (primary key, unique index, foreign key, check) belong to the
+          same namespace. In MySQL, each constraint type has its own
+          namespace per schema. Consequently, names for each type of
+          constraint must be unique per schema.
+        </p></li><li class="listitem"><p>
+          <code class="literal">PRIMARY KEY</code>
+        </p><a class="indexterm" name="idm45852583081424"></a><p>
+          A unique index where all key columns must be defined as
+          <code class="literal">NOT NULL</code>. If they are not explicitly
+          declared as <code class="literal">NOT NULL</code>, MySQL declares them
+          so implicitly (and silently). A table can have only one
+          <code class="literal">PRIMARY KEY</code>. The name of a <code class="literal">PRIMARY
+          KEY</code> is always <code class="literal">PRIMARY</code>, which thus
+          cannot be used as the name for any other kind of index.
+        </p><p>
+          If you do not have a <code class="literal">PRIMARY KEY</code> and an
+          application asks for the <code class="literal">PRIMARY KEY</code> in
+          your tables, MySQL returns the first <code class="literal">UNIQUE</code>
+          index that has no <code class="literal">NULL</code> columns as the
+          <code class="literal">PRIMARY KEY</code>.
+        </p><p>
+          In <code class="literal">InnoDB</code> tables, keep the <code class="literal">PRIMARY
+          KEY</code> short to minimize storage overhead for secondary
+          indexes. Each secondary index entry contains a copy of the
+          primary key columns for the corresponding row. (See
+          <a class="xref" href="innodb-index-types.html" title="14.6.2.1&nbsp;Clustered and Secondary Indexes">Section&nbsp;14.6.2.1, “Clustered and Secondary Indexes”</a>.)
+        </p><p>
+          In the created table, a <code class="literal">PRIMARY KEY</code> is
+          placed first, followed by all <code class="literal">UNIQUE</code>
+          indexes, and then the nonunique indexes. This helps the MySQL
+          optimizer to prioritize which index to use and also more
+          quickly to detect duplicated <code class="literal">UNIQUE</code> keys.
+        </p><p>
+          A <code class="literal">PRIMARY KEY</code> can be a multiple-column
+          index. However, you cannot create a multiple-column index
+          using the <code class="literal">PRIMARY KEY</code> key attribute in a
+          column specification. Doing so only marks that single column
+          as primary. You must use a separate <code class="literal">PRIMARY
+          KEY(<em class="replaceable"><code>key_part</code></em>, ...)</code>
+          clause.
+        </p><a class="indexterm" name="idm45852583063216"></a><p>
+          If a table has a <code class="literal">PRIMARY KEY</code> or
+          <code class="literal">UNIQUE NOT NULL</code> index that consists of a
+          single column that has an integer type, you can use
+          <code class="literal">_rowid</code> to refer to the indexed column in
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements, as described
+          in <a class="xref" href="create-index.html#create-index-unique" title="Unique Indexes">Unique Indexes</a>.
+        </p><p>
+          In MySQL, the name of a <code class="literal">PRIMARY KEY</code> is
+          <code class="literal">PRIMARY</code>. For other indexes, if you do not
+          assign a name, the index is assigned the same name as the
+          first indexed column, with an optional suffix
+          (<code class="literal">_2</code>, <code class="literal">_3</code>,
+          <code class="literal">...</code>) to make it unique. You can see index
+          names for a table using <code class="literal">SHOW INDEX FROM
+          <em class="replaceable"><code>tbl_name</code></em></code>. See
+          <a class="xref" href="show-index.html" title="13.7.5.22&nbsp;SHOW INDEX Statement">Section&nbsp;13.7.5.22, “SHOW INDEX Statement”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">KEY | INDEX</code>
+        </p><p>
+          <code class="literal">KEY</code> is normally a synonym for
+          <code class="literal">INDEX</code>. The key attribute <code class="literal">PRIMARY
+          KEY</code> can also be specified as just
+          <code class="literal">KEY</code> when given in a column definition. This
+          was implemented for compatibility with other database systems.
+        </p></li><li class="listitem"><p>
+          <code class="literal">UNIQUE</code>
+        </p><p>
+          A <code class="literal">UNIQUE</code> index creates a constraint such
+          that all values in the index must be distinct. An error occurs
+          if you try to add a new row with a key value that matches an
+          existing row. For all engines, a <code class="literal">UNIQUE</code>
+          index permits multiple <code class="literal">NULL</code> values for
+          columns that can contain <code class="literal">NULL</code>. If you
+          specify a prefix value for a column in a
+          <code class="literal">UNIQUE</code> index, the column values must be
+          unique within the prefix length.
+        </p><a class="indexterm" name="idm45852583040528"></a><p>
+          If a table has a <code class="literal">PRIMARY KEY</code> or
+          <code class="literal">UNIQUE NOT NULL</code> index that consists of a
+          single column that has an integer type, you can use
+          <code class="literal">_rowid</code> to refer to the indexed column in
+          <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statements, as described
+          in <a class="xref" href="create-index.html#create-index-unique" title="Unique Indexes">Unique Indexes</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">FULLTEXT</code>
+        </p><p>
+          A <code class="literal">FULLTEXT</code> index is a special type of index
+          used for full-text searches. Only the
+          <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> and
+          <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> storage engines support
+          <code class="literal">FULLTEXT</code> indexes. They can be created only
+          from <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+          <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>, and
+          <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns. Indexing always
+          happens over the entire column; column prefix indexing is not
+          supported and any prefix length is ignored if specified. See
+          <a class="xref" href="fulltext-search.html" title="12.10&nbsp;Full-Text Search Functions">Section&nbsp;12.10, “Full-Text Search Functions”</a>, for details of operation. A
+          <code class="literal">WITH PARSER</code> clause can be specified as an
+          <em class="replaceable"><code>index_option</code></em> value to associate a
+          parser plugin with the index if full-text indexing and
+          searching operations need special handling. This clause is
+          valid only for <code class="literal">FULLTEXT</code> indexes. Both
+          <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> and
+          <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> support full-text parser
+          plugins. See <a class="ulink" href="https://dev.mysql.com/doc/extending-mysql/5.7/en/plugin-types.html#full-text-plugin-type" target="_top">Full-Text Parser Plugins</a> and
+          <a class="ulink" href="https://dev.mysql.com/doc/extending-mysql/5.7/en/writing-full-text-plugins.html" target="_top">Writing Full-Text Parser Plugins</a> for more
+          information.
+        </p></li><li class="listitem"><p>
+          <code class="literal">SPATIAL</code>
+        </p><p>
+          You can create <code class="literal">SPATIAL</code> indexes on spatial
+          data types. Spatial types are supported only for
+          <code class="literal">MyISAM</code> and <code class="literal">InnoDB</code>
+          tables, and indexed columns must be declared as <code class="literal">NOT
+          NULL</code>. See <a class="xref" href="spatial-types.html" title="11.4&nbsp;Spatial Data Types">Section&nbsp;11.4, “Spatial Data Types”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">FOREIGN KEY</code>
+        </p><p>
+          MySQL supports foreign keys, which let you cross-reference
+          related data across tables, and foreign key constraints, which
+          help keep this spread-out data consistent. For definition and
+          option information, see
+          <a class="link" href="create-table.html#create-table-reference-definition"><em class="replaceable"><code>reference_definition</code></em></a>,
+          and
+          <a class="link" href="create-table.html#create-table-reference-option"><em class="replaceable"><code>reference_option</code></em></a>.
+        </p><p>
+          Partitioned tables employing the
+          <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> storage engine do not
+          support foreign keys. See
+          <a class="xref" href="partitioning-limitations.html" title="22.6&nbsp;Restrictions and Limitations on Partitioning">Section&nbsp;22.6, “Restrictions and Limitations on Partitioning”</a>, for more
+          information.
+        </p></li><li class="listitem"><p>
+          <code class="literal">CHECK</code>
+        </p><p>
+          The <code class="literal">CHECK</code> clause is parsed but ignored by
+          all storage engines.
+        </p></li><li class="listitem"><p>
+          <code class="literal"><em class="replaceable"><code>key_part</code></em></code>
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              A <em class="replaceable"><code>key_part</code></em> specification can
+              end with <code class="literal">ASC</code> or
+              <code class="literal">DESC</code>. These keywords are permitted for
+              future extensions for specifying ascending or descending
+              index value storage. Currently, they are parsed but
+              ignored; index values are always stored in ascending
+              order.
+            </p></li><li class="listitem"><p>
+              Prefixes, defined by the <em class="replaceable"><code>length</code></em>
+              attribute, can be up to 767 bytes long for
+              <code class="literal">InnoDB</code> tables or 3072 bytes if the
+              <a class="link" href="innodb-parameters.html#sysvar_innodb_large_prefix"><code class="literal">innodb_large_prefix</code></a>
+              option is enabled. For <code class="literal">MyISAM</code> tables,
+              the prefix length limit is 1000 bytes.
+            </p><p>
+              Prefix <span class="emphasis"><em>limits</em></span> are measured in bytes.
+              However, prefix <span class="emphasis"><em>lengths</em></span> for index
+              specifications in <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+              TABLE</code></a>, <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER
+              TABLE</code></a>, and <a class="link" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement"><code class="literal">CREATE
+              INDEX</code></a> statements are interpreted as number of
+              characters for nonbinary string types
+              (<a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+              <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>,
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a>) and number of bytes
+              for binary string types
+              (<a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a>,
+              <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a>,
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>). Take this into
+              account when specifying a prefix length for a nonbinary
+              string column that uses a multibyte character set.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal"><em class="replaceable"><code>index_type</code></em></code>
+        </p><p>
+          Some storage engines permit you to specify an index type when
+          creating an index. The syntax for the
+          <em class="replaceable"><code>index_type</code></em> specifier is
+          <code class="literal">USING <em class="replaceable"><code>type_name</code></em></code>.
+        </p><p>
+          Example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE lookup
+  (id INT, INDEX USING BTREE (id))
+  ENGINE = MEMORY;</code></pre><p>
+          The preferred position for <code class="literal">USING</code> is after
+          the index column list. It can be given before the column list,
+          but support for use of the option in that position is
+          deprecated; expect it to be removed in a future MySQL release.
+        </p></li><li class="listitem"><p>
+          <code class="literal"><em class="replaceable"><code>index_option</code></em></code>
+        </p><p>
+          <em class="replaceable"><code>index_option</code></em> values specify
+          additional options for an index.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              <code class="literal">KEY_BLOCK_SIZE</code>
+            </p><p>
+              For <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> tables,
+              <code class="literal">KEY_BLOCK_SIZE</code> optionally specifies the
+              size in bytes to use for index key blocks. The value is
+              treated as a hint; a different size could be used if
+              necessary. A <code class="literal">KEY_BLOCK_SIZE</code> value
+              specified for an individual index definition overrides the
+              table-level <code class="literal">KEY_BLOCK_SIZE</code> value.
+            </p><p>
+              For information about the table-level
+              <code class="literal">KEY_BLOCK_SIZE</code> attribute, see
+              <a class="xref" href="create-table.html#create-table-options" title="Table Options">Table Options</a>.
+            </p></li><li class="listitem"><p>
+              <code class="literal">WITH PARSER</code>
+            </p><p>
+              The <code class="literal">WITH PARSER</code> option can be used only
+              with <code class="literal">FULLTEXT</code> indexes. It associates a
+              parser plugin with the index if full-text indexing and
+              searching operations need special handling. Both
+              <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> and
+              <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> support full-text
+              parser plugins. If you have a
+              <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> table with an
+              associated full-text parser plugin, you can convert the
+              table to <code class="literal">InnoDB</code> using <code class="literal">ALTER
+              TABLE</code>.
+            </p></li><li class="listitem"><p>
+              <code class="literal">COMMENT</code>
+            </p><p>
+              Index definitions can include an optional comment of up to
+              1024 characters.
+            </p><p>
+              You can set the <code class="literal">InnoDB</code>
+              <code class="literal">MERGE_THRESHOLD</code> value for an individual
+              index using the
+              <code class="literal"><em class="replaceable"><code>index_option</code></em></code>
+              <code class="literal">COMMENT</code> clause. See
+              <a class="xref" href="index-page-merge-threshold.html" title="14.8.12&nbsp;Configuring the Merge Threshold for Index Pages">Section&nbsp;14.8.12, “Configuring the Merge Threshold for Index Pages”</a>.
+</p></li></ul>
+</div>
+<p>
+          For more information about permissible
+          <em class="replaceable"><code>index_option</code></em> values, see
+          <a class="xref" href="create-index.html" title="13.1.14&nbsp;CREATE INDEX Statement">Section&nbsp;13.1.14, “CREATE INDEX Statement”</a>. For more information about
+          indexes, see <a class="xref" href="mysql-indexes.html" title="8.3.1&nbsp;How MySQL Uses Indexes">Section&nbsp;8.3.1, “How MySQL Uses Indexes”</a>.
+        </p></li><li class="listitem"><p><a name="create-table-reference-definition"></a>
+          <code class="literal"><em class="replaceable"><code>reference_definition</code></em></code>
+        </p><p>
+          For <em class="replaceable"><code>reference_definition</code></em> syntax
+          details and examples, see
+          <a class="xref" href="create-table-foreign-keys.html" title="13.1.18.5&nbsp;FOREIGN KEY Constraints">Section&nbsp;13.1.18.5, “FOREIGN KEY Constraints”</a>.
+        </p><p>
+          <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> and
+          <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables support checking of
+          foreign key constraints. The columns of the referenced table
+          must always be explicitly named. Both <code class="literal">ON
+          DELETE</code> and <code class="literal">ON UPDATE</code> actions on
+          foreign keys are supported. For more detailed information and
+          examples, see <a class="xref" href="create-table-foreign-keys.html" title="13.1.18.5&nbsp;FOREIGN KEY Constraints">Section&nbsp;13.1.18.5, “FOREIGN KEY Constraints”</a>.
+        </p><p>
+          For other storage engines, MySQL Server parses and ignores the
+          <code class="literal">FOREIGN KEY</code> syntax in
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statements.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+            For users familiar with the ANSI/ISO SQL Standard, please
+            note that no storage engine, including
+            <code class="literal">InnoDB</code>, recognizes or enforces the
+            <code class="literal">MATCH</code> clause used in referential
+            integrity constraint definitions. Use of an explicit
+            <code class="literal">MATCH</code> clause does not have the specified
+            effect, and also causes <code class="literal">ON DELETE</code> and
+            <code class="literal">ON UPDATE</code> clauses to be ignored. For
+            these reasons, specifying <code class="literal">MATCH</code> should be
+            avoided.
+          </p><p>
+            The <code class="literal">MATCH</code> clause in the SQL standard
+            controls how <code class="literal">NULL</code> values in a composite
+            (multiple-column) foreign key are handled when comparing to
+            a primary key. <code class="literal">InnoDB</code> essentially
+            implements the semantics defined by <code class="literal">MATCH
+            SIMPLE</code>, which permit a foreign key to be all or
+            partially <code class="literal">NULL</code>. In that case, the (child
+            table) row containing such a foreign key is permitted to be
+            inserted, and does not match any row in the referenced
+            (parent) table. It is possible to implement other semantics
+            using triggers.
+          </p><p>
+            Additionally, MySQL requires that the referenced columns be
+            indexed for performance. However, <code class="literal">InnoDB</code>
+            does not enforce any requirement that the referenced columns
+            be declared <code class="literal">UNIQUE</code> or <code class="literal">NOT
+            NULL</code>. The handling of foreign key references to
+            nonunique keys or keys that contain <code class="literal">NULL</code>
+            values is not well defined for operations such as
+            <code class="literal">UPDATE</code> or <code class="literal">DELETE
+            CASCADE</code>. You are advised to use foreign keys that
+            reference only keys that are both <code class="literal">UNIQUE</code>
+            (or <code class="literal">PRIMARY</code>) and <code class="literal">NOT
+            NULL</code>.
+          </p><p>
+            MySQL parses but ignores <span class="quote">“<span class="quote">inline
+            <code class="literal">REFERENCES</code> specifications</span>”</span> (as
+            defined in the SQL standard) where the references are
+            defined as part of the column specification. MySQL accepts
+            <code class="literal">REFERENCES</code> clauses only when specified as
+            part of a separate <code class="literal">FOREIGN KEY</code>
+            specification. For more information, see
+            <a class="xref" href="ansi-diff-foreign-keys.html" title="1.6.2.3&nbsp;FOREIGN KEY Constraint Differences">Section&nbsp;1.6.2.3, “FOREIGN KEY Constraint Differences”</a>.
+</p>
+</div>
+</li><li class="listitem"><p><a name="create-table-reference-option"></a>
+          <code class="literal"><em class="replaceable"><code>reference_option</code></em></code>
+        </p><p>
+          For information about the <code class="literal">RESTRICT</code>,
+          <code class="literal">CASCADE</code>, <code class="literal">SET NULL</code>,
+          <code class="literal">NO ACTION</code>, and <code class="literal">SET
+          DEFAULT</code> options, see
+          <a class="xref" href="create-table-foreign-keys.html" title="13.1.18.5&nbsp;FOREIGN KEY Constraints">Section&nbsp;13.1.18.5, “FOREIGN KEY Constraints”</a>.
+</p></li></ul>
+</div>
+<h4><a name="create-table-options"></a>Table Options</h4>
+<p>
+      Table options are used to optimize the behavior of the table. In
+      most cases, you do not have to specify any of them. These options
+      apply to all storage engines unless otherwise indicated. Options
+      that do not apply to a given storage engine may be accepted and
+      remembered as part of the table definition. Such options then
+      apply if you later use <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a>
+      to convert the table to use a different storage engine.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">ENGINE</code>
+        </p><p>
+          Specifies the storage engine for the table, using one of the
+          names shown in the following table. The engine name can be
+          unquoted or quoted. The quoted name
+          <code class="literal">'DEFAULT'</code> is recognized but ignored.
+</p>
+<div class="informaltable">
+<table summary="Storage engine names permitted for the ENGINE table option and a description of each engine."><colgroup><col style="width: 25%"><col style="width: 70%"></colgroup><thead><tr>
+              <th>Storage Engine</th>
+              <th>Description</th>
+            </tr></thead><tbody><tr>
+              <td><code class="literal">InnoDB</code></td>
+              <td>Transaction-safe tables with row locking and foreign keys. The default
+                storage engine for new tables. See
+                <a class="xref" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine">Chapter&nbsp;14, <i>The InnoDB Storage Engine</i></a>, and in
+                particular <a class="xref" href="innodb-introduction.html" title="14.1&nbsp;Introduction to InnoDB">Section&nbsp;14.1, “Introduction to InnoDB”</a> if you
+                have MySQL experience but are new to
+                <code class="literal">InnoDB</code>.</td>
+            </tr><tr>
+              <td><code class="literal">MyISAM</code></td>
+              <td>The binary portable storage engine that is primarily used for read-only
+                or read-mostly workloads. See
+                <a class="xref" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine">Section&nbsp;15.2, “The MyISAM Storage Engine”</a>.</td>
+            </tr><tr>
+              <td><code class="literal">MEMORY</code></td>
+              <td>The data for this storage engine is stored only in memory. See
+                <a class="xref" href="memory-storage-engine.html" title="15.3&nbsp;The MEMORY Storage Engine">Section&nbsp;15.3, “The MEMORY Storage Engine”</a>.</td>
+            </tr><tr>
+              <td><code class="literal">CSV</code></td>
+              <td>Tables that store rows in comma-separated values format. See
+                <a class="xref" href="csv-storage-engine.html" title="15.4&nbsp;The CSV Storage Engine">Section&nbsp;15.4, “The CSV Storage Engine”</a>.</td>
+            </tr><tr>
+              <td><code class="literal">ARCHIVE</code></td>
+              <td>The archiving storage engine. See
+                <a class="xref" href="archive-storage-engine.html" title="15.5&nbsp;The ARCHIVE Storage Engine">Section&nbsp;15.5, “The ARCHIVE Storage Engine”</a>.</td>
+            </tr><tr>
+              <td><code class="literal">EXAMPLE</code></td>
+              <td>An example engine. See <a class="xref" href="example-storage-engine.html" title="15.9&nbsp;The EXAMPLE Storage Engine">Section&nbsp;15.9, “The EXAMPLE Storage Engine”</a>.</td>
+            </tr><tr>
+              <td><code class="literal">FEDERATED</code></td>
+              <td>Storage engine that accesses remote tables. See
+                <a class="xref" href="federated-storage-engine.html" title="15.8&nbsp;The FEDERATED Storage Engine">Section&nbsp;15.8, “The FEDERATED Storage Engine”</a>.</td>
+            </tr><tr>
+              <td><code class="literal">HEAP</code></td>
+              <td>This is a synonym for <code class="literal">MEMORY</code>.</td>
+            </tr><tr>
+              <td><code class="literal">MERGE</code></td>
+              <td>A collection of <code class="literal">MyISAM</code> tables used as one table. Also
+                known as <code class="literal">MRG_MyISAM</code>. See
+                <a class="xref" href="merge-storage-engine.html" title="15.7&nbsp;The MERGE Storage Engine">Section&nbsp;15.7, “The MERGE Storage Engine”</a>.</td>
+            </tr><tr>
+              <td><a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a></td>
+              <td>Clustered, fault-tolerant, memory-based tables, supporting transactions
+                and foreign keys. Also known as
+                <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDBCLUSTER</code></a>. See
+                <a class="xref" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6">Chapter&nbsp;21, <i>MySQL NDB Cluster 7.5 and NDB Cluster 7.6</i></a>.</td>
+</tr></tbody></table>
+</div>
+<p>
+          By default, if a storage engine is specified that is not
+          available, the statement fails with an error. You can override
+          this behavior by removing
+          <a class="link" href="sql-mode.html#sqlmode_no_engine_substitution"><code class="literal">NO_ENGINE_SUBSTITUTION</code></a> from
+          the server SQL mode (see <a class="xref" href="sql-mode.html" title="5.1.10&nbsp;Server SQL Modes">Section&nbsp;5.1.10, “Server SQL Modes”</a>) so that
+          MySQL allows substitution of the specified engine with the
+          default storage engine instead. Normally in such cases, this
+          is <code class="literal">InnoDB</code>, which is the default value for
+          the <a class="link" href="server-system-variables.html#sysvar_default_storage_engine"><code class="literal">default_storage_engine</code></a>
+          system variable. When
+          <code class="literal">NO_ENGINE_SUBSTITUTION</code> is disabled, a
+          warning occurs if the storage engine specification is not
+          honored.
+        </p></li><li class="listitem"><p>
+          <code class="literal">AUTO_INCREMENT</code>
+        </p><p>
+          The initial <code class="literal">AUTO_INCREMENT</code> value for the
+          table. In MySQL 5.7, this works for
+          <code class="literal">MyISAM</code>, <code class="literal">MEMORY</code>,
+          <code class="literal">InnoDB</code>, and <code class="literal">ARCHIVE</code>
+          tables. To set the first auto-increment value for engines that
+          do not support the <code class="literal">AUTO_INCREMENT</code> table
+          option, insert a <span class="quote">“<span class="quote">dummy</span>”</span> row with a value one
+          less than the desired value after creating the table, and then
+          delete the dummy row.
+        </p><p>
+          For engines that support the <code class="literal">AUTO_INCREMENT</code>
+          table option in <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>
+          statements, you can also use <code class="literal">ALTER TABLE
+          <em class="replaceable"><code>tbl_name</code></em> AUTO_INCREMENT =
+          <em class="replaceable"><code>N</code></em></code> to reset the
+          <code class="literal">AUTO_INCREMENT</code> value. The value cannot be
+          set lower than the maximum value currently in the column.
+        </p></li><li class="listitem"><p>
+          <code class="literal">AVG_ROW_LENGTH</code>
+        </p><p>
+          An approximation of the average row length for your table. You
+          need to set this only for large tables with variable-size
+          rows.
+        </p><p>
+          When you create a <code class="literal">MyISAM</code> table, MySQL uses
+          the product of the <code class="literal">MAX_ROWS</code> and
+          <code class="literal">AVG_ROW_LENGTH</code> options to decide how big
+          the resulting table is. If you don't specify either option,
+          the maximum size for <code class="literal">MyISAM</code> data and index
+          files is 256TB by default. (If your operating system does not
+          support files that large, table sizes are constrained by the
+          file size limit.) If you want to keep down the pointer sizes
+          to make the index smaller and faster and you don't really need
+          big files, you can decrease the default pointer size by
+          setting the
+          <a class="link" href="server-system-variables.html#sysvar_myisam_data_pointer_size"><code class="literal">myisam_data_pointer_size</code></a>
+          system variable. (See
+          <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>.) If you want all
+          your tables to be able to grow above the default limit and are
+          willing to have your tables slightly slower and larger than
+          necessary, you can increase the default pointer size by
+          setting this variable. Setting the value to 7 permits table
+          sizes up to 65,536TB.
+        </p></li><li class="listitem"><p>
+          <code class="literal">[DEFAULT] CHARACTER SET</code>
+        </p><p>
+          Specifies a default character set for the table.
+          <code class="literal">CHARSET</code> is a synonym for <code class="literal">CHARACTER
+          SET</code>. If the character set name is
+          <code class="literal">DEFAULT</code>, the database character set is
+          used.
+        </p></li><li class="listitem"><p>
+          <code class="literal">CHECKSUM</code>
+        </p><p>
+          Set this to 1 if you want MySQL to maintain a live checksum
+          for all rows (that is, a checksum that MySQL updates
+          automatically as the table changes). This makes the table a
+          little slower to update, but also makes it easier to find
+          corrupted tables. The <a class="link" href="checksum-table.html" title="13.7.2.3&nbsp;CHECKSUM TABLE Statement"><code class="literal">CHECKSUM
+          TABLE</code></a> statement reports the checksum.
+          (<code class="literal">MyISAM</code> only.)
+        </p></li><li class="listitem"><p>
+          <code class="literal">[DEFAULT] COLLATE</code>
+        </p><p>
+          Specifies a default collation for the table.
+        </p></li><li class="listitem"><p>
+          <code class="literal">COMMENT</code>
+        </p><p>
+          A comment for the table, up to 2048 characters long.
+        </p><p>
+          You can set the <code class="literal">InnoDB</code>
+          <code class="literal">MERGE_THRESHOLD</code> value for a table using the
+          <code class="literal"><em class="replaceable"><code>table_option</code></em></code>
+          <code class="literal">COMMENT</code> clause. See
+          <a class="xref" href="index-page-merge-threshold.html" title="14.8.12&nbsp;Configuring the Merge Threshold for Index Pages">Section&nbsp;14.8.12, “Configuring the Merge Threshold for Index Pages”</a>.
+        </p><p><a name="create-table-comment-ndb-table-options"></a><b>Setting NDB_TABLE options.&nbsp;</b>
+            <a class="indexterm" name="idm45852582814976"></a>
+
+            In MySQL NDB Cluster 7.5.2 and later, the table comment in a
+            <code class="literal">CREATE TABLE</code> or
+            <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statement can
+            also be used to specify one to four of the
+            <code class="literal">NDB_TABLE</code> options
+            <code class="literal">NOLOGGING</code>,
+            <code class="literal">READ_BACKUP</code>,
+            <code class="literal">PARTITION_BALANCE</code>, or
+            <code class="literal">FULLY_REPLICATED</code> as a set of name-value
+            pairs, separated by commas if need be, immediately following
+            the string <code class="literal">NDB_TABLE=</code> that begins the
+            quoted comment text. An example statement using this syntax
+            is shown here (emphasized text):
+          </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (
+    c1 INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    c2 VARCHAR(100),
+    c3 VARCHAR(100) )
+ENGINE=NDB
+<em>COMMENT="NDB_TABLE=READ_BACKUP=0,PARTITION_BALANCE=FOR_RP_BY_NODE"</em>;</code></pre><p>
+          Spaces are not permitted within the quoted string. The string
+          is case-insensitive.
+        </p><p>
+          The comment is displayed as part of the ouput of
+          <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE TABLE</code></a>. The text of
+          the comment is also available as the TABLE_COMMENT column of
+          the MySQL Information Schema
+          <a class="link" href="information-schema-tables-table.html" title="24.3.25&nbsp;The INFORMATION_SCHEMA TABLES Table"><code class="literal">TABLES</code></a> table.
+        </p><p>
+          This comment syntax is also supported with
+          <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> statements for
+          <code class="literal">NDB</code> tables. Keep in mind that a table
+          comment used with <code class="literal">ALTER TABLE</code> replaces any
+          existing comment which the table might have had perviously.
+        </p><p>
+          Setting the <code class="literal">MERGE_THRESHOLD</code> option in table
+          comments is not supported for <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a>
+          tables (it is ignored).
+        </p><p>
+          For complete syntax information and examples, see
+          <a class="xref" href="create-table-ndb-comment-options.html" title="13.1.18.9&nbsp;Setting NDB Comment Options">Section&nbsp;13.1.18.9, “Setting NDB Comment Options”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">COMPRESSION</code>
+        </p><p>
+          The compression algorithm used for page level compression for
+          <code class="literal">InnoDB</code> tables. Supported values include
+          <code class="literal">Zlib</code>, <code class="literal">LZ4</code>, and
+          <code class="literal">None</code>. The <code class="literal">COMPRESSION</code>
+          attribute was introduced with the transparent page compression
+          feature. Page compression is only supported with
+          <code class="literal">InnoDB</code> tables that reside in
+          <a class="link" href="glossary.html#glos_file_per_table" title="file-per-table">file-per-table</a>
+          tablespaces, and is only available on Linux and Windows
+          platforms that support sparse files and hole punching. For
+          more information, see
+          <a class="xref" href="innodb-page-compression.html" title="14.9.2&nbsp;InnoDB Page Compression">Section&nbsp;14.9.2, “InnoDB Page Compression”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">CONNECTION</code>
+        </p><p>
+          The connection string for a <code class="literal">FEDERATED</code>
+          table.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            Older versions of MySQL used a <code class="literal">COMMENT</code>
+            option for the connection string.
+</p>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal">DATA DIRECTORY</code>, <code class="literal">INDEX
+          DIRECTORY</code>
+        </p><p>
+          For <code class="literal">InnoDB</code>, the <code class="literal">DATA
+          DIRECTORY='<em class="replaceable"><code>directory</code></em>'</code>
+          clause permits creating a table outside of the data directory.
+          The <a class="link" href="innodb-parameters.html#sysvar_innodb_file_per_table"><code class="literal">innodb_file_per_table</code></a>
+          variable must be enabled to use the <code class="literal">DATA
+          DIRECTORY</code> clause. The full directory path must be
+          specified. For more information, see
+          <a class="xref" href="innodb-create-table-external.html" title="14.6.1.2&nbsp;Creating Tables Externally">Section&nbsp;14.6.1.2, “Creating Tables Externally”</a>.
+        </p><p>
+          When creating <code class="literal">MyISAM</code> tables, you can use
+          the <code class="literal">DATA
+          DIRECTORY='<em class="replaceable"><code>directory</code></em>'</code>
+          clause, the <code class="literal">INDEX
+          DIRECTORY='<em class="replaceable"><code>directory</code></em>'</code>
+          clause, or both. They specify where to put a
+          <code class="literal">MyISAM</code> table's data file and index file,
+          respectively. Unlike <code class="literal">InnoDB</code> tables, MySQL
+          does not create subdirectories that correspond to the database
+          name when creating a <code class="literal">MyISAM</code> table with a
+          <code class="literal">DATA DIRECTORY</code> or <code class="literal">INDEX
+          DIRECTORY</code> option. Files are created in the directory
+          that is specified.
+        </p><p>
+          As of MySQL 5.7.17, you must have the
+          <a class="link" href="privileges-provided.html#priv_file"><code class="literal">FILE</code></a> privilege to use the
+          <code class="literal">DATA DIRECTORY</code> or <code class="literal">INDEX
+          DIRECTORY</code> table option.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+            Table-level <code class="literal">DATA DIRECTORY</code> and
+            <code class="literal">INDEX DIRECTORY</code> options are ignored for
+            partitioned tables. (Bug #32091)
+</p>
+</div>
+<p>
+          These options work only when you are not using the
+          <a class="link" href="server-options.html#option_mysqld_symbolic-links"><code class="option">--skip-symbolic-links</code></a>
+          option. Your operating system must also have a working,
+          thread-safe <code class="literal">realpath()</code> call. See
+          <a class="xref" href="symbolic-links-to-tables.html" title="8.12.3.2&nbsp;Using Symbolic Links for MyISAM Tables on Unix">Section&nbsp;8.12.3.2, “Using Symbolic Links for MyISAM Tables on Unix”</a>, for more complete
+          information.
+        </p><p>
+          If a <code class="literal">MyISAM</code> table is created with no
+          <code class="literal">DATA DIRECTORY</code> option, the
+          <code class="filename">.MYD</code> file is created in the database
+          directory. By default, if <code class="literal">MyISAM</code> finds an
+          existing <code class="filename">.MYD</code> file in this case, it
+          overwrites it. The same applies to <code class="filename">.MYI</code>
+          files for tables created with no <code class="literal">INDEX
+          DIRECTORY</code> option. To suppress this behavior, start
+          the server with the
+          <a class="link" href="server-system-variables.html#sysvar_keep_files_on_create"><code class="option">--keep_files_on_create</code></a> option,
+          in which case <code class="literal">MyISAM</code> does not overwrite
+          existing files and returns an error instead.
+        </p><p>
+          If a <code class="literal">MyISAM</code> table is created with a
+          <code class="literal">DATA DIRECTORY</code> or <code class="literal">INDEX
+          DIRECTORY</code> option and an existing
+          <code class="filename">.MYD</code> or <code class="filename">.MYI</code> file is
+          found, MyISAM always returns an error. It does not overwrite a
+          file in the specified directory.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+            You cannot use path names that contain the MySQL data
+            directory with <code class="literal">DATA DIRECTORY</code> or
+            <code class="literal">INDEX DIRECTORY</code>. This includes
+            partitioned tables and individual table partitions. (See Bug
+            #32167.)
+</p>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal">DELAY_KEY_WRITE</code>
+        </p><p>
+          Set this to 1 if you want to delay key updates for the table
+          until the table is closed. See the description of the
+          <a class="link" href="server-system-variables.html#sysvar_delay_key_write"><code class="literal">delay_key_write</code></a> system
+          variable in <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>.
+          (<code class="literal">MyISAM</code> only.)
+        </p></li><li class="listitem"><p>
+          <code class="literal">ENCRYPTION</code>
+        </p><p>
+          Set the <code class="literal">ENCRYPTION</code> option to
+          <code class="literal">'Y'</code> to enable page-level data encryption
+          for an <code class="literal">InnoDB</code> table created in a
+          <a class="link" href="glossary.html#glos_file_per_table" title="file-per-table">file-per-table</a>
+          tablespace. Option values are not case-sensitive. The
+          <code class="literal">ENCRYPTION</code> option was introduced with the
+          <code class="literal">InnoDB</code> tablespace encryption feature; see
+          <a class="xref" href="innodb-data-encryption.html" title="14.14&nbsp;InnoDB Data-at-Rest Encryption">Section&nbsp;14.14, “InnoDB Data-at-Rest Encryption”</a>. A
+          <code class="literal">keyring</code> plugin must be installed and
+          configured before encryption can be enabled.
+        </p></li><li class="listitem"><p>
+          <code class="literal">INSERT_METHOD</code>
+        </p><p>
+          If you want to insert data into a <code class="literal">MERGE</code>
+          table, you must specify with <code class="literal">INSERT_METHOD</code>
+          the table into which the row should be inserted.
+          <code class="literal">INSERT_METHOD</code> is an option useful for
+          <code class="literal">MERGE</code> tables only. Use a value of
+          <code class="literal">FIRST</code> or <code class="literal">LAST</code> to have
+          inserts go to the first or last table, or a value of
+          <code class="literal">NO</code> to prevent inserts. See
+          <a class="xref" href="merge-storage-engine.html" title="15.7&nbsp;The MERGE Storage Engine">Section&nbsp;15.7, “The MERGE Storage Engine”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">KEY_BLOCK_SIZE</code>
+        </p><p>
+          For <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> tables,
+          <code class="literal">KEY_BLOCK_SIZE</code> optionally specifies the
+          size in bytes to use for index key blocks. The value is
+          treated as a hint; a different size could be used if
+          necessary. A <code class="literal">KEY_BLOCK_SIZE</code> value specified
+          for an individual index definition overrides the table-level
+          <code class="literal">KEY_BLOCK_SIZE</code> value.
+        </p><p>
+          For <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tables,
+          <code class="literal">KEY_BLOCK_SIZE</code> specifies the
+          <a class="link" href="glossary.html#glos_page" title="page">page</a> size in kilobytes to use
+          for <a class="link" href="glossary.html#glos_compression" title="compression">compressed</a>
+          <code class="literal">InnoDB</code> tables. The
+          <code class="literal">KEY_BLOCK_SIZE</code> value is treated as a hint;
+          a different size could be used by <code class="literal">InnoDB</code> if
+          necessary. <code class="literal">KEY_BLOCK_SIZE</code> can only be less
+          than or equal to the
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_page_size"><code class="literal">innodb_page_size</code></a> value. A
+          value of 0 represents the default compressed page size, which
+          is half of the
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_page_size"><code class="literal">innodb_page_size</code></a> value.
+          Depending on
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_page_size"><code class="literal">innodb_page_size</code></a>, possible
+          <code class="literal">KEY_BLOCK_SIZE</code> values include 0, 1, 2, 4,
+          8, and 16. See <a class="xref" href="innodb-table-compression.html" title="14.9.1&nbsp;InnoDB Table Compression">Section&nbsp;14.9.1, “InnoDB Table Compression”</a> for
+          more information.
+        </p><p>
+          Oracle recommends enabling
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a> when
+          specifying <code class="literal">KEY_BLOCK_SIZE</code> for
+          <code class="literal">InnoDB</code> tables. When
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a> is
+          enabled, specifying an invalid
+          <code class="literal">KEY_BLOCK_SIZE</code> value returns an error. If
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a> is
+          disabled, an invalid <code class="literal">KEY_BLOCK_SIZE</code> value
+          results in a warning, and the
+          <code class="literal">KEY_BLOCK_SIZE</code> option is ignored.
+        </p><p>
+          The <code class="literal">Create_options</code> column in response to
+          <a class="link" href="show-table-status.html" title="13.7.5.36&nbsp;SHOW TABLE STATUS Statement"><code class="literal">SHOW TABLE STATUS</code></a> reports the
+          originally specified <code class="literal">KEY_BLOCK_SIZE</code> option,
+          as does <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE TABLE</code></a>.
+        </p><p>
+          <code class="literal">InnoDB</code> only supports
+          <code class="literal">KEY_BLOCK_SIZE</code> at the table level.
+        </p><p>
+          <code class="literal">KEY_BLOCK_SIZE</code> is not supported with 32KB
+          and 64KB <a class="link" href="innodb-parameters.html#sysvar_innodb_page_size"><code class="literal">innodb_page_size</code></a>
+          values. <code class="literal">InnoDB</code> table compression does not
+          support these pages sizes.
+        </p></li><li class="listitem"><p>
+          <code class="literal">MAX_ROWS</code>
+        </p><p>
+          The maximum number of rows you plan to store in the table.
+          This is not a hard limit, but rather a hint to the storage
+          engine that the table must be able to store at least this many
+          rows.
+</p><a class="indexterm" name="idm45852582687456"></a><a class="indexterm" name="idm45852582685968"></a><a class="indexterm" name="idm45852582684480"></a><a class="indexterm" name="idm45852582682992"></a>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+            The use of <code class="literal">MAX_ROWS</code> with
+            <code class="literal">NDB</code> tables to control the number of table
+            partitions is deprecated as of NDB Cluster 7.5.4. It remains
+            supported in later versions for backward compatibility, but
+            is subject to removal in a future release. Use
+            PARTITION_BALANCE instead; see
+            <a class="xref" href="create-table.html#create-table-comment-ndb-table-options" title="Setting NDB_TABLE options">Setting NDB_TABLE options</a>.
+</p>
+</div>
+<p>
+          The <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> storage engine treats
+          this value as a maximum. If you plan to create very large NDB
+          Cluster tables (containing millions of rows), you should use
+          this option to insure that <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a>
+          allocates sufficient number of index slots in the hash table
+          used for storing hashes of the table's primary keys by
+          setting <code class="literal">MAX_ROWS = 2 *
+          <em class="replaceable"><code>rows</code></em></code>, where
+          <em class="replaceable"><code>rows</code></em> is the number of rows that you
+          expect to insert into the table.
+        </p><p>
+          The maximum <code class="literal">MAX_ROWS</code> value is 4294967295;
+          larger values are truncated to this limit.
+        </p></li><li class="listitem"><p>
+          <code class="literal">MIN_ROWS</code>
+        </p><p>
+          The minimum number of rows you plan to store in the table. The
+          <a class="link" href="memory-storage-engine.html" title="15.3&nbsp;The MEMORY Storage Engine"><code class="literal">MEMORY</code></a> storage engine uses this
+          option as a hint about memory use.
+        </p></li><li class="listitem"><p>
+          <code class="literal">PACK_KEYS</code>
+        </p><p>
+          Takes effect only with <code class="literal">MyISAM</code> tables. Set
+          this option to 1 if you want to have smaller indexes. This
+          usually makes updates slower and reads faster. Setting the
+          option to 0 disables all packing of keys. Setting it to
+          <code class="literal">DEFAULT</code> tells the storage engine to pack
+          only long <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">CHAR</code></a>,
+          <a class="link" href="char.html" title="11.3.2&nbsp;The CHAR and VARCHAR Types"><code class="literal">VARCHAR</code></a>,
+          <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">BINARY</code></a>, or
+          <a class="link" href="binary-varbinary.html" title="11.3.3&nbsp;The BINARY and VARBINARY Types"><code class="literal">VARBINARY</code></a> columns.
+        </p><p>
+          If you do not use <code class="literal">PACK_KEYS</code>, the default is
+          to pack strings, but not numbers. If you use
+          <code class="literal">PACK_KEYS=1</code>, numbers are packed as well.
+        </p><p>
+          When packing binary number keys, MySQL uses prefix
+          compression:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              Every key needs one extra byte to indicate how many bytes
+              of the previous key are the same for the next key.
+            </p></li><li class="listitem"><p>
+              The pointer to the row is stored in high-byte-first order
+              directly after the key, to improve compression.
+</p></li></ul>
+</div>
+<p>
+          This means that if you have many equal keys on two consecutive
+          rows, all following <span class="quote">“<span class="quote">same</span>”</span> keys usually only take
+          two bytes (including the pointer to the row). Compare this to
+          the ordinary case where the following keys takes
+          <code class="literal">storage_size_for_key + pointer_size</code> (where
+          the pointer size is usually 4). Conversely, you get a
+          significant benefit from prefix compression only if you have
+          many numbers that are the same. If all keys are totally
+          different, you use one byte more per key, if the key is not a
+          key that can have <code class="literal">NULL</code> values. (In this
+          case, the packed key length is stored in the same byte that is
+          used to mark if a key is <code class="literal">NULL</code>.)
+        </p></li><li class="listitem"><p>
+          <code class="literal">PASSWORD</code>
+        </p><p>
+          This option is unused. If you have a need to scramble your
+          <code class="filename">.frm</code> files and make them unusable to any
+          other MySQL server, please contact our sales department.
+        </p></li><li class="listitem"><p>
+          <code class="literal">ROW_FORMAT</code>
+        </p><p>
+          Defines the physical format in which the rows are stored.
+        </p><p>
+          When creating a table with
+          <a class="link" href="glossary.html#glos_strict_mode" title="strict mode">strict mode</a> disabled,
+          the storage engine's default row format is used if the
+          specified row format is not supported. The actual row format
+          of the table is reported in the <code class="literal">Row_format</code>
+          column in response to <a class="link" href="show-table-status.html" title="13.7.5.36&nbsp;SHOW TABLE STATUS Statement"><code class="literal">SHOW TABLE
+          STATUS</code></a>. The <code class="literal">Create_options</code> column
+          shows the row format that was specified in the
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement, as does
+          <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE TABLE</code></a>.
+        </p><p>
+          Row format choices differ depending on the storage engine used
+          for the table.
+        </p><p>
+          For <code class="literal">InnoDB</code> tables:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              The default row format is defined by
+              <a class="link" href="innodb-parameters.html#sysvar_innodb_default_row_format"><code class="literal">innodb_default_row_format</code></a>,
+              which has a default setting of <code class="literal">DYNAMIC</code>.
+              The default row format is used when the
+              <code class="literal">ROW_FORMAT</code> option is not defined or
+              when <code class="literal">ROW_FORMAT=DEFAULT</code> is used.
+            </p><p>
+              If the <code class="literal">ROW_FORMAT</code> option is not
+              defined, or if <code class="literal">ROW_FORMAT=DEFAULT</code> is
+              used, operations that rebuild a table also silently change
+              the row format of the table to the default defined by
+              <a class="link" href="innodb-parameters.html#sysvar_innodb_default_row_format"><code class="literal">innodb_default_row_format</code></a>.
+              For more information, see
+              <a class="xref" href="innodb-row-format.html#innodb-row-format-defining" title="Defining the Row Format of a Table">Defining the Row Format of a Table</a>.
+            </p></li><li class="listitem"><p>
+              For more efficient <code class="literal">InnoDB</code> storage of
+              data types, especially <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>
+              types, use the <code class="literal">DYNAMIC</code>. See
+              <a class="xref" href="innodb-row-format.html#innodb-row-format-dynamic" title="DYNAMIC Row Format">DYNAMIC Row Format</a> for
+              requirements associated with the
+              <code class="literal">DYNAMIC</code> row format.
+            </p></li><li class="listitem"><p>
+              To enable compression for <code class="literal">InnoDB</code>
+              tables, specify <code class="literal">ROW_FORMAT=COMPRESSED</code>.
+              See <a class="xref" href="innodb-compression.html" title="14.9&nbsp;InnoDB Table and Page Compression">Section&nbsp;14.9, “InnoDB Table and Page Compression”</a> for requirements
+              associated with the <code class="literal">COMPRESSED</code> row
+              format.
+            </p></li><li class="listitem"><p>
+              The row format used in older versions of MySQL can still
+              be requested by specifying the
+              <code class="literal">REDUNDANT</code> row format.
+            </p></li><li class="listitem"><p>
+              When you specify a non-default
+              <code class="literal">ROW_FORMAT</code> clause, consider also
+              enabling the
+              <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a>
+              configuration option.
+            </p></li><li class="listitem"><p>
+              <code class="literal">ROW_FORMAT=FIXED</code> is not supported. If
+              <code class="literal">ROW_FORMAT=FIXED</code> is specified while
+              <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a> is
+              disabled, <code class="literal">InnoDB</code> issues a warning and
+              assumes <code class="literal">ROW_FORMAT=DYNAMIC</code>. If
+              <code class="literal">ROW_FORMAT=FIXED</code> is specified while
+              <a class="link" href="innodb-parameters.html#sysvar_innodb_strict_mode"><code class="literal">innodb_strict_mode</code></a> is
+              enabled, which is the default, <code class="literal">InnoDB</code>
+              returns an error.
+            </p></li><li class="listitem"><p>
+              For additional information about <code class="literal">InnoDB</code>
+              row formats, see <a class="xref" href="innodb-row-format.html" title="14.11&nbsp;InnoDB Row Formats">Section&nbsp;14.11, “InnoDB Row Formats”</a>.
+</p></li></ul>
+</div>
+<p>
+          For <code class="literal">MyISAM</code> tables, the option value can be
+          <code class="literal">FIXED</code> or <code class="literal">DYNAMIC</code> for
+          static or variable-length row format.
+          <a class="link" href="myisampack.html" title="4.6.5&nbsp;myisampack — Generate Compressed, Read-Only MyISAM Tables"><span class="command"><strong>myisampack</strong></span></a> sets the type to
+          <code class="literal">COMPRESSED</code>. See
+          <a class="xref" href="myisam-table-formats.html" title="15.2.3&nbsp;MyISAM Table Storage Formats">Section&nbsp;15.2.3, “MyISAM Table Storage Formats”</a>.
+        </p><p>
+          For <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables, the default
+          <code class="literal">ROW_FORMAT</code> in MySQL NDB Cluster 7.5.1 and
+          later is <code class="literal">DYNAMIC</code>. (Previously, it was
+          <code class="literal">FIXED</code>.)
+        </p></li><li class="listitem"><p>
+          <code class="literal">STATS_AUTO_RECALC</code>
+        </p><p>
+          Specifies whether to automatically recalculate
+          <a class="link" href="glossary.html#glos_persistent_statistics" title="persistent statistics">persistent
+          statistics</a> for an <code class="literal">InnoDB</code> table. The
+          value <code class="literal">DEFAULT</code> causes the persistent
+          statistics setting for the table to be determined by the
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_stats_auto_recalc"><code class="literal">innodb_stats_auto_recalc</code></a>
+          configuration option. The value <code class="literal">1</code> causes
+          statistics to be recalculated when 10% of the data in the
+          table has changed. The value <code class="literal">0</code> prevents
+          automatic recalculation for this table; with this setting,
+          issue an <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a>
+          statement to recalculate the statistics after making
+          substantial changes to the table. For more information about
+          the persistent statistics feature, see
+          <a class="xref" href="innodb-persistent-stats.html" title="14.8.11.1&nbsp;Configuring Persistent Optimizer Statistics Parameters">Section&nbsp;14.8.11.1, “Configuring Persistent Optimizer Statistics Parameters”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">STATS_PERSISTENT</code>
+        </p><p>
+          Specifies whether to enable
+          <a class="link" href="glossary.html#glos_persistent_statistics" title="persistent statistics">persistent
+          statistics</a> for an <code class="literal">InnoDB</code> table. The
+          value <code class="literal">DEFAULT</code> causes the persistent
+          statistics setting for the table to be determined by the
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_stats_persistent"><code class="literal">innodb_stats_persistent</code></a>
+          configuration option. The value <code class="literal">1</code> enables
+          persistent statistics for the table, while the value
+          <code class="literal">0</code> turns off this feature. After enabling
+          persistent statistics through a <code class="literal">CREATE
+          TABLE</code> or <code class="literal">ALTER TABLE</code> statement,
+          issue an <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE TABLE</code></a>
+          statement to calculate the statistics, after loading
+          representative data into the table. For more information about
+          the persistent statistics feature, see
+          <a class="xref" href="innodb-persistent-stats.html" title="14.8.11.1&nbsp;Configuring Persistent Optimizer Statistics Parameters">Section&nbsp;14.8.11.1, “Configuring Persistent Optimizer Statistics Parameters”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">STATS_SAMPLE_PAGES</code>
+        </p><p>
+          The number of index pages to sample when estimating
+          cardinality and other statistics for an indexed column, such
+          as those calculated by <a class="link" href="analyze-table.html" title="13.7.2.1&nbsp;ANALYZE TABLE Statement"><code class="literal">ANALYZE
+          TABLE</code></a>. For more information, see
+          <a class="xref" href="innodb-persistent-stats.html" title="14.8.11.1&nbsp;Configuring Persistent Optimizer Statistics Parameters">Section&nbsp;14.8.11.1, “Configuring Persistent Optimizer Statistics Parameters”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">TABLESPACE</code>
+        </p><p>
+          The <code class="literal">TABLESPACE</code> clause can be used to create
+          an <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> table in an existing
+          general tablespace, a file-per-table tablespace, or the system
+          tablespace.
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE <em class="replaceable">tbl_name</em> ... TABLESPACE [=] <em class="replaceable">tablespace_name</em></code></pre><p>
+          The general tablespace that you specify must exist prior to
+          using the <code class="literal">TABLESPACE</code> clause. For
+          information about general tablespaces, see
+          <a class="xref" href="general-tablespaces.html" title="14.6.3.3&nbsp;General Tablespaces">Section&nbsp;14.6.3.3, “General Tablespaces”</a>.
+        </p><p>
+          The
+          <code class="literal"><em class="replaceable"><code>tablespace_name</code></em></code>
+          is a case-sensitive identifier. It may be quoted or unquoted.
+          The forward slash character (<span class="quote">“<span class="quote">/</span>”</span>) is not
+          permitted. Names beginning with <span class="quote">“<span class="quote">innodb_</span>”</span> are
+          reserved for special use.
+        </p><p>
+          To create a table in the system tablespace, specify
+          <code class="literal">innodb_system</code> as the tablespace name.
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE <em class="replaceable">tbl_name</em> ... TABLESPACE [=] innodb_system</code></pre><p>
+          Using <code class="literal">TABLESPACE [=] innodb_system</code>, you can
+          place a table of any uncompressed row format in the system
+          tablespace regardless of the
+          <a class="link" href="innodb-parameters.html#sysvar_innodb_file_per_table"><code class="literal">innodb_file_per_table</code></a>
+          setting. For example, you can add a table with
+          <code class="literal">ROW_FORMAT=DYNAMIC</code> to the system tablespace
+          using <code class="literal">TABLESPACE [=] innodb_system</code>.
+        </p><p>
+          To create a table in a file-per-table tablespace, specify
+          <code class="literal">innodb_file_per_table</code> as the tablespace
+          name.
+</p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CREATE TABLE <em class="replaceable">tbl_name</em> ... TABLESPACE [=] innodb_file_per_table</code></pre>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            If <a class="link" href="innodb-parameters.html#sysvar_innodb_file_per_table"><code class="literal">innodb_file_per_table</code></a> is
+            enabled, you need not specify
+            <code class="literal">TABLESPACE=innodb_file_per_table</code> to
+            create an <code class="literal">InnoDB</code> file-per-table
+            tablespace. <code class="literal">InnoDB</code> tables are created in
+            file-per-table tablespaces by default when
+            <a class="link" href="innodb-parameters.html#sysvar_innodb_file_per_table"><code class="literal">innodb_file_per_table</code></a> is
+            enabled.
+</p>
+</div>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+<div class="admon-title">
+Note
+</div>
+<p>
+            Support for creating table partitions in shared
+            <code class="literal">InnoDB</code> tablespaces is deprecated in MySQL
+            5.7.24; expect it to be removed in a future version of
+            MySQL. Shared tablespaces include the
+            <code class="literal">InnoDB</code> system tablespace and general
+            tablespaces.
+</p>
+</div>
+<p>
+          The <code class="literal">DATA DIRECTORY</code> clause is permitted with
+          <code class="literal">CREATE TABLE ...
+          TABLESPACE=innodb_file_per_table</code> but is otherwise
+          not supported for use in combination with the
+          <code class="literal">TABLESPACE</code> option.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            Support for <code class="literal">TABLESPACE =
+            innodb_file_per_table</code> and <code class="literal">TABLESPACE =
+            innodb_temporary</code> clauses with
+            <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE
+            TEMPORARY TABLE</code></a> is deprecated as of MySQL 5.7.24;
+            expect it to be removed in a future version of MySQL.
+</p>
+</div>
+<p>
+          The <code class="literal">STORAGE</code> table option is employed only
+          with <a class="link" href="mysql-cluster.html" title="Chapter&nbsp;21&nbsp;MySQL NDB Cluster 7.5 and NDB Cluster 7.6"><code class="literal">NDB</code></a> tables.
+          <code class="literal">STORAGE</code> determines the type of storage
+          used, and can be either of <code class="literal">DISK</code> or
+          <code class="literal">MEMORY</code>.
+        </p><p>
+          <code class="literal">TABLESPACE ... STORAGE DISK</code> assigns a table
+          to an NDB Cluster Disk Data tablespace. <code class="literal">STORAGE
+          DISK</code> cannot be used in <code class="literal">CREATE
+          TABLE</code> unless preceded by
+          <code class="literal">TABLESPACE</code>
+          <em class="replaceable"><code>tablespace_name</code></em>.
+        </p><p>
+          For <code class="literal">STORAGE MEMORY</code>, the tablespace name is
+          optional, thus, you can use <code class="literal">TABLESPACE
+          <em class="replaceable"><code>tablespace_name</code></em> STORAGE
+          MEMORY</code> or simply <code class="literal">STORAGE MEMORY</code>
+          to specify explicitly that the table is in-memory.
+        </p><p>
+          See <a class="xref" href="mysql-cluster-disk-data.html" title="21.6.11&nbsp;NDB Cluster Disk Data Tables">Section&nbsp;21.6.11, “NDB Cluster Disk Data Tables”</a>, for more
+          information.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="union.html" title="13.2.9.3&nbsp;UNION Clause"><code class="literal">UNION</code></a>
+        </p><p>
+          Used to access a collection of identical
+          <code class="literal">MyISAM</code> tables as one. This works only with
+          <code class="literal">MERGE</code> tables. See
+          <a class="xref" href="merge-storage-engine.html" title="15.7&nbsp;The MERGE Storage Engine">Section&nbsp;15.7, “The MERGE Storage Engine”</a>.
+        </p><p>
+          You must have <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a>,
+          <a class="link" href="privileges-provided.html#priv_update"><code class="literal">UPDATE</code></a>, and
+          <a class="link" href="privileges-provided.html#priv_delete"><code class="literal">DELETE</code></a> privileges for the
+          tables you map to a <code class="literal">MERGE</code> table.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            Formerly, all tables used had to be in the same database as
+            the <code class="literal">MERGE</code> table itself. This restriction
+            no longer applies.
+</p>
+</div>
+</li></ul>
+</div>
+<h4><a name="create-table-partitioning"></a>Table Partitioning</h4>
+<p>
+      <em class="replaceable"><code>partition_options</code></em> can be used to
+      control partitioning of the table created with
+      <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>.
+    </p><p>
+      Not all options shown in the syntax for
+      <em class="replaceable"><code>partition_options</code></em> at the beginning of
+      this section are available for all partitioning types. Please see
+      the listings for the following individual types for information
+      specific to each type, and see <a class="xref" href="partitioning.html" title="Chapter&nbsp;22&nbsp;Partitioning">Chapter&nbsp;22, <i>Partitioning</i></a>, for
+      more complete information about the workings of and uses for
+      partitioning in MySQL, as well as additional examples of table
+      creation and other statements relating to MySQL partitioning.
+    </p><p>
+      Partitions can be modified, merged, added to tables, and dropped
+      from tables. For basic information about the MySQL statements to
+      accomplish these tasks, see <a class="xref" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement">Section&nbsp;13.1.8, “ALTER TABLE Statement”</a>. For
+      more detailed descriptions and examples, see
+      <a class="xref" href="partitioning-management.html" title="22.3&nbsp;Partition Management">Section&nbsp;22.3, “Partition Management”</a>.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <code class="literal">PARTITION BY</code>
+        </p><p>
+          If used, a <em class="replaceable"><code>partition_options</code></em> clause
+          begins with <code class="literal">PARTITION BY</code>. This clause
+          contains the function that is used to determine the partition;
+          the function returns an integer value ranging from 1 to
+          <em class="replaceable"><code>num</code></em>, where
+          <em class="replaceable"><code>num</code></em> is the number of partitions.
+          (The maximum number of user-defined partitions which a table
+          may contain is 1024; the number of
+          subpartitions—discussed later in this section—is
+          included in this maximum.)
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            The expression (<em class="replaceable"><code>expr</code></em>) used in a
+            <code class="literal">PARTITION BY</code> clause cannot refer to any
+            columns not in the table being created; such references are
+            specifically not permitted and cause the statement to fail
+            with an error. (Bug #29444)
+</p>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal">HASH(<em class="replaceable"><code>expr</code></em>)</code>
+        </p><p>
+          Hashes one or more columns to create a key for placing and
+          locating rows. <em class="replaceable"><code>expr</code></em> is an
+          expression using one or more table columns. This can be any
+          valid MySQL expression (including MySQL functions) that yields
+          a single integer value. For example, these are both valid
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statements using
+          <code class="literal">PARTITION BY HASH</code>:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (col1 INT, col2 CHAR(5))
+    PARTITION BY HASH(col1);
+
+CREATE TABLE t1 (col1 INT, col2 CHAR(5), col3 DATETIME)
+    PARTITION BY HASH ( YEAR(col3) );</code></pre><p>
+          You may not use either <code class="literal">VALUES LESS THAN</code> or
+          <code class="literal">VALUES IN</code> clauses with <code class="literal">PARTITION
+          BY HASH</code>.
+        </p><p>
+          <code class="literal">PARTITION BY HASH</code> uses the remainder of
+          <em class="replaceable"><code>expr</code></em> divided by the number of
+          partitions (that is, the modulus). For examples and additional
+          information, see <a class="xref" href="partitioning-hash.html" title="22.2.4&nbsp;HASH Partitioning">Section&nbsp;22.2.4, “HASH Partitioning”</a>.
+        </p><p>
+          The <code class="literal">LINEAR</code> keyword entails a somewhat
+          different algorithm. In this case, the number of the partition
+          in which a row is stored is calculated as the result of one or
+          more logical <a class="link" href="logical-operators.html#operator_and"><code class="literal">AND</code></a> operations. For
+          discussion and examples of linear hashing, see
+          <a class="xref" href="partitioning-linear-hash.html" title="22.2.4.1&nbsp;LINEAR HASH Partitioning">Section&nbsp;22.2.4.1, “LINEAR HASH Partitioning”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">KEY(<em class="replaceable"><code>column_list</code></em>)</code>
+        </p><p>
+          This is similar to <code class="literal">HASH</code>, except that MySQL
+          supplies the hashing function so as to guarantee an even data
+          distribution. The <em class="replaceable"><code>column_list</code></em>
+          argument is simply a list of 1 or more table columns (maximum:
+          16). This example shows a simple table partitioned by key,
+          with 4 partitions:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE tk (col1 INT, col2 CHAR(5), col3 DATE)
+    PARTITION BY KEY(col3)
+    PARTITIONS 4;</code></pre><p>
+          For tables that are partitioned by key, you can employ linear
+          partitioning by using the <code class="literal">LINEAR</code> keyword.
+          This has the same effect as with tables that are partitioned
+          by <code class="literal">HASH</code>. That is, the partition number is
+          found using the
+          <a class="link" href="bit-functions.html#operator_bitwise-and"><code class="literal">&amp;</code></a>
+          operator rather than the modulus (see
+          <a class="xref" href="partitioning-linear-hash.html" title="22.2.4.1&nbsp;LINEAR HASH Partitioning">Section&nbsp;22.2.4.1, “LINEAR HASH Partitioning”</a>, and
+          <a class="xref" href="partitioning-key.html" title="22.2.5&nbsp;KEY Partitioning">Section&nbsp;22.2.5, “KEY Partitioning”</a>, for details). This example
+          uses linear partitioning by key to distribute data between 5
+          partitions:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE tk (col1 INT, col2 CHAR(5), col3 DATE)
+    PARTITION BY LINEAR KEY(col3)
+    PARTITIONS 5;</code></pre><p>
+          The <code class="literal">ALGORITHM={1 | 2}</code> option is supported
+          with <code class="literal">[SUB]PARTITION BY [LINEAR] KEY</code>.
+          <code class="literal">ALGORITHM=1</code> causes the server to use the
+          same key-hashing functions as MySQL 5.1;
+          <code class="literal">ALGORITHM=2</code> means that the server employs
+          the key-hashing functions used by default for new
+          <code class="literal">KEY</code> partitioned tables in MySQL 5.7 and
+          later. Not specifying the option has the same effect as using
+          <code class="literal">ALGORITHM=2</code>. This option is intended for
+          use chiefly when upgrading <code class="literal">[LINEAR] KEY</code>
+          partitioned tables from MySQL 5.1 to later MySQL versions. For
+          more information, see
+          <a class="xref" href="alter-table-partition-operations.html" title="13.1.8.1&nbsp;ALTER TABLE Partition Operations">Section&nbsp;13.1.8.1, “ALTER TABLE Partition Operations”</a>.
+        </p><p>
+          <a class="link" href="mysqldump.html" title="4.5.4&nbsp;mysqldump — A Database Backup Program"><span class="command"><strong>mysqldump</strong></span></a> writes this option encased in
+          versioned comments, like this:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (a INT)
+/*!50100 PARTITION BY KEY */ <em>/*!50611 ALGORITHM = 1 */</em> /*!50100 ()
+      PARTITIONS 3 */</code></pre><p>
+          This causes MySQL 5.6.10 and earlier servers to ignore the
+          option, which would otherwise cause a syntax error in those
+          versions.
+        </p><p>
+          <code class="literal">ALGORITHM=1</code> is shown when necessary in the
+          output of <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE TABLE</code></a>
+          using versioned comments in the same manner as
+          <a class="link" href="mysqldump.html" title="4.5.4&nbsp;mysqldump — A Database Backup Program"><span class="command"><strong>mysqldump</strong></span></a>. <code class="literal">ALGORITHM=2</code>
+          is always omitted from <code class="literal">SHOW CREATE TABLE</code>
+          output, even if this option was specified when creating the
+          original table.
+        </p><p>
+          You may not use either <code class="literal">VALUES LESS THAN</code> or
+          <code class="literal">VALUES IN</code> clauses with <code class="literal">PARTITION
+          BY KEY</code>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">RANGE(<em class="replaceable"><code>expr</code></em>)</code>
+        </p><p>
+          In this case, <em class="replaceable"><code>expr</code></em> shows a range of
+          values using a set of <code class="literal">VALUES LESS THAN</code>
+          operators. When using range partitioning, you must define at
+          least one partition using <code class="literal">VALUES LESS THAN</code>.
+          You cannot use <code class="literal">VALUES IN</code> with range
+          partitioning.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            For tables partitioned by <code class="literal">RANGE</code>,
+            <code class="literal">VALUES LESS THAN</code> must be used with either
+            an integer literal value or an expression that evaluates to
+            a single integer value. In MySQL 5.7, you can
+            overcome this limitation in a table that is defined using
+            <code class="literal">PARTITION BY RANGE COLUMNS</code>, as described
+            later in this section.
+</p>
+</div>
+<p>
+          Suppose that you have a table that you wish to partition on a
+          column containing year values, according to the following
+          scheme.
+</p>
+<div class="informaltable">
+<table summary="A table partitioning scheme based on a column containing year values, as described in the preceding text. The table lists partition numbers and corresponding range of years."><colgroup><col style="width: 40%"><col style="width: 60%"></colgroup><thead><tr>
+              <th>Partition Number:</th>
+              <th>Years Range:</th>
+            </tr></thead><tbody><tr>
+              <td>0</td>
+              <td>1990 and earlier</td>
+            </tr><tr>
+              <td>1</td>
+              <td>1991 to 1994</td>
+            </tr><tr>
+              <td>2</td>
+              <td>1995 to 1998</td>
+            </tr><tr>
+              <td>3</td>
+              <td>1999 to 2002</td>
+            </tr><tr>
+              <td>4</td>
+              <td>2003 to 2005</td>
+            </tr><tr>
+              <td>5</td>
+              <td>2006 and later</td>
+</tr></tbody></table>
+</div>
+<p>
+          A table implementing such a partitioning scheme can be
+          realized by the <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a>
+          statement shown here:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (
+    year_col  INT,
+    some_data INT
+)
+PARTITION BY RANGE (year_col) (
+    PARTITION p0 VALUES LESS THAN (1991),
+    PARTITION p1 VALUES LESS THAN (1995),
+    PARTITION p2 VALUES LESS THAN (1999),
+    PARTITION p3 VALUES LESS THAN (2002),
+    PARTITION p4 VALUES LESS THAN (2006),
+    PARTITION p5 VALUES LESS THAN MAXVALUE
+);</code></pre><p>
+          <code class="literal">PARTITION ... VALUES LESS THAN ...</code>
+          statements work in a consecutive fashion. <code class="literal">VALUES LESS
+          THAN MAXVALUE</code> works to specify
+          <span class="quote">“<span class="quote">leftover</span>”</span> values that are greater than the
+          maximum value otherwise specified.
+        </p><p>
+          <code class="literal">VALUES LESS THAN</code> clauses work sequentially
+          in a manner similar to that of the <code class="literal">case</code>
+          portions of a <code class="literal">switch ... case</code> block (as
+          found in many programming languages such as C, Java, and PHP).
+          That is, the clauses must be arranged in such a way that the
+          upper limit specified in each successive <code class="literal">VALUES LESS
+          THAN</code> is greater than that of the previous one, with
+          the one referencing <code class="literal">MAXVALUE</code> coming last of
+          all in the list.
+        </p></li><li class="listitem"><p>
+          <code class="literal">RANGE
+          COLUMNS(<em class="replaceable"><code>column_list</code></em>)</code>
+        </p><p>
+          This variant on <code class="literal">RANGE</code> facilitates partition
+          pruning for queries using range conditions on multiple columns
+          (that is, having conditions such as <code class="literal">WHERE a = 1 AND b
+          &lt; 10</code> or <code class="literal">WHERE a = 1 AND b = 10 AND c
+          &lt; 10</code>). It enables you to specify value ranges in
+          multiple columns by using a list of columns in the
+          <code class="literal">COLUMNS</code> clause and a set of column values
+          in each <code class="literal">PARTITION ... VALUES LESS THAN
+          (<em class="replaceable"><code>value_list</code></em>)</code> partition
+          definition clause. (In the simplest case, this set consists of
+          a single column.) The maximum number of columns that can be
+          referenced in the <em class="replaceable"><code>column_list</code></em> and
+          <em class="replaceable"><code>value_list</code></em> is 16.
+        </p><p>
+          The <em class="replaceable"><code>column_list</code></em> used in the
+          <code class="literal">COLUMNS</code> clause may contain only names of
+          columns; each column in the list must be one of the following
+          MySQL data types: the integer types; the string types; and
+          time or date column types. Columns using
+          <code class="literal">BLOB</code>, <code class="literal">TEXT</code>,
+          <code class="literal">SET</code>, <code class="literal">ENUM</code>,
+          <code class="literal">BIT</code>, or spatial data types are not
+          permitted; columns that use floating-point number types are
+          also not permitted. You also may not use functions or
+          arithmetic expressions in the <code class="literal">COLUMNS</code>
+          clause.
+        </p><p>
+          The <code class="literal">VALUES LESS THAN</code> clause used in a
+          partition definition must specify a literal value for each
+          column that appears in the <code class="literal">COLUMNS()</code>
+          clause; that is, the list of values used for each
+          <code class="literal">VALUES LESS THAN</code> clause must contain the
+          same number of values as there are columns listed in the
+          <code class="literal">COLUMNS</code> clause. An attempt to use more or
+          fewer values in a <code class="literal">VALUES LESS THAN</code> clause
+          than there are in the <code class="literal">COLUMNS</code> clause causes
+          the statement to fail with the error <span class="errortext">Inconsistency
+          in usage of column lists for partitioning...</span>. You
+          cannot use <code class="literal">NULL</code> for any value appearing in
+          <code class="literal">VALUES LESS THAN</code>. It is possible to use
+          <code class="literal">MAXVALUE</code> more than once for a given column
+          other than the first, as shown in this example:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE rc (
+    a INT NOT NULL,
+    b INT NOT NULL
+)
+PARTITION BY RANGE COLUMNS(a,b) (
+    PARTITION p0 VALUES LESS THAN (10,5),
+    PARTITION p1 VALUES LESS THAN (20,10),
+    PARTITION p2 VALUES LESS THAN (50,MAXVALUE),
+    PARTITION p3 VALUES LESS THAN (65,MAXVALUE),
+    PARTITION p4 VALUES LESS THAN (MAXVALUE,MAXVALUE)
+);</code></pre><p>
+          Each value used in a <code class="literal">VALUES LESS THAN</code> value
+          list must match the type of the corresponding column exactly;
+          no conversion is made. For example, you cannot use the string
+          <code class="literal">'1'</code> for a value that matches a column that
+          uses an integer type (you must use the numeral
+          <code class="literal">1</code> instead), nor can you use the numeral
+          <code class="literal">1</code> for a value that matches a column that
+          uses a string type (in such a case, you must use a quoted
+          string: <code class="literal">'1'</code>).
+        </p><p>
+          For more information, see
+          <a class="xref" href="partitioning-range.html" title="22.2.1&nbsp;RANGE Partitioning">Section&nbsp;22.2.1, “RANGE Partitioning”</a>, and
+          <a class="xref" href="partitioning-pruning.html" title="22.4&nbsp;Partition Pruning">Section&nbsp;22.4, “Partition Pruning”</a>.
+        </p></li><li class="listitem"><p>
+          <code class="literal">LIST(<em class="replaceable"><code>expr</code></em>)</code>
+        </p><p>
+          This is useful when assigning partitions based on a table
+          column with a restricted set of possible values, such as a
+          state or country code. In such a case, all rows pertaining to
+          a certain state or country can be assigned to a single
+          partition, or a partition can be reserved for a certain set of
+          states or countries. It is similar to
+          <code class="literal">RANGE</code>, except that only <code class="literal">VALUES
+          IN</code> may be used to specify permissible values for
+          each partition.
+        </p><p>
+          <code class="literal">VALUES IN</code> is used with a list of values to
+          be matched. For instance, you could create a partitioning
+          scheme such as the following:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE client_firms (
+    id   INT,
+    name VARCHAR(35)
+)
+PARTITION BY LIST (id) (
+    PARTITION r0 VALUES IN (1, 5, 9, 13, 17, 21),
+    PARTITION r1 VALUES IN (2, 6, 10, 14, 18, 22),
+    PARTITION r2 VALUES IN (3, 7, 11, 15, 19, 23),
+    PARTITION r3 VALUES IN (4, 8, 12, 16, 20, 24)
+);</code></pre><p>
+          When using list partitioning, you must define at least one
+          partition using <code class="literal">VALUES IN</code>. You cannot use
+          <code class="literal">VALUES LESS THAN</code> with <code class="literal">PARTITION BY
+          LIST</code>.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            For tables partitioned by <code class="literal">LIST</code>, the value
+            list used with <code class="literal">VALUES IN</code> must consist of
+            integer values only. In MySQL 5.7, you can
+            overcome this limitation using partitioning by <code class="literal">LIST
+            COLUMNS</code>, which is described later in this section.
+</p>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal">LIST
+          COLUMNS(<em class="replaceable"><code>column_list</code></em>)</code>
+        </p><p>
+          This variant on <code class="literal">LIST</code> facilitates partition
+          pruning for queries using comparison conditions on multiple
+          columns (that is, having conditions such as <code class="literal">WHERE a =
+          5 AND b = 5</code> or <code class="literal">WHERE a = 1 AND b = 10 AND c
+          = 5</code>). It enables you to specify values in multiple
+          columns by using a list of columns in the
+          <code class="literal">COLUMNS</code> clause and a set of column values
+          in each <code class="literal">PARTITION ... VALUES IN
+          (<em class="replaceable"><code>value_list</code></em>)</code> partition
+          definition clause.
+        </p><p>
+          The rules governing regarding data types for the column list
+          used in <code class="literal">LIST
+          COLUMNS(<em class="replaceable"><code>column_list</code></em>)</code> and
+          the value list used in <code class="literal">VALUES
+          IN(<em class="replaceable"><code>value_list</code></em>)</code> are the
+          same as those for the column list used in <code class="literal">RANGE
+          COLUMNS(<em class="replaceable"><code>column_list</code></em>)</code> and
+          the value list used in <code class="literal">VALUES LESS
+          THAN(<em class="replaceable"><code>value_list</code></em>)</code>,
+          respectively, except that in the <code class="literal">VALUES IN</code>
+          clause, <code class="literal">MAXVALUE</code> is not permitted, and you
+          may use <code class="literal">NULL</code>.
+        </p><p>
+          There is one important difference between the list of values
+          used for <code class="literal">VALUES IN</code> with <code class="literal">PARTITION
+          BY LIST COLUMNS</code> as opposed to when it is used with
+          <code class="literal">PARTITION BY LIST</code>. When used with
+          <code class="literal">PARTITION BY LIST COLUMNS</code>, each element in
+          the <code class="literal">VALUES IN</code> clause must be a
+          <span class="emphasis"><em>set</em></span> of column values; the number of
+          values in each set must be the same as the number of columns
+          used in the <code class="literal">COLUMNS</code> clause, and the data
+          types of these values must match those of the columns (and
+          occur in the same order). In the simplest case, the set
+          consists of a single column. The maximum number of columns
+          that can be used in the <em class="replaceable"><code>column_list</code></em>
+          and in the elements making up the
+          <em class="replaceable"><code>value_list</code></em> is 16.
+        </p><p>
+          The table defined by the following <code class="literal">CREATE
+          TABLE</code> statement provides an example of a table using
+          <code class="literal">LIST COLUMNS</code> partitioning:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE lc (
+    a INT NULL,
+    b INT NULL
+)
+PARTITION BY LIST COLUMNS(a,b) (
+    PARTITION p0 VALUES IN( (0,0), (NULL,NULL) ),
+    PARTITION p1 VALUES IN( (0,1), (0,2), (0,3), (1,1), (1,2) ),
+    PARTITION p2 VALUES IN( (1,0), (2,0), (2,1), (3,0), (3,1) ),
+    PARTITION p3 VALUES IN( (1,3), (2,2), (2,3), (3,2), (3,3) )
+);</code></pre></li><li class="listitem"><p>
+          <code class="literal">PARTITIONS <em class="replaceable"><code>num</code></em></code>
+        </p><p>
+          The number of partitions may optionally be specified with a
+          <code class="literal">PARTITIONS <em class="replaceable"><code>num</code></em></code>
+          clause, where <em class="replaceable"><code>num</code></em> is the number of
+          partitions. If both this clause <span class="emphasis"><em>and</em></span> any
+          <code class="literal">PARTITION</code> clauses are used,
+          <em class="replaceable"><code>num</code></em> must be equal to the total
+          number of any partitions that are declared using
+          <code class="literal">PARTITION</code> clauses.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            Whether or not you use a <code class="literal">PARTITIONS</code>
+            clause in creating a table that is partitioned by
+            <code class="literal">RANGE</code> or <code class="literal">LIST</code>, you
+            must still include at least one <code class="literal">PARTITION
+            VALUES</code> clause in the table definition (see below).
+</p>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal">SUBPARTITION BY</code>
+        </p><p>
+          A partition may optionally be divided into a number of
+          subpartitions. This can be indicated by using the optional
+          <code class="literal">SUBPARTITION BY</code> clause. Subpartitioning may
+          be done by <code class="literal">HASH</code> or <code class="literal">KEY</code>.
+          Either of these may be <code class="literal">LINEAR</code>. These work
+          in the same way as previously described for the equivalent
+          partitioning types. (It is not possible to subpartition by
+          <code class="literal">LIST</code> or <code class="literal">RANGE</code>.)
+        </p><p>
+          The number of subpartitions can be indicated using the
+          <code class="literal">SUBPARTITIONS</code> keyword followed by an
+          integer value.
+        </p></li><li class="listitem"><p>
+          Rigorous checking of the value used in
+          <code class="literal">PARTITIONS</code> or
+          <code class="literal">SUBPARTITIONS</code> clauses is applied and this
+          value must adhere to the following rules:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              The value must be a positive, nonzero integer.
+            </p></li><li class="listitem"><p>
+              No leading zeros are permitted.
+            </p></li><li class="listitem"><p>
+              The value must be an integer literal, and cannot not be an
+              expression. For example, <code class="literal">PARTITIONS
+              0.2E+01</code> is not permitted, even though
+              <code class="literal">0.2E+01</code> evaluates to
+              <code class="literal">2</code>. (Bug #15890)
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal"><em class="replaceable"><code>partition_definition</code></em></code>
+        </p><p>
+          Each partition may be individually defined using a
+          <em class="replaceable"><code>partition_definition</code></em> clause. The
+          individual parts making up this clause are as follows:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              <code class="literal">PARTITION
+              <em class="replaceable"><code>partition_name</code></em></code>
+            </p><p>
+              Specifies a logical name for the partition.
+            </p></li><li class="listitem"><p>
+              <code class="literal">VALUES</code>
+            </p><p>
+              For range partitioning, each partition must include a
+              <code class="literal">VALUES LESS THAN</code> clause; for list
+              partitioning, you must specify a <code class="literal">VALUES
+              IN</code> clause for each partition. This is used to
+              determine which rows are to be stored in this partition.
+              See the discussions of partitioning types in
+              <a class="xref" href="partitioning.html" title="Chapter&nbsp;22&nbsp;Partitioning">Chapter&nbsp;22, <i>Partitioning</i></a>, for syntax examples.
+            </p></li><li class="listitem"><p>
+              <code class="literal">[STORAGE] ENGINE</code>
+            </p><p>
+              The partitioning handler accepts a <code class="literal">[STORAGE]
+              ENGINE</code> option for both
+              <code class="literal">PARTITION</code> and
+              <code class="literal">SUBPARTITION</code>. Currently, the only way
+              in which this can be used is to set all partitions or all
+              subpartitions to the same storage engine, and an attempt
+              to set different storage engines for partitions or
+              subpartitions in the same table raises the error
+              <span class="errortext">ERROR 1469 (HY000): The mix of handlers in the
+              partitions is not permitted in this version of
+              MySQL</span>. We expect to lift this restriction on
+              partitioning in a future MySQL release.
+            </p></li><li class="listitem"><p>
+              <code class="literal">COMMENT</code>
+            </p><p>
+              An optional <code class="literal">COMMENT</code> clause may be used
+              to specify a string that describes the partition. Example:
+            </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">COMMENT = 'Data for the years previous to 1999'</code></pre><p>
+              The maximum length for a partition comment is 1024
+              characters.
+            </p></li><li class="listitem"><p>
+              <code class="literal">DATA DIRECTORY</code> and <code class="literal">INDEX
+              DIRECTORY</code>
+            </p><p>
+              <code class="literal">DATA DIRECTORY</code> and <code class="literal">INDEX
+              DIRECTORY</code> may be used to indicate the directory
+              where, respectively, the data and indexes for this
+              partition are to be stored. Both the
+              <code class="filename"><em class="replaceable"><code>data_dir</code></em></code>
+              and the
+              <code class="filename"><em class="replaceable"><code>index_dir</code></em></code>
+              must be absolute system path names.
+            </p><p>
+              As of MySQL 5.7.17, you must have the
+              <a class="link" href="privileges-provided.html#priv_file"><code class="literal">FILE</code></a> privilege to use the
+              <code class="literal">DATA DIRECTORY</code> or <code class="literal">INDEX
+              DIRECTORY</code> partition option.
+            </p><p>
+              Example:
+            </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE th (id INT, name VARCHAR(30), adate DATE)
+PARTITION BY LIST(YEAR(adate))
+(
+  PARTITION p1999 VALUES IN (1995, 1999, 2003)
+    DATA DIRECTORY = '/var/appdata/95/data'
+    INDEX DIRECTORY = '/var/appdata/95/idx',
+  PARTITION p2000 VALUES IN (1996, 2000, 2004)
+    DATA DIRECTORY = '/var/appdata/96/data'
+    INDEX DIRECTORY = '/var/appdata/96/idx',
+  PARTITION p2001 VALUES IN (1997, 2001, 2005)
+    DATA DIRECTORY = '/var/appdata/97/data'
+    INDEX DIRECTORY = '/var/appdata/97/idx',
+  PARTITION p2002 VALUES IN (1998, 2002, 2006)
+    DATA DIRECTORY = '/var/appdata/98/data'
+    INDEX DIRECTORY = '/var/appdata/98/idx'
+);</code></pre><p>
+              <code class="literal">DATA DIRECTORY</code> and <code class="literal">INDEX
+              DIRECTORY</code> behave in the same way as in the
+              <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement's
+              <em class="replaceable"><code>table_option</code></em> clause as used for
+              <code class="literal">MyISAM</code> tables.
+            </p><p>
+              One data directory and one index directory may be
+              specified per partition. If left unspecified, the data and
+              indexes are stored by default in the table's database
+              directory.
+            </p><p>
+              On Windows, the <code class="literal">DATA DIRECTORY</code> and
+              <code class="literal">INDEX DIRECTORY</code> options are not
+              supported for individual partitions or subpartitions of
+              <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> tables, and the
+              <code class="literal">INDEX DIRECTORY</code> option is not supported
+              for individual partitions or subpartitions of
+              <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tables. These options
+              are ignored on Windows, except that a warning is
+              generated. (Bug #30459)
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+                The <code class="literal">DATA DIRECTORY</code> and <code class="literal">INDEX
+                DIRECTORY</code> options are ignored for creating
+                partitioned tables if
+                <a class="link" href="sql-mode.html#sqlmode_no_dir_in_create"><code class="literal">NO_DIR_IN_CREATE</code></a> is in
+                effect. (Bug #24633)
+</p>
+</div>
+</li><li class="listitem"><p>
+              <code class="literal">MAX_ROWS</code> and
+              <code class="literal">MIN_ROWS</code>
+            </p><p>
+              May be used to specify, respectively, the maximum and
+              minimum number of rows to be stored in the partition. The
+              values for <em class="replaceable"><code>max_number_of_rows</code></em>
+              and <em class="replaceable"><code>min_number_of_rows</code></em> must be
+              positive integers. As with the table-level options with
+              the same names, these act only as
+              <span class="quote">“<span class="quote">suggestions</span>”</span> to the server and are not hard
+              limits.
+            </p></li><li class="listitem"><p>
+              <code class="literal">TABLESPACE</code>
+            </p><p>
+              May be used to designate a tablespace for the partition.
+              Supported by NDB Cluster. For <code class="literal">InnoDB</code>
+              tables, it may be used to designate a file-per-table
+              tablespace for the partition by specifying
+              <code class="literal">TABLESPACE `innodb_file_per_table`</code>. All
+              partitions must belong to the same storage engine.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+                Support for placing <code class="literal">InnoDB</code> table
+                partitions in shared <code class="literal">InnoDB</code>
+                tablespaces is deprecated in MySQL 5.7.24; expect it to
+                be removed in a future MySQL version. Shared tablespaces
+                include the <code class="literal">InnoDB</code> system tablespace
+                and general tablespaces.
+</p>
+</div>
+</li></ul>
+</div>
+</li><li class="listitem"><p>
+          <code class="literal"><em class="replaceable"><code>subpartition_definition</code></em></code>
+        </p><p>
+          The partition definition may optionally contain one or more
+          <em class="replaceable"><code>subpartition_definition</code></em> clauses.
+          Each of these consists at a minimum of the
+          <code class="literal">SUBPARTITION
+          <em class="replaceable"><code>name</code></em></code>, where
+          <em class="replaceable"><code>name</code></em> is an identifier for the
+          subpartition. Except for the replacement of the
+          <code class="literal">PARTITION</code> keyword with
+          <code class="literal">SUBPARTITION</code>, the syntax for a subpartition
+          definition is identical to that for a partition definition.
+        </p><p>
+          Subpartitioning must be done by <code class="literal">HASH</code> or
+          <code class="literal">KEY</code>, and can be done only on
+          <code class="literal">RANGE</code> or <code class="literal">LIST</code>
+          partitions. See <a class="xref" href="partitioning-subpartitions.html" title="22.2.6&nbsp;Subpartitioning">Section&nbsp;22.2.6, “Subpartitioning”</a>.
+</p></li></ul>
+</div>
+<p>
+      <span class="bold"><strong>Partitioning by Generated Columns</strong></span>
+    </p><p>
+      Partitioning by generated columns is permitted. For example:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE TABLE t1 (
+  s1 INT,
+  s2 INT AS (EXP(s1)) STORED
+)
+PARTITION BY LIST (s2) (
+  PARTITION p1 VALUES IN (1)
+);</code></pre><p>
+      Partitioning sees a generated column as a regular column, which
+      enables workarounds for limitations on functions that are not
+      permitted for partitioning (see
+      <a class="xref" href="partitioning-limitations-functions.html" title="22.6.3&nbsp;Partitioning Limitations Relating to Functions">Section&nbsp;22.6.3, “Partitioning Limitations Relating to Functions”</a>). The
+      preceding example demonstrates this technique:
+      <a class="link" href="mathematical-functions.html#function_exp"><code class="literal">EXP()</code></a> cannot be used directly in
+      the <code class="literal">PARTITION BY</code> clause, but a generated column
+      defined using <a class="link" href="mathematical-functions.html#function_exp"><code class="literal">EXP()</code></a> is permitted.
+</p>
+</div><br>
+        
+</body>
+</html>

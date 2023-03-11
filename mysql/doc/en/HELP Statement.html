@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>HELP Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="help"></a>13.8.3&nbsp;HELP Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852568746464"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">HELP '<em class="replaceable">search_string</em>'</code></pre><p>
+      The <a class="link" href="help.html" title="13.8.3&nbsp;HELP Statement"><code class="literal">HELP</code></a> statement returns online
+      information from the MySQL Reference Manual. Its proper operation
+      requires that the help tables in the <code class="literal">mysql</code>
+      database be initialized with help topic information (see
+      <a class="xref" href="server-side-help-support.html" title="5.1.14&nbsp;Server-Side Help Support">Section&nbsp;5.1.14, “Server-Side Help Support”</a>).
+    </p><p>
+      The <a class="link" href="help.html" title="13.8.3&nbsp;HELP Statement"><code class="literal">HELP</code></a> statement searches the
+      help tables for the given search string and displays the result of
+      the search. The search string is not case-sensitive.
+    </p><p>
+      The search string can contain the wildcard characters
+      <code class="literal">%</code> and <code class="literal">_</code>. These have the same
+      meaning as for pattern-matching operations performed with the
+      <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> operator. For example,
+      <code class="literal">HELP 'rep%'</code> returns a list of topics that begin
+      with <code class="literal">rep</code>.
+    </p><p>
+      The HELP statement understands several types of search strings:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          At the most general level, use <code class="literal">contents</code> to
+          retrieve a list of the top-level help categories:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">HELP 'contents'</code></pre></li><li class="listitem"><p>
+          For a list of topics in a given help category, such as
+          <code class="literal">Data Types</code>, use the category name:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">HELP 'data types'</code></pre></li><li class="listitem"><p>
+          For help on a specific help topic, such as the
+          <a class="link" href="string-functions.html#function_ascii"><code class="literal">ASCII()</code></a> function or the
+          <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement, use the
+          associated keyword or keywords:
+        </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">HELP 'ascii'
+HELP 'create table'</code></pre></li></ul>
+</div>
+<p>
+      In other words, the search string matches a category, many topics,
+      or a single topic. You cannot necessarily tell in advance whether
+      a given search string returns a list of items or the help
+      information for a single help topic. However, you can tell what
+      kind of response <a class="link" href="help.html" title="13.8.3&nbsp;HELP Statement"><code class="literal">HELP</code></a> returned by
+      examining the number of rows and columns in the result set.
+    </p><p>
+      The following descriptions indicate the forms that the result set
+      can take. Output for the example statements is shown using the
+      familiar <span class="quote">“<span class="quote">tabular</span>”</span> or <span class="quote">“<span class="quote">vertical</span>”</span> format
+      that you see when using the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> client, but
+      note that <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a> itself reformats
+      <a class="link" href="help.html" title="13.8.3&nbsp;HELP Statement"><code class="literal">HELP</code></a> result sets in a different
+      way.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          Empty result set
+        </p><p>
+          No match could be found for the search string.
+        </p></li><li class="listitem"><p>
+          Result set containing a single row with three columns
+        </p><p>
+          This means that the search string yielded a hit for the help
+          topic. The result has three columns:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              <code class="literal">name</code>: The topic name.
+            </p></li><li class="listitem"><p>
+              <code class="literal">description</code>: Descriptive help text for
+              the topic.
+            </p></li><li class="listitem"><p>
+              <code class="literal">example</code>: Usage example or examples.
+              This column might be blank.
+</p></li></ul>
+</div>
+<p>
+          Example: <code class="literal">HELP 'replace'</code>
+        </p><p>
+          Yields:
+        </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">name: REPLACE
+description: Syntax:
+REPLACE(str,from_str,to_str)
+
+Returns the string str with all occurrences of the string from_str
+replaced by the string to_str. REPLACE() performs a case-sensitive
+match when searching for from_str.
+example: mysql&gt; SELECT REPLACE('www.mysql.com', 'w', 'Ww');
+        -&gt; 'WwWwWw.mysql.com'</code></pre></li><li class="listitem"><p>
+          Result set containing multiple rows with two columns
+        </p><p>
+          This means that the search string matched many help topics.
+          The result set indicates the help topic names:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              <code class="literal">name</code>: The help topic name.
+            </p></li><li class="listitem"><p>
+              <code class="literal">is_it_category</code>: <code class="literal">Y</code> if
+              the name represents a help category, <code class="literal">N</code>
+              if it does not. If it does not, the
+              <code class="literal">name</code> value when specified as the
+              argument to the <a class="link" href="help.html" title="13.8.3&nbsp;HELP Statement"><code class="literal">HELP</code></a>
+              statement should yield a single-row result set containing
+              a description for the named item.
+</p></li></ul>
+</div>
+<p>
+          Example: <code class="literal">HELP 'status'</code>
+        </p><p>
+          Yields:
+        </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">+-----------------------+----------------+
+| name                  | is_it_category |
++-----------------------+----------------+
+| SHOW                  | N              |
+| SHOW ENGINE           | N              |
+| SHOW MASTER STATUS    | N              |
+| SHOW PROCEDURE STATUS | N              |
+| SHOW SLAVE STATUS     | N              |
+| SHOW STATUS           | N              |
+| SHOW TABLE STATUS     | N              |
++-----------------------+----------------+</code></pre></li><li class="listitem"><p>
+          Result set containing multiple rows with three columns
+        </p><p>
+          This means the search string matches a category. The result
+          set contains category entries:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+              <code class="literal">source_category_name</code>: The help category
+              name.
+            </p></li><li class="listitem"><p>
+              <code class="literal">name</code>: The category or topic name
+            </p></li><li class="listitem"><p>
+              <code class="literal">is_it_category</code>: <code class="literal">Y</code> if
+              the name represents a help category, <code class="literal">N</code>
+              if it does not. If it does not, the
+              <code class="literal">name</code> value when specified as the
+              argument to the <a class="link" href="help.html" title="13.8.3&nbsp;HELP Statement"><code class="literal">HELP</code></a>
+              statement should yield a single-row result set containing
+              a description for the named item.
+</p></li></ul>
+</div>
+<p>
+          Example: <code class="literal">HELP 'functions'</code>
+        </p><p>
+          Yields:
+        </p><pre class="programlisting copytoclipboard language-none"><code class="language-none">+----------------------+-------------------------+----------------+
+| source_category_name | name                    | is_it_category |
++----------------------+-------------------------+----------------+
+| Functions            | CREATE FUNCTION         | N              |
+| Functions            | DROP FUNCTION           | N              |
+| Functions            | Bit Functions           | Y              |
+| Functions            | Comparison operators    | Y              |
+| Functions            | Control flow functions  | Y              |
+| Functions            | Date and Time Functions | Y              |
+| Functions            | Encryption Functions    | Y              |
+| Functions            | Information Functions   | Y              |
+| Functions            | Logical operators       | Y              |
+| Functions            | Miscellaneous Functions | Y              |
+| Functions            | Numeric Functions       | Y              |
+| Functions            | String Functions        | Y              |
++----------------------+-------------------------+----------------+</code></pre></li></ul>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

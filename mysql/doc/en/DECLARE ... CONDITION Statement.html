@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DECLARE ... CONDITION Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="declare-condition"></a>13.6.7.1&nbsp;DECLARE ... CONDITION Statement</h4>
+</div>
+</div>
+</div>
+<a class="indexterm" name="idm45852574948848"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE <em class="replaceable">condition_name</em> CONDITION FOR <em class="replaceable">condition_value</em>
+
+<em class="replaceable">condition_value</em>: {
+    <em class="replaceable">mysql_error_code</em>
+  | SQLSTATE [VALUE] <em class="replaceable">sqlstate_value</em>
+}</code></pre><p>
+        The <a class="link" href="declare-condition.html" title="13.6.7.1&nbsp;DECLARE ... CONDITION Statement"><code class="literal">DECLARE
+        ... CONDITION</code></a> statement declares a named error
+        condition, associating a name with a condition that needs
+        specific handling. The name can be referred to in a subsequent
+        <a class="link" href="declare-handler.html" title="13.6.7.2&nbsp;DECLARE ... HANDLER Statement"><code class="literal">DECLARE ...
+        HANDLER</code></a> statement (see
+        <a class="xref" href="declare-handler.html" title="13.6.7.2&nbsp;DECLARE ... HANDLER Statement">Section&nbsp;13.6.7.2, “DECLARE ... HANDLER Statement”</a>).
+      </p><p>
+        Condition declarations must appear before cursor or handler
+        declarations.
+      </p><p>
+        The <em class="replaceable"><code>condition_value</code></em> for
+        <a class="link" href="declare-condition.html" title="13.6.7.1&nbsp;DECLARE ... CONDITION Statement"><code class="literal">DECLARE ...
+        CONDITION</code></a> indicates the specific condition or class of
+        conditions to associate with the condition name. It can take the
+        following forms:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <em class="replaceable"><code>mysql_error_code</code></em>: An integer
+            literal indicating a MySQL error code.
+          </p><p>
+            Do not use MySQL error code 0 because that indicates success
+            rather than an error condition. For a list of MySQL error
+            codes, see <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html" target="_top">Server Error Message Reference</a>.
+          </p></li><li class="listitem"><p>
+            SQLSTATE [VALUE] <em class="replaceable"><code>sqlstate_value</code></em>:
+            A 5-character string literal indicating an SQLSTATE value.
+          </p><p>
+            Do not use SQLSTATE values that begin with
+            <code class="literal">'00'</code> because those indicate success
+            rather than an error condition. For a list of SQLSTATE
+            values, see <a class="ulink" href="https://dev.mysql.com/doc/mysql-errors/5.7/en/server-error-reference.html" target="_top">Server Error Message Reference</a>.
+</p></li></ul>
+</div>
+<p>
+        Condition names referred to in
+        <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a> or use
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a> statements must be
+        associated with SQLSTATE values, not MySQL error codes.
+      </p><p>
+        Using names for conditions can help make stored program code
+        clearer. For example, this handler applies to attempts to drop a
+        nonexistent table, but that is apparent only if you know that
+        1051 is the MySQL error code for <span class="quote">“<span class="quote">unknown table</span>”</span>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE CONTINUE HANDLER FOR 1051
+  BEGIN
+    -- body of handler
+  END;</code></pre><p>
+        By declaring a name for the condition, the purpose of the
+        handler is more readily seen:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE no_such_table CONDITION FOR 1051;
+DECLARE CONTINUE HANDLER FOR no_such_table
+  BEGIN
+    -- body of handler
+  END;</code></pre><p>
+        Here is a named condition for the same condition, but based on
+        the corresponding SQLSTATE value rather than the MySQL error
+        code:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DECLARE no_such_table CONDITION FOR SQLSTATE '42S02';
+DECLARE CONTINUE HANDLER FOR no_such_table
+  BEGIN
+    -- body of handler
+  END;</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

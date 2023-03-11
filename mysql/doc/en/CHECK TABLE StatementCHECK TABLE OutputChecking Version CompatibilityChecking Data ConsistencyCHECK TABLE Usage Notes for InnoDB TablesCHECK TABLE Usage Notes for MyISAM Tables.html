@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>CHECK TABLE StatementCHECK TABLE OutputChecking Version CompatibilityChecking Data ConsistencyCHECK TABLE Usage Notes for InnoDB TablesCHECK TABLE Usage Notes for MyISAM Tables</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="check-table"></a>13.7.2.2&nbsp;CHECK TABLE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572640432"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CHECK TABLE <em class="replaceable">tbl_name</em> [, <em class="replaceable">tbl_name</em>] ... [<em class="replaceable">option</em>] ...
+
+<em class="replaceable">option</em>: {
+    FOR UPGRADE
+  | QUICK
+  | FAST
+  | MEDIUM
+  | EXTENDED
+  | CHANGED
+}</code></pre><p>
+        <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> checks a table or
+        tables for errors. For <code class="literal">MyISAM</code> tables, the key
+        statistics are updated as well. <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK
+        TABLE</code></a> can also check views for problems, such as
+        tables that are referenced in the view definition that no longer
+        exist.
+      </p><p>
+        To check a table, you must have some privilege for it.
+      </p><p>
+        <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> works for
+        <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a>,
+        <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a>,
+        <a class="link" href="archive-storage-engine.html" title="15.5&nbsp;The ARCHIVE Storage Engine"><code class="literal">ARCHIVE</code></a>, and
+        <a class="link" href="csv-storage-engine.html" title="15.4&nbsp;The CSV Storage Engine"><code class="literal">CSV</code></a> tables.
+      </p><p>
+        Before running <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> on
+        <code class="literal">InnoDB</code> tables, see
+        <a class="xref" href="check-table.html#check-table-innodb" title="CHECK TABLE Usage Notes for InnoDB Tables">CHECK TABLE Usage Notes for InnoDB Tables</a>.
+      </p><p>
+        <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> is supported for
+        partitioned tables, and you can use <code class="literal">ALTER TABLE ...
+        CHECK PARTITION</code> to check one or more partitions; for
+        more information, see <a class="xref" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement">Section&nbsp;13.1.8, “ALTER TABLE Statement”</a>, and
+        <a class="xref" href="partitioning-maintenance.html" title="22.3.4&nbsp;Maintenance of Partitions">Section&nbsp;22.3.4, “Maintenance of Partitions”</a>.
+      </p><p>
+        <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> ignores virtual
+        generated columns that are not indexed.
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><a class="xref" href="check-table.html#check-table-output" title="CHECK TABLE Output">CHECK TABLE Output</a></p></li><li class="listitem"><p><a class="xref" href="check-table.html#check-table-version-compatibility" title="Checking Version Compatibility">Checking Version Compatibility</a></p></li><li class="listitem"><p><a class="xref" href="check-table.html#check-table-data-consistency" title="Checking Data Consistency">Checking Data Consistency</a></p></li><li class="listitem"><p><a class="xref" href="check-table.html#check-table-innodb" title="CHECK TABLE Usage Notes for InnoDB Tables">CHECK TABLE Usage Notes for InnoDB Tables</a></p></li><li class="listitem"><p><a class="xref" href="check-table.html#check-table-myisam" title="CHECK TABLE Usage Notes for MyISAM Tables">CHECK TABLE Usage Notes for MyISAM Tables</a></p></li></ul>
+</div>
+
+<div class="simplesect">
+
+<div class="titlepage">
+<div>
+
+<div class="simple">
+<h5 class="title"><a name="check-table-output"></a>CHECK TABLE Output</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> returns a result
+          set with the columns shown in the following table.
+</p>
+<div class="informaltable">
+<table summary="Columns of the CHECK TABLE result set."><colgroup><col style="width: 15%"><col style="width: 60%"></colgroup><thead><tr>
+              <th>Column</th>
+              <th>Value</th>
+            </tr></thead><tbody><tr>
+              <td><code class="literal">Table</code></td>
+              <td>The table name</td>
+            </tr><tr>
+              <td><code class="literal">Op</code></td>
+              <td>Always <code class="literal">check</code></td>
+            </tr><tr>
+              <td><code class="literal">Msg_type</code></td>
+              <td><code class="literal">status</code>, <code class="literal">error</code>,
+                <code class="literal">info</code>, <code class="literal">note</code>, or
+                <code class="literal">warning</code></td>
+            </tr><tr>
+              <td><code class="literal">Msg_text</code></td>
+              <td>An informational message</td>
+</tr></tbody></table>
+</div>
+<p>
+          The statement might produce many rows of information for each
+          checked table. The last row has a <code class="literal">Msg_type</code>
+          value of <code class="literal">status</code> and the
+          <code class="literal">Msg_text</code> normally should be
+          <code class="literal">OK</code>. For a <code class="literal">MyISAM</code> table,
+          if you don't get <code class="literal">OK</code> or <code class="literal">Table is
+          already up to date</code>, you should normally run a repair
+          of the table. See <a class="xref" href="myisam-table-maintenance.html" title="7.6&nbsp;MyISAM Table Maintenance and Crash Recovery">Section&nbsp;7.6, “MyISAM Table Maintenance and Crash Recovery”</a>.
+          <code class="literal">Table is already up to date</code> means that the
+          storage engine for the table indicated that there was no need
+          to check the table.
+</p>
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="check-table-version-compatibility"></a>Checking Version Compatibility</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          The <code class="literal">FOR UPGRADE</code> option checks whether the
+          named tables are compatible with the current version of MySQL.
+          With <code class="literal">FOR UPGRADE</code>, the server checks each
+          table to determine whether there have been any incompatible
+          changes in any of the table's data types or indexes since the
+          table was created. If not, the check succeeds. Otherwise, if
+          there is a possible incompatibility, the server runs a full
+          check on the table (which might take some time). If the full
+          check succeeds, the server marks the table's
+          <code class="filename">.frm</code> file with the current MySQL version
+          number. Marking the <code class="filename">.frm</code> file ensures
+          that further checks for the table with the same version of the
+          server are fast.
+        </p><p>
+          Incompatibilities might occur because the storage format for a
+          data type has changed or because its sort order has changed.
+          Our aim is to avoid these changes, but occasionally they are
+          necessary to correct problems that would be worse than an
+          incompatibility between releases.
+        </p><p>
+          <code class="literal">FOR UPGRADE</code> discovers these
+          incompatibilities:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              The indexing order for end-space in
+              <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">TEXT</code></a> columns for
+              <code class="literal">InnoDB</code> and <code class="literal">MyISAM</code>
+              tables changed between MySQL 4.1 and 5.0.
+            </p></li><li class="listitem"><p>
+              The storage method of the new
+              <a class="link" href="fixed-point-types.html" title="11.1.3&nbsp;Fixed-Point Types (Exact Value) - DECIMAL, NUMERIC"><code class="literal">DECIMAL</code></a> data type changed
+              between MySQL 5.0.3 and 5.0.5.
+            </p></li><li class="listitem"><p>
+              If your table was created by a different version of the
+              MySQL server than the one you are currently running,
+              <code class="literal">FOR UPGRADE</code> indicates that the table
+              has an <code class="filename">.frm</code> file with an incompatible
+              version. In this case, the result set returned by
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> contains a line
+              with a <code class="literal">Msg_type</code> value of
+              <code class="literal">error</code> and a <code class="literal">Msg_text</code>
+              value of <code class="literal">Table upgrade required. Please do
+              "REPAIR TABLE `<em class="replaceable"><code>tbl_name</code></em>`" to
+              fix it!</code>
+            </p></li><li class="listitem"><p>
+              Changes are sometimes made to character sets or collations
+              that require table indexes to be rebuilt. For details
+              about such changes, see
+              <a class="xref" href="upgrading-from-previous-series.html" title="2.10.3&nbsp;Changes in MySQL 5.7">Section&nbsp;2.10.3, “Changes in MySQL 5.7”</a>. For
+              information about rebuilding tables, see
+              <a class="xref" href="rebuilding-tables.html" title="2.10.12&nbsp;Rebuilding or Repairing Tables or Indexes">Section&nbsp;2.10.12, “Rebuilding or Repairing Tables or Indexes”</a>.
+            </p></li><li class="listitem"><p>
+              The <a class="link" href="year.html" title="11.2.4&nbsp;The YEAR Type"><code class="literal">YEAR(2)</code></a> data type is
+              deprecated and support for it is removed in MySQL 5.7.5.
+              For tables containing
+              <a class="link" href="year.html" title="11.2.4&nbsp;The YEAR Type"><code class="literal">YEAR(2)</code></a> columns,
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> recommends
+              <a class="link" href="repair-table.html" title="13.7.2.5&nbsp;REPAIR TABLE Statement"><code class="literal">REPAIR TABLE</code></a>, which
+              converts 2-digit <a class="link" href="year.html" title="11.2.4&nbsp;The YEAR Type"><code class="literal">YEAR(2)</code></a>
+              columns to 4-digit <a class="link" href="year.html" title="11.2.4&nbsp;The YEAR Type"><code class="literal">YEAR</code></a>
+              columns.
+            </p></li><li class="listitem"><p>
+              As of MySQL 5.7.2, trigger creation time is maintained. If
+              run against a table that has triggers,
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE
+              ... FOR UPGRADE</code></a> displays this warning for each
+              trigger created before MySQL 5.7.2:
+            </p><pre class="programlisting copytoclipboard language-none one-line"><code class="language-none">Trigger <em class="replaceable">db_name</em>.<em class="replaceable">tbl_name</em>.<em class="replaceable">trigger_name</em> does not have CREATED attribute.</code></pre><p>
+              The warning is informational only. No change is made to
+              the trigger.
+            </p></li><li class="listitem"><p>
+              As of MySQL 5.7.7, a table is reported as needing a
+              rebuild if it contains old temporal columns in pre-5.6.4
+              format (<a class="link" href="time.html" title="11.2.3&nbsp;The TIME Type"><code class="literal">TIME</code></a>,
+              <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">DATETIME</code></a>, and
+              <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">TIMESTAMP</code></a> columns without
+              support for fractional seconds precision) and the
+              <a class="link" href="server-system-variables.html#sysvar_avoid_temporal_upgrade"><code class="literal">avoid_temporal_upgrade</code></a>
+              system variable is disabled. This helps the MySQL upgrade
+              procedure detect and upgrade tables containing old
+              temporal columns. If
+              <a class="link" href="server-system-variables.html#sysvar_avoid_temporal_upgrade"><code class="literal">avoid_temporal_upgrade</code></a> is
+              enabled, <code class="literal">FOR UPGRADE</code> ignores the old
+              temporal columns present in the table; consequently, the
+              upgrade procedure does not upgrade them.
+            </p><p>
+              To check for tables that contain such temporal columns and
+              need a rebuild, disable
+              <a class="link" href="server-system-variables.html#sysvar_avoid_temporal_upgrade"><code class="literal">avoid_temporal_upgrade</code></a>
+              before executing
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE
+              ... FOR UPGRADE</code></a>.
+            </p></li><li class="listitem"><p>
+              Warnings are issued for tables that use nonnative
+              partitioning because nonnative partitioning is deprecated
+              in MySQL 5.7 and removed in MySQL
+              8.0. See <a class="xref" href="partitioning.html" title="Chapter&nbsp;22&nbsp;Partitioning">Chapter&nbsp;22, <i>Partitioning</i></a>.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="check-table-data-consistency"></a>Checking Data Consistency</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          The following table shows the other check options that can be
+          given. These options are passed to the storage engine, which
+          may use or ignore them.
+</p>
+<div class="informaltable">
+<table summary="Other CHECK TABLE options."><colgroup><col style="width: 15%"><col style="width: 85%"></colgroup><thead><tr>
+              <th>Type</th>
+              <th>Meaning</th>
+            </tr></thead><tbody><tr>
+              <td><code class="literal">QUICK</code></td>
+              <td>Do not scan the rows to check for incorrect links. Applies to
+                <code class="literal">InnoDB</code> and <code class="literal">MyISAM</code>
+                tables and views.</td>
+            </tr><tr>
+              <td><code class="literal">FAST</code></td>
+              <td>Check only tables that have not been closed properly. Ignored for
+                <code class="literal">InnoDB</code>; applies only to
+                <code class="literal">MyISAM</code> tables and views.</td>
+            </tr><tr>
+              <td><code class="literal">CHANGED</code></td>
+              <td>Check only tables that have been changed since the last check or that
+                have not been closed properly. Ignored for
+                <code class="literal">InnoDB</code>; applies only to
+                <code class="literal">MyISAM</code> tables and views.</td>
+            </tr><tr>
+              <td><code class="literal">MEDIUM</code></td>
+              <td>Scan rows to verify that deleted links are valid. This also calculates a
+                key checksum for the rows and verifies this with a
+                calculated checksum for the keys. Ignored for
+                <code class="literal">InnoDB</code>; applies only to
+                <code class="literal">MyISAM</code> tables and views.</td>
+            </tr><tr>
+              <td><code class="literal">EXTENDED</code></td>
+              <td>Do a full key lookup for all keys for each row. This ensures that the
+                table is 100% consistent, but takes a long time. Ignored
+                for <code class="literal">InnoDB</code>; applies only to
+                <code class="literal">MyISAM</code> tables and views.</td>
+</tr></tbody></table>
+</div>
+<p>
+          If none of the options <code class="literal">QUICK</code>,
+          <code class="literal">MEDIUM</code>, or <code class="literal">EXTENDED</code> are
+          specified, the default check type for dynamic-format
+          <code class="literal">MyISAM</code> tables is <code class="literal">MEDIUM</code>.
+          This has the same result as running <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk
+          --medium-check <em class="replaceable"><code>tbl_name</code></em></strong></span></a>
+          on the table. The default check type also is
+          <code class="literal">MEDIUM</code> for static-format
+          <code class="literal">MyISAM</code> tables, unless
+          <code class="literal">CHANGED</code> or <code class="literal">FAST</code> is
+          specified. In that case, the default is
+          <code class="literal">QUICK</code>. The row scan is skipped for
+          <code class="literal">CHANGED</code> and <code class="literal">FAST</code> because
+          the rows are very seldom corrupted.
+        </p><p>
+          You can combine check options, as in the following example
+          that does a quick check on the table to determine whether it
+          was closed properly:
+        </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">CHECK TABLE test_table FAST QUICK;</code></pre>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+            If <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> finds no
+            problems with a table that is marked as
+            <span class="quote">“<span class="quote">corrupted</span>”</span> or <span class="quote">“<span class="quote">not closed
+            properly</span>”</span>, <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a>
+            may remove the mark.
+</p>
+</div>
+<p>
+          If a table is corrupted, the problem is most likely in the
+          indexes and not in the data part. All of the preceding check
+          types check the indexes thoroughly and should thus find most
+          errors.
+        </p><p>
+          To check a table that you assume is okay, use no check options
+          or the <code class="literal">QUICK</code> option. The latter should be
+          used when you are in a hurry and can take the very small risk
+          that <code class="literal">QUICK</code> does not find an error in the
+          data file. (In most cases, under normal usage, MySQL should
+          find any error in the data file. If this happens, the table is
+          marked as <span class="quote">“<span class="quote">corrupted</span>”</span> and cannot be used until it
+          is repaired.)
+        </p><p>
+          <code class="literal">FAST</code> and <code class="literal">CHANGED</code> are
+          mostly intended to be used from a script (for example, to be
+          executed from <span class="command"><strong>cron</strong></span>) to check tables
+          periodically. In most cases, <code class="literal">FAST</code> is to be
+          preferred over <code class="literal">CHANGED</code>. (The only case when
+          it is not preferred is when you suspect that you have found a
+          bug in the <code class="literal">MyISAM</code> code.)
+        </p><p>
+          <code class="literal">EXTENDED</code> is to be used only after you have
+          run a normal check but still get errors from a table when
+          MySQL tries to update a row or find a row by key. This is very
+          unlikely if a normal check has succeeded.
+        </p><p>
+          Use of <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK
+          TABLE ... EXTENDED</code></a> might influence execution plans
+          generated by the query optimizer.
+        </p><p>
+          Some problems reported by <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK
+          TABLE</code></a> cannot be corrected automatically:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              <code class="literal">Found row where the auto_increment column has the
+              value 0</code>.
+            </p><p>
+              This means that you have a row in the table where the
+              <code class="literal">AUTO_INCREMENT</code> index column contains
+              the value 0. (It is possible to create a row where the
+              <code class="literal">AUTO_INCREMENT</code> column is 0 by
+              explicitly setting the column to 0 with an
+              <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statement.)
+            </p><p>
+              This is not an error in itself, but could cause trouble if
+              you decide to dump the table and restore it or do an
+              <a class="link" href="alter-table.html" title="13.1.8&nbsp;ALTER TABLE Statement"><code class="literal">ALTER TABLE</code></a> on the table.
+              In this case, the <code class="literal">AUTO_INCREMENT</code> column
+              changes value according to the rules of
+              <code class="literal">AUTO_INCREMENT</code> columns, which could
+              cause problems such as a duplicate-key error.
+            </p><p>
+              To get rid of the warning, execute an
+              <a class="link" href="update.html" title="13.2.11&nbsp;UPDATE Statement"><code class="literal">UPDATE</code></a> statement to set the
+              column to some value other than 0.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="check-table-innodb"></a>CHECK TABLE Usage Notes for InnoDB Tables</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          The following notes apply to
+          <a class="link" href="innodb-storage-engine.html" title="Chapter&nbsp;14&nbsp;The InnoDB Storage Engine"><code class="literal">InnoDB</code></a> tables:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              If <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> encounters a
+              corrupt page, the server exits to prevent error
+              propagation (Bug #10132). If the corruption occurs in a
+              secondary index but table data is readable, running
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> can still cause
+              a server exit.
+            </p></li><li class="listitem"><p>
+              If <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> encounters a
+              corrupted <code class="literal">DB_TRX_ID</code> or
+              <code class="literal">DB_ROLL_PTR</code> field in a clustered index,
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> can cause
+              <code class="literal">InnoDB</code> to access an invalid undo log
+              record, resulting in an
+              <a class="link" href="glossary.html#glos_mvcc" title="MVCC">MVCC</a>-related server exit.
+            </p></li><li class="listitem"><p>
+              If <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> encounters
+              errors in <code class="literal">InnoDB</code> tables or indexes, it
+              reports an error, and usually marks the index and
+              sometimes marks the table as corrupted, preventing further
+              use of the index or table. Such errors include an
+              incorrect number of entries in a secondary index or
+              incorrect links.
+            </p></li><li class="listitem"><p>
+              If <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> finds an
+              incorrect number of entries in a secondary index, it
+              reports an error but does not cause a server exit or
+              prevent access to the file.
+            </p></li><li class="listitem"><p>
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> surveys the
+              index page structure, then surveys each key entry. It does
+              not validate the key pointer to a clustered record or
+              follow the path for <a class="link" href="blob.html" title="11.3.4&nbsp;The BLOB and TEXT Types"><code class="literal">BLOB</code></a>
+              pointers.
+            </p></li><li class="listitem"><p>
+              When an <code class="literal">InnoDB</code> table is stored in its
+              own
+              <a class="link" href="glossary.html#glos_ibd_file" title=".ibd file"><code class="filename">.ibd</code>
+              file</a>, the first 3
+              <a class="link" href="glossary.html#glos_page" title="page">pages</a> of the
+              <code class="literal">.ibd</code> file contain header information
+              rather than table or index data. The
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> statement does
+              not detect inconsistencies that affect only the header
+              data. To verify the entire contents of an
+              <code class="literal">InnoDB</code> <code class="literal">.ibd</code> file,
+              use the <a class="link" href="innochecksum.html" title="4.6.1&nbsp;innochecksum — Offline InnoDB File Checksum Utility"><span class="command"><strong>innochecksum</strong></span></a> command.
+            </p></li><li class="listitem"><p>
+              When running <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> on
+              large <code class="literal">InnoDB</code> tables, other threads may
+              be blocked during <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK
+              TABLE</code></a> execution. To avoid timeouts, the
+              semaphore wait threshold (600 seconds) is extended by 2
+              hours (7200 seconds) for <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK
+              TABLE</code></a> operations. If <code class="literal">InnoDB</code>
+              detects semaphore waits of 240 seconds or more, it starts
+              printing <code class="literal">InnoDB</code> monitor output to the
+              error log. If a lock request extends beyond the semaphore
+              wait threshold, <code class="literal">InnoDB</code> aborts the
+              process. To avoid the possibility of a semaphore wait
+              timeout entirely, run
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE
+              QUICK</code></a> instead of <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK
+              TABLE</code></a>.
+            </p></li><li class="listitem"><p>
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> functionality
+              for <code class="literal">InnoDB</code> <code class="literal">SPATIAL</code>
+              indexes includes an R-tree validity check and a check to
+              ensure that the R-tree row count matches the clustered
+              index.
+            </p></li><li class="listitem"><p>
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> supports
+              secondary indexes on virtual generated columns, which are
+              supported by <code class="literal">InnoDB</code>.
+</p></li></ul>
+</div>
+
+</div>
+<div class="simplesect">
+<div class="titlepage">
+<div>
+<div class="simple">
+<h5 class="title"><a name="check-table-myisam"></a>CHECK TABLE Usage Notes for MyISAM Tables</h5>
+
+</div>
+
+</div>
+
+</div>
+<p>
+          The following notes apply to
+          <a class="link" href="myisam-storage-engine.html" title="15.2&nbsp;The MyISAM Storage Engine"><code class="literal">MyISAM</code></a> tables:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+              <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> updates key
+              statistics for <code class="literal">MyISAM</code> tables.
+            </p></li><li class="listitem"><p>
+              If <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a> output does
+              not return <code class="literal">OK</code> or <code class="literal">Table is
+              already up to date</code>, you should normally run a
+              repair of the table. See
+              <a class="xref" href="myisam-table-maintenance.html" title="7.6&nbsp;MyISAM Table Maintenance and Crash Recovery">Section&nbsp;7.6, “MyISAM Table Maintenance and Crash Recovery”</a>.
+            </p></li><li class="listitem"><p>
+              If none of the <a class="link" href="check-table.html" title="13.7.2.2&nbsp;CHECK TABLE Statement"><code class="literal">CHECK TABLE</code></a>
+              options <code class="literal">QUICK</code>,
+              <code class="literal">MEDIUM</code>, or <code class="literal">EXTENDED</code>
+              are specified, the default check type for dynamic-format
+              <code class="literal">MyISAM</code> tables is
+              <code class="literal">MEDIUM</code>. This has the same result as
+              running <a class="link" href="myisamchk.html" title="4.6.3&nbsp;myisamchk — MyISAM Table-Maintenance Utility"><span class="command"><strong>myisamchk --medium-check
+              <em class="replaceable"><code>tbl_name</code></em></strong></span></a> on the
+              table. The default check type also is
+              <code class="literal">MEDIUM</code> for static-format
+              <code class="literal">MyISAM</code> tables, unless
+              <code class="literal">CHANGED</code> or <code class="literal">FAST</code> is
+              specified. In that case, the default is
+              <code class="literal">QUICK</code>. The row scan is skipped for
+              <code class="literal">CHANGED</code> and <code class="literal">FAST</code>
+              because the rows are very seldom corrupted.
+</p></li></ul>
+</div>
+
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

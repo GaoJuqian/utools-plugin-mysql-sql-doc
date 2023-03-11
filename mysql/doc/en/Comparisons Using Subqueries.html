@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Comparisons Using Subqueries</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="comparisons-using-subqueries"></a>13.2.10.2&nbsp;Comparisons Using Subqueries</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        The most common use of a subquery is in the form:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql"><em class="replaceable">non_subquery_operand</em> <em class="replaceable">comparison_operator</em> (<em class="replaceable">subquery</em>)</code></pre><p>
+        Where <em class="replaceable"><code>comparison_operator</code></em> is one of
+        these operators:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">=  &gt;  &lt;  &gt;=  &lt;=  &lt;&gt;  !=  &lt;=&gt;</code></pre><p>
+        For example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">... WHERE 'a' = (SELECT column1 FROM t1)</code></pre><p>
+        MySQL also permits this construct:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql"><em class="replaceable">non_subquery_operand</em> LIKE (<em class="replaceable">subquery</em>)</code></pre><p>
+        At one time the only legal place for a subquery was on the right
+        side of a comparison, and you might still find some old DBMSs
+        that insist on this.
+      </p><p>
+        Here is an example of a common-form subquery comparison that you
+        cannot do with a join. It finds all the rows in table
+        <code class="literal">t1</code> for which the <code class="literal">column1</code>
+        value is equal to a maximum value in table
+        <code class="literal">t2</code>:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1
+  WHERE column1 = (SELECT MAX(column2) FROM t2);</code></pre><p>
+        Here is another example, which again is impossible with a join
+        because it involves aggregating for one of the tables. It finds
+        all rows in table <code class="literal">t1</code> containing a value that
+        occurs twice in a given column:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SELECT * FROM t1 AS t
+  WHERE 2 = (SELECT COUNT(*) FROM t1 WHERE t1.id = t.id);</code></pre><p>
+        For a comparison of the subquery to a scalar, the subquery must
+        return a scalar. For a comparison of the subquery to a row
+        constructor, the subquery must be a row subquery that returns a
+        row with the same number of values as the row constructor. See
+        <a class="xref" href="row-subqueries.html" title="13.2.10.5&nbsp;Row Subqueries">Section&nbsp;13.2.10.5, “Row Subqueries”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

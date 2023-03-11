@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>PURGE BINARY LOGS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="purge-binary-logs"></a>13.4.1.1&nbsp;PURGE BINARY LOGS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852576389696"></a><a class="indexterm" name="idm45852576388656"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">PURGE { BINARY | MASTER } LOGS {
+    TO '<em class="replaceable">log_name</em>'
+  | BEFORE <em class="replaceable">datetime_expr</em>
+}</code></pre><p>
+        The binary log is a set of files that contain information about
+        data modifications made by the MySQL server. The log consists of
+        a set of binary log files, plus an index file (see
+        <a class="xref" href="binary-log.html" title="5.4.4&nbsp;The Binary Log">Section&nbsp;5.4.4, “The Binary Log”</a>).
+      </p><p>
+        The <a class="link" href="purge-binary-logs.html" title="13.4.1.1&nbsp;PURGE BINARY LOGS Statement"><code class="literal">PURGE BINARY LOGS</code></a> statement
+        deletes all the binary log files listed in the log index file
+        prior to the specified log file name or date.
+        <code class="literal">BINARY</code> and <code class="literal">MASTER</code> are
+        synonyms. Deleted log files also are removed from the list
+        recorded in the index file, so that the given log file becomes
+        the first in the list.
+      </p><p>
+        <a class="link" href="purge-binary-logs.html" title="13.4.1.1&nbsp;PURGE BINARY LOGS Statement"><code class="literal">PURGE BINARY LOGS</code></a> requires the
+        <a class="ulink" href="https://dev.mysql.com/doc/refman/8.0/en/privileges-provided.html#priv_binlog-admin" target="_top"><code class="literal">BINLOG_ADMIN</code></a> privilege. This
+        statement has no effect if the server was not started with the
+        <a class="link" href="replication-options-binary-log.html#option_mysqld_log-bin"><code class="option">--log-bin</code></a> option to enable binary
+        logging.
+      </p><p>
+        Examples:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">PURGE BINARY LOGS TO 'mysql-bin.010';
+PURGE BINARY LOGS BEFORE '2019-04-02 22:46:26';</code></pre><p>
+        The <code class="literal">BEFORE</code> variant's
+        <em class="replaceable"><code>datetime_expr</code></em> argument should
+        evaluate to a <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">DATETIME</code></a> value (a
+        value in <code class="literal">'<em class="replaceable"><code>YYYY-MM-DD
+        hh:mm:ss</code></em>'</code> format).
+      </p><p>
+        This statement is safe to run while replicas are replicating.
+        You need not stop them. If you have an active replica that
+        currently is reading one of the log files you are trying to
+        delete, this statement does not delete the log file that is in
+        use or any log files later than that one, but it deletes any
+        earlier log files. A warning message is issued in this
+        situation. However, if a replica is not connected and you happen
+        to purge one of the log files it has yet to read, the replica
+        cannot replicate after it reconnects.
+      </p><p>
+        To safely purge binary log files, follow this procedure:
+</p>
+<div class="orderedlist">
+<ol class="orderedlist" type="1"><li class="listitem"><p>
+            On each replica, use <a class="link" href="show-slave-status.html" title="13.7.5.34&nbsp;SHOW SLAVE STATUS Statement"><code class="literal">SHOW SLAVE
+            STATUS</code></a> to check which log file it is reading.
+          </p></li><li class="listitem"><p>
+            Obtain a listing of the binary log files on the replication
+            source server with <a class="link" href="show-binary-logs.html" title="13.7.5.1&nbsp;SHOW BINARY LOGS Statement"><code class="literal">SHOW BINARY
+            LOGS</code></a>.
+          </p></li><li class="listitem"><p>
+            Determine the earliest log file among all the replicas. This
+            is the target file. If all the replicas are up to date, this
+            is the last log file on the list.
+          </p></li><li class="listitem"><p>
+            Make a backup of all the log files you are about to delete.
+            (This step is optional, but always advisable.)
+          </p></li><li class="listitem"><p>
+            Purge all log files up to but not including the target file.
+</p></li></ol>
+</div>
+<p>
+        You can also set the
+        <a class="link" href="replication-options-binary-log.html#sysvar_expire_logs_days"><code class="literal">expire_logs_days</code></a> system
+        variable to expire binary log files automatically after a given
+        number of days (see <a class="xref" href="server-system-variables.html" title="5.1.7&nbsp;Server System Variables">Section&nbsp;5.1.7, “Server System Variables”</a>).
+        If you are using replication, you should set the variable no
+        lower than the maximum number of days your replicas might lag
+        behind the source.
+      </p><p>
+        <code class="literal">PURGE BINARY LOGS TO</code> and <code class="literal">PURGE
+        BINARY LOGS BEFORE</code> both fail with an error when binary
+        log files listed in the <code class="filename">.index</code> file had
+        been removed from the system by some other means (such as using
+        <span class="command"><strong>rm</strong></span> on Linux). (Bug #18199, Bug #18453) To
+        handle such errors, edit the <code class="filename">.index</code> file
+        (which is a simple text file) manually to ensure that it lists
+        only the binary log files that are actually present, then run
+        again the <a class="link" href="purge-binary-logs.html" title="13.4.1.1&nbsp;PURGE BINARY LOGS Statement"><code class="literal">PURGE BINARY LOGS</code></a>
+        statement that failed.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

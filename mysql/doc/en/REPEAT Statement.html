@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>REPEAT Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="repeat"></a>13.6.5.6&nbsp;REPEAT Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575102256"></a><a class="indexterm" name="idm45852575101184"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">[<em class="replaceable">begin_label</em>:] REPEAT
+    <em class="replaceable">statement_list</em>
+UNTIL <em class="replaceable">search_condition</em>
+END REPEAT [<em class="replaceable">end_label</em>]</code></pre><p>
+        The statement list within a
+        <a class="link" href="repeat.html" title="13.6.5.6&nbsp;REPEAT Statement"><code class="literal">REPEAT</code></a> statement is repeated
+        until the <em class="replaceable"><code>search_condition</code></em> expression
+        is true. Thus, a <a class="link" href="repeat.html" title="13.6.5.6&nbsp;REPEAT Statement"><code class="literal">REPEAT</code></a> always
+        enters the loop at least once.
+        <em class="replaceable"><code>statement_list</code></em> consists of one or
+        more statements, each terminated by a semicolon
+        (<code class="literal">;</code>) statement delimiter.
+      </p><p>
+        A <a class="link" href="repeat.html" title="13.6.5.6&nbsp;REPEAT Statement"><code class="literal">REPEAT</code></a> statement can be
+        labeled. For the rules regarding label use, see
+        <a class="xref" href="statement-labels.html" title="13.6.2&nbsp;Statement Labels">Section&nbsp;13.6.2, “Statement Labels”</a>.
+      </p><p>
+        Example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; delimiter //
+
+mysql&gt; CREATE PROCEDURE dorepeat(p1 INT)
+       BEGIN
+         SET @x = 0;
+         REPEAT
+           SET @x = @x + 1;
+         UNTIL @x &gt; p1 END REPEAT;
+       END
+       //
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; CALL dorepeat(1000)//
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; SELECT @x//
++------+
+| @x   |
++------+
+| 1001 |
++------+
+1 row in set (0.00 sec)</code></pre>
+</div>
+<br>
+        
+</body>
+</html>

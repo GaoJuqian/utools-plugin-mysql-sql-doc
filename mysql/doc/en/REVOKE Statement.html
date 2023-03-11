@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>REVOKE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="revoke"></a>13.7.1.6&nbsp;REVOKE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852572891120"></a><a class="indexterm" name="idm45852572890048"></a><a class="indexterm" name="idm45852572889008"></a><a class="indexterm" name="idm45852572887520"></a><a class="indexterm" name="idm45852572886448"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">REVOKE
+    <em class="replaceable">priv_type</em> [(<em class="replaceable">column_list</em>)]
+      [, <em class="replaceable">priv_type</em> [(<em class="replaceable">column_list</em>)]] ...
+    ON [<em class="replaceable">object_type</em>] <em class="replaceable">priv_level</em>
+    FROM <em class="replaceable">user</em> [, <em class="replaceable">user</em>] ...
+
+REVOKE ALL [PRIVILEGES], GRANT OPTION
+    FROM <em class="replaceable">user</em> [, <em class="replaceable">user</em>] ...
+
+REVOKE PROXY ON <em class="replaceable">user</em>
+    FROM <em class="replaceable">user</em> [, <em class="replaceable">user</em>] ...</code></pre><p>
+        The <a class="link" href="revoke.html" title="13.7.1.6&nbsp;REVOKE Statement"><code class="literal">REVOKE</code></a> statement enables
+        system administrators to revoke privileges from MySQL accounts.
+      </p><p>
+        For details on the levels at which privileges exist, the
+        permissible <em class="replaceable"><code>priv_type</code></em>,
+        <em class="replaceable"><code>priv_level</code></em>, and
+        <em class="replaceable"><code>object_type</code></em> values, and the syntax
+        for specifying users and passwords, see <a class="xref" href="grant.html" title="13.7.1.4&nbsp;GRANT Statement">Section&nbsp;13.7.1.4, “GRANT Statement”</a>.
+      </p><p>
+        When the <a class="link" href="server-system-variables.html#sysvar_read_only"><code class="literal">read_only</code></a> system
+        variable is enabled, <a class="link" href="revoke.html" title="13.7.1.6&nbsp;REVOKE Statement"><code class="literal">REVOKE</code></a>
+        requires the <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege in
+        addition to any other required privileges described in the
+        following discussion.
+      </p><p>
+        Each account name uses the format described in
+        <a class="xref" href="account-names.html" title="6.2.4&nbsp;Specifying Account Names">Section&nbsp;6.2.4, “Specifying Account Names”</a>. For example:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">REVOKE INSERT ON *.* FROM 'jeffrey'@'localhost';</code></pre><p>
+        The host name part of the account name, if omitted, defaults to
+        <code class="literal">'%'</code>.
+      </p><p>
+        To use the first <a class="link" href="revoke.html" title="13.7.1.6&nbsp;REVOKE Statement"><code class="literal">REVOKE</code></a> syntax,
+        you must have the <a class="link" href="privileges-provided.html#priv_grant-option"><code class="literal">GRANT OPTION</code></a>
+        privilege, and you must have the privileges that you are
+        revoking.
+      </p><p>
+        To revoke all privileges, use the second syntax, which drops all
+        global, database, table, column, and routine privileges for the
+        named user or users:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">REVOKE ALL PRIVILEGES, GRANT OPTION FROM <em class="replaceable">user</em> [, <em class="replaceable">user</em>] ...</code></pre><p>
+        To use this <a class="link" href="revoke.html" title="13.7.1.6&nbsp;REVOKE Statement"><code class="literal">REVOKE</code></a> syntax, you
+        must have the global <a class="link" href="privileges-provided.html#priv_create-user"><code class="literal">CREATE USER</code></a>
+        privilege, or the <a class="link" href="privileges-provided.html#priv_update"><code class="literal">UPDATE</code></a>
+        privilege for the <code class="literal">mysql</code> system database.
+      </p><p>
+        User accounts from which privileges are to be revoked must
+        exist, but the privileges to be revoked need not be currently
+        granted to them.
+      </p><p>
+        <a class="link" href="revoke.html" title="13.7.1.6&nbsp;REVOKE Statement"><code class="literal">REVOKE</code></a> removes privileges, but
+        does not remove rows from the <code class="literal">mysql.user</code>
+        system table. To remove a user account entirely, use
+        <a class="link" href="drop-user.html" title="13.7.1.3&nbsp;DROP USER Statement"><code class="literal">DROP USER</code></a>. See
+        <a class="xref" href="drop-user.html" title="13.7.1.3&nbsp;DROP USER Statement">Section&nbsp;13.7.1.3, “DROP USER Statement”</a>.
+      </p><p>
+        If the grant tables hold privilege rows that contain mixed-case
+        database or table names and the
+        <a class="link" href="server-system-variables.html#sysvar_lower_case_table_names"><code class="literal">lower_case_table_names</code></a> system
+        variable is set to a nonzero value,
+        <a class="link" href="revoke.html" title="13.7.1.6&nbsp;REVOKE Statement"><code class="literal">REVOKE</code></a> cannot be used to revoke
+        these privileges. It is necessary to manipulate the grant tables
+        directly. (<a class="link" href="grant.html" title="13.7.1.4&nbsp;GRANT Statement"><code class="literal">GRANT</code></a> does not create
+        such rows when
+        <a class="link" href="server-system-variables.html#sysvar_lower_case_table_names"><code class="literal">lower_case_table_names</code></a> is set,
+        but such rows might have been created prior to setting the
+        variable.)
+      </p><p>
+        When successfully executed from the <a class="link" href="mysql.html" title="4.5.1&nbsp;mysql — The MySQL Command-Line Client"><span class="command"><strong>mysql</strong></span></a>
+        program, <a class="link" href="revoke.html" title="13.7.1.6&nbsp;REVOKE Statement"><code class="literal">REVOKE</code></a> responds with
+        <code class="literal">Query OK, 0 rows affected</code>. To determine what
+        privileges remain after the operation, use
+        <a class="link" href="show-grants.html" title="13.7.5.21&nbsp;SHOW GRANTS Statement"><code class="literal">SHOW GRANTS</code></a>. See
+        <a class="xref" href="show-grants.html" title="13.7.5.21&nbsp;SHOW GRANTS Statement">Section&nbsp;13.7.5.21, “SHOW GRANTS Statement”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

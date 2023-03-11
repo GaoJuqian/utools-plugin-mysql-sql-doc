@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>MASTER_POS_WAIT() Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="master-pos-wait"></a>13.4.2.3&nbsp;MASTER_POS_WAIT() Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575889536"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SELECT MASTER_POS_WAIT('<em class="replaceable">source_log_file</em>', <em class="replaceable">source_log_pos</em> [, <em class="replaceable">timeout</em>][, <em class="replaceable">channel</em>])</code></pre><p>
+        This is actually a function, not a statement. It is used to
+        ensure that the replica has read and executed events up to a
+        given position in the source's binary log. See
+        <a class="xref" href="miscellaneous-functions.html" title="12.21&nbsp;Miscellaneous Functions">Section&nbsp;12.21, “Miscellaneous Functions”</a>, for a full
+        description.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

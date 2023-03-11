@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Restrictions on Condition Handling</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="condition-handling-restrictions"></a>13.6.7.9&nbsp;Restrictions on Condition Handling</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852574068576"></a><a class="indexterm" name="idm45852574067088"></a><p>
+        <a class="link" href="signal.html" title="13.6.7.5&nbsp;SIGNAL Statement"><code class="literal">SIGNAL</code></a>,
+        <a class="link" href="resignal.html" title="13.6.7.4&nbsp;RESIGNAL Statement"><code class="literal">RESIGNAL</code></a>, and
+        <a class="link" href="get-diagnostics.html" title="13.6.7.3&nbsp;GET DIAGNOSTICS Statement"><code class="literal">GET DIAGNOSTICS</code></a> are not
+        permissible as prepared statements. For example, this statement
+        is invalid:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">PREPARE stmt1 FROM 'SIGNAL SQLSTATE "02000"';</code></pre><p>
+        <code class="literal">SQLSTATE</code> values in class
+        <code class="literal">'04'</code> are not treated specially. They are
+        handled the same as other exceptions.
+      </p><p>
+        In standard SQL, the first condition relates to the
+        <code class="literal">SQLSTATE</code> value returned for the previous SQL
+        statement. In MySQL, this is not guaranteed, so to get the main
+        error, you cannot do this:
+      </p><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">GET DIAGNOSTICS CONDITION 1 @errno = MYSQL_ERRNO;</code></pre><p>
+        Instead, do this:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">GET DIAGNOSTICS @cno = NUMBER;
+GET DIAGNOSTICS CONDITION @cno @errno = MYSQL_ERRNO;</code></pre>
+</div>
+
+<br>
+        
+</body>
+</html>

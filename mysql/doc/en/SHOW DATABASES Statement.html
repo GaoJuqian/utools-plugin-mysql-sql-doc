@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW DATABASES Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-databases"></a>13.7.5.14&nbsp;SHOW DATABASES Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571150624"></a><a class="indexterm" name="idm45852571149568"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW {DATABASES | SCHEMAS}
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        <a class="link" href="show-databases.html" title="13.7.5.14&nbsp;SHOW DATABASES Statement"><code class="literal">SHOW DATABASES</code></a> lists the
+        databases on the MySQL server host.
+        <a class="link" href="show-databases.html" title="13.7.5.14&nbsp;SHOW DATABASES Statement"><code class="literal">SHOW
+        SCHEMAS</code></a> is a synonym for <a class="link" href="show-databases.html" title="13.7.5.14&nbsp;SHOW DATABASES Statement"><code class="literal">SHOW
+        DATABASES</code></a>. The <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a>
+        clause, if present, indicates which database names to match. The
+        <code class="literal">WHERE</code> clause can be given to select rows
+        using more general conditions, as discussed in
+        <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+      </p><p>
+        You see only those databases for which you have some kind of
+        privilege, unless you have the global <a class="link" href="show-databases.html" title="13.7.5.14&nbsp;SHOW DATABASES Statement"><code class="literal">SHOW
+        DATABASES</code></a> privilege. You can also get this list using
+        the <a class="link" href="mysqlshow.html" title="4.5.7&nbsp;mysqlshow — Display Database, Table, and Column Information"><span class="command"><strong>mysqlshow</strong></span></a> command.
+      </p><p>
+        If the server was started with the
+        <a class="link" href="server-options.html#option_mysqld_skip-show-database"><code class="option">--skip-show-database</code></a> option, you
+        cannot use this statement at all unless you have the
+        <a class="link" href="privileges-provided.html#priv_show-databases"><code class="literal">SHOW DATABASES</code></a> privilege.
+      </p><p>
+        MySQL implements databases as directories in the data directory,
+        so this statement simply lists directories in that location.
+        However, the output may include names of directories that do not
+        correspond to actual databases.
+      </p><p>
+        Database information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-schemata-table.html" title="24.3.22&nbsp;The INFORMATION_SCHEMA SCHEMATA Table"><code class="literal">SCHEMATA</code></a> table. See
+        <a class="xref" href="information-schema-schemata-table.html" title="24.3.22&nbsp;The INFORMATION_SCHEMA SCHEMATA Table">Section&nbsp;24.3.22, “The INFORMATION_SCHEMA SCHEMATA Table”</a>.
+</p>
+<div class="caution" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Caution
+</div>
+<p>
+          Because a global privilege is considered a privilege for all
+          databases, <span class="emphasis"><em>any</em></span> global privilege enables a
+          user to see all database names with <a class="link" href="show-databases.html" title="13.7.5.14&nbsp;SHOW DATABASES Statement"><code class="literal">SHOW
+          DATABASES</code></a> or by examining the
+          <code class="literal">INFORMATION_SCHEMA</code>
+          <a class="link" href="information-schema-schemata-table.html" title="24.3.22&nbsp;The INFORMATION_SCHEMA SCHEMATA Table"><code class="literal">SCHEMATA</code></a> table.
+</p>
+</div>
+
+</div>
+<br>
+        
+</body>
+</html>

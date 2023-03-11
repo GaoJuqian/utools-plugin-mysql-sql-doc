@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Local Variable Scope and Resolution</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="local-variable-scope"></a>13.6.4.2&nbsp;Local Variable Scope and Resolution</h4>
+
+</div>
+
+</div>
+
+</div>
+<p>
+        The scope of a local variable is the
+        <a class="link" href="begin-end.html" title="13.6.1&nbsp;BEGIN ... END Compound Statement"><code class="literal">BEGIN ...
+        END</code></a> block within which it is declared. The variable
+        can be referred to in blocks nested within the declaring block,
+        except those blocks that declare a variable with the same name.
+      </p><p>
+        Because local variables are in scope only during stored program
+        execution, references to them are not permitted in prepared
+        statements created within a stored program. Prepared statement
+        scope is the current session, not the stored program, so the
+        statement could be executed after the program ends, at which
+        point the variables would no longer be in scope. For example,
+        <code class="literal">SELECT ... INTO
+        <em class="replaceable"><code>local_var</code></em></code> cannot be used as
+        a prepared statement. This restriction also applies to stored
+        procedure and function parameters. See
+        <a class="xref" href="prepare.html" title="13.5.1&nbsp;PREPARE Statement">Section&nbsp;13.5.1, “PREPARE Statement”</a>.
+      </p><p>
+        A local variable should not have the same name as a table
+        column. If an SQL statement, such as a
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT ...
+        INTO</code></a> statement, contains a reference to a column and a
+        declared local variable with the same name, MySQL currently
+        interprets the reference as the name of a variable. Consider the
+        following procedure definition:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE sp1 (x VARCHAR(5))
+BEGIN
+  DECLARE xname VARCHAR(5) DEFAULT 'bob';
+  DECLARE newname VARCHAR(5);
+  DECLARE xid INT;
+
+  SELECT xname, id INTO newname, xid
+    FROM table1 WHERE xname = xname;
+  SELECT newname;
+END;</code></pre><p>
+        MySQL interprets <code class="literal">xname</code> in the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement as a reference
+        to the <code class="literal">xname</code> <span class="emphasis"><em>variable</em></span>
+        rather than the <code class="literal">xname</code>
+        <span class="emphasis"><em>column</em></span>. Consequently, when the procedure
+        <code class="literal">sp1()</code>is called, the
+        <code class="literal">newname</code> variable returns the value
+        <code class="literal">'bob'</code> regardless of the value of the
+        <code class="literal">table1.xname</code> column.
+      </p><p>
+        Similarly, the cursor definition in the following procedure
+        contains a <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement that
+        refers to <code class="literal">xname</code>. MySQL interprets this as a
+        reference to the variable of that name rather than a column
+        reference.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE PROCEDURE sp2 (x VARCHAR(5))
+BEGIN
+  DECLARE xname VARCHAR(5) DEFAULT 'bob';
+  DECLARE newname VARCHAR(5);
+  DECLARE xid INT;
+  DECLARE done TINYINT DEFAULT 0;
+  DECLARE cur1 CURSOR FOR SELECT xname, id FROM table1;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+  OPEN cur1;
+  read_loop: LOOP
+    FETCH FROM cur1 INTO newname, xid;
+    IF done THEN LEAVE read_loop; END IF;
+    SELECT newname;
+  END LOOP;
+  CLOSE cur1;
+END;</code></pre><p>
+        See also <a class="xref" href="stored-program-restrictions.html" title="23.8&nbsp;Restrictions on Stored Programs">Section&nbsp;23.8, “Restrictions on Stored Programs”</a>.
+</p>
+</div>
+
+<br>
+        
+</body>
+</html>

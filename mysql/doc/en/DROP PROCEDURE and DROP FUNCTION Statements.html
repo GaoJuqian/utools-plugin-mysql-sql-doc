@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>DROP PROCEDURE and DROP FUNCTION Statements</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="drop-procedure"></a>13.1.27&nbsp;DROP PROCEDURE and DROP FUNCTION Statements</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852580665712"></a><a class="indexterm" name="idm45852580664672"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DROP {PROCEDURE | FUNCTION} [IF EXISTS] <em class="replaceable">sp_name</em></code></pre><p>
+      These statements are used to drop a stored routine (a stored
+      procedure or function). That is, the specified routine is removed
+      from the server. (<code class="literal">DROP FUNCTION</code> is also used to
+      drop loadable functions; see
+      <a class="xref" href="drop-function-loadable.html" title="13.7.3.2&nbsp;DROP FUNCTION Statement for Loadable Functions">Section&nbsp;13.7.3.2, “DROP FUNCTION Statement for Loadable Functions”</a>.)
+    </p><p>
+      To drop a stored routine, you must have the
+      <a class="link" href="privileges-provided.html#priv_alter-routine"><code class="literal">ALTER ROUTINE</code></a> privilege for it. (If
+      the <code class="literal">automatic_sp_privileges</code> system variable is
+      enabled, that privilege and <a class="link" href="privileges-provided.html#priv_execute"><code class="literal">EXECUTE</code></a>
+      are granted automatically to the routine creator when the routine
+      is created and dropped from the creator when the routine is
+      dropped. See <a class="xref" href="stored-routines-privileges.html" title="23.2.2&nbsp;Stored Routines and MySQL Privileges">Section&nbsp;23.2.2, “Stored Routines and MySQL Privileges”</a>.)
+    </p><p>
+      The <code class="literal">IF EXISTS</code> clause is a MySQL extension. It
+      prevents an error from occurring if the procedure or function does
+      not exist. A warning is produced that can be viewed with
+      <a class="link" href="show-warnings.html" title="13.7.5.40&nbsp;SHOW WARNINGS Statement"><code class="literal">SHOW WARNINGS</code></a>.
+    </p><p>
+      <a class="link" href="drop-function.html" title="13.1.24&nbsp;DROP FUNCTION Statement"><code class="literal">DROP FUNCTION</code></a> is also used to drop
+      loadable functions (see <a class="xref" href="drop-function-loadable.html" title="13.7.3.2&nbsp;DROP FUNCTION Statement for Loadable Functions">Section&nbsp;13.7.3.2, “DROP FUNCTION Statement for Loadable Functions”</a>).
+</p>
+</div>
+<br>
+        
+</body>
+</html>

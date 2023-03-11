@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>ALTER EVENT Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="alter-event"></a>13.1.2&nbsp;ALTER EVENT Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852585734848"></a><a class="indexterm" name="idm45852585733360"></a><a class="indexterm" name="idm45852585731872"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER
+    [DEFINER = <em class="replaceable">user</em>]
+    EVENT <em class="replaceable">event_name</em>
+    [ON SCHEDULE <em class="replaceable">schedule</em>]
+    [ON COMPLETION [NOT] PRESERVE]
+    [RENAME TO <em class="replaceable">new_event_name</em>]
+    [ENABLE | DISABLE | DISABLE ON SLAVE]
+    [COMMENT '<em class="replaceable">string</em>']
+    [DO <em class="replaceable">event_body</em>]</code></pre><p>
+      The <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> statement changes
+      one or more of the characteristics of an existing event without
+      the need to drop and recreate it. The syntax for each of the
+      <code class="literal">DEFINER</code>, <code class="literal">ON SCHEDULE</code>,
+      <code class="literal">ON COMPLETION</code>, <code class="literal">COMMENT</code>,
+      <code class="literal">ENABLE</code> / <code class="literal">DISABLE</code>, and
+      <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> clauses is exactly the same as
+      when used with <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE EVENT</code></a>. (See
+      <a class="xref" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement">Section&nbsp;13.1.12, “CREATE EVENT Statement”</a>.)
+    </p><p>
+      Any user can alter an event defined on a database for which that
+      user has the <a class="link" href="privileges-provided.html#priv_event"><code class="literal">EVENT</code></a> privilege. When
+      a user executes a successful <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER
+      EVENT</code></a> statement, that user becomes the definer for the
+      affected event.
+    </p><p>
+      <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> works only with an
+      existing event:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; ALTER EVENT no_such_event 
+     &gt;     ON SCHEDULE 
+     &gt;       EVERY '2:3' DAY_HOUR;
+ERROR 1517 (HY000): Unknown event 'no_such_event'</code></pre><p>
+      In each of the following examples, assume that the event named
+      <code class="literal">myevent</code> is defined as shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">CREATE EVENT myevent
+    ON SCHEDULE
+      EVERY 6 HOUR
+    COMMENT 'A sample comment.'
+    DO
+      UPDATE myschema.mytable SET mycol = mycol + 1;</code></pre><p>
+      The following statement changes the schedule for
+      <code class="literal">myevent</code> from once every six hours starting
+      immediately to once every twelve hours, starting four hours from
+      the time the statement is run:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER EVENT myevent
+    ON SCHEDULE
+      EVERY 12 HOUR
+    STARTS CURRENT_TIMESTAMP + INTERVAL 4 HOUR;</code></pre><p>
+      It is possible to change multiple characteristics of an event in a
+      single statement. This example changes the SQL statement executed
+      by <code class="literal">myevent</code> to one that deletes all records from
+      <code class="literal">mytable</code>; it also changes the schedule for the
+      event such that it executes once, one day after this
+      <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> statement is run.
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER EVENT myevent
+    ON SCHEDULE
+      AT CURRENT_TIMESTAMP + INTERVAL 1 DAY
+    DO
+      TRUNCATE TABLE myschema.mytable;</code></pre><p>
+      Specify the options in an <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER
+      EVENT</code></a> statement only for those characteristics that you
+      want to change; omitted options keep their existing values. This
+      includes any default values for <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE
+      EVENT</code></a> such as <code class="literal">ENABLE</code>.
+    </p><p>
+      To disable <code class="literal">myevent</code>, use this
+      <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> statement:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER EVENT myevent
+    DISABLE;</code></pre><p>
+      The <code class="literal">ON SCHEDULE</code> clause may use expressions
+      involving built-in MySQL functions and user variables to obtain
+      any of the <em class="replaceable"><code>timestamp</code></em> or
+      <em class="replaceable"><code>interval</code></em> values which it contains. You
+      cannot use stored routines or loadable functions in such
+      expressions, and you cannot use any table references; however, you
+      can use <code class="literal">SELECT FROM DUAL</code>. This is true for both
+      <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> and
+      <a class="link" href="create-event.html" title="13.1.12&nbsp;CREATE EVENT Statement"><code class="literal">CREATE EVENT</code></a> statements. References
+      to stored routines, loadable functions, and tables in such cases
+      are specifically not permitted, and fail with an error (see Bug
+      #22830).
+    </p><p>
+      Although an <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a> statement
+      that contains another <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER EVENT</code></a>
+      statement in its <a class="link" href="do.html" title="13.2.3&nbsp;DO Statement"><code class="literal">DO</code></a> clause appears
+      to succeed, when the server attempts to execute the resulting
+      scheduled event, the execution fails with an error.
+    </p><p>
+      To rename an event, use the <a class="link" href="alter-event.html" title="13.1.2&nbsp;ALTER EVENT Statement"><code class="literal">ALTER
+      EVENT</code></a> statement's <code class="literal">RENAME TO</code> clause.
+      This statement renames the event <code class="literal">myevent</code> to
+      <code class="literal">yourevent</code>:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER EVENT myevent
+    RENAME TO yourevent;</code></pre><p>
+      You can also move an event to a different database using
+      <code class="literal">ALTER EVENT ... RENAME TO ...</code> and
+      <code class="literal"><em class="replaceable"><code>db_name.event_name</code></em></code>
+      notation, as shown here:
+    </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER EVENT olddb.myevent
+    RENAME TO newdb.myevent;</code></pre><p>
+      To execute the previous statement, the user executing it must have
+      the <a class="link" href="privileges-provided.html#priv_event"><code class="literal">EVENT</code></a> privilege on both the
+      <code class="literal">olddb</code> and <code class="literal">newdb</code> databases.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+        There is no <code class="literal">RENAME EVENT</code> statement.
+</p>
+</div>
+<p>
+      The value <code class="literal">DISABLE ON SLAVE</code> is used on a replica
+      instead of <code class="literal">ENABLE</code> or <code class="literal">DISABLE</code>
+      to indicate an event that was created on the source and replicated
+      to the replica, but that is not executed on the replica. Normally,
+      <code class="literal">DISABLE ON SLAVE</code> is set automatically as
+      required; however, there are some circumstances under which you
+      may want or need to change it manually. See
+      <a class="xref" href="replication-features-invoked.html" title="16.4.1.16&nbsp;Replication of Invoked Features">Section&nbsp;16.4.1.16, “Replication of Invoked Features”</a>, for more
+      information.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

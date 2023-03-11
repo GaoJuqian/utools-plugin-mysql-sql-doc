@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW CREATE VIEW Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-create-view"></a>13.7.5.13&nbsp;SHOW CREATE VIEW Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571186688"></a><pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">SHOW CREATE VIEW <em class="replaceable">view_name</em></code></pre><p>
+        This statement shows the <a class="link" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement"><code class="literal">CREATE
+        VIEW</code></a> statement that creates the named view.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW CREATE VIEW v\G
+*************************** 1. row ***************************
+                View: v
+         Create View: CREATE ALGORITHM=UNDEFINED
+                      DEFINER=`bob`@`localhost`
+                      SQL SECURITY DEFINER VIEW
+                      `v` AS select 1 AS `a`,2 AS `b`
+character_set_client: utf8
+collation_connection: utf8_general_ci</code></pre><p>
+        <code class="literal">character_set_client</code> is the session value of
+        the <a class="link" href="server-system-variables.html#sysvar_character_set_client"><code class="literal">character_set_client</code></a> system
+        variable when the view was created.
+        <code class="literal">collation_connection</code> is the session value of
+        the <a class="link" href="server-system-variables.html#sysvar_collation_connection"><code class="literal">collation_connection</code></a> system
+        variable when the view was created.
+      </p><p>
+        Use of <a class="link" href="show-create-view.html" title="13.7.5.13&nbsp;SHOW CREATE VIEW Statement"><code class="literal">SHOW CREATE VIEW</code></a> requires
+        the <a class="link" href="privileges-provided.html#priv_show-view"><code class="literal">SHOW VIEW</code></a> privilege, and the
+        <a class="link" href="privileges-provided.html#priv_select"><code class="literal">SELECT</code></a> privilege for the view in
+        question.
+      </p><p>
+        View information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-views-table.html" title="24.3.31&nbsp;The INFORMATION_SCHEMA VIEWS Table"><code class="literal">VIEWS</code></a> table. See
+        <a class="xref" href="information-schema-views-table.html" title="24.3.31&nbsp;The INFORMATION_SCHEMA VIEWS Table">Section&nbsp;24.3.31, “The INFORMATION_SCHEMA VIEWS Table”</a>.
+      </p><p>
+        MySQL lets you use different
+        <a class="link" href="server-system-variables.html#sysvar_sql_mode"><code class="literal">sql_mode</code></a> settings to tell the
+        server the type of SQL syntax to support. For example, you might
+        use the <a class="link" href="sql-mode.html#sqlmode_ansi"><code class="literal">ANSI</code></a> SQL mode to
+        ensure MySQL correctly interprets the standard SQL concatenation
+        operator, the double bar (<code class="literal">||</code>), in your
+        queries. If you then create a view that concatenates items, you
+        might worry that changing the
+        <a class="link" href="server-system-variables.html#sysvar_sql_mode"><code class="literal">sql_mode</code></a> setting to a value
+        different from <a class="link" href="sql-mode.html#sqlmode_ansi"><code class="literal">ANSI</code></a> could
+        cause the view to become invalid. But this is not the case. No
+        matter how you write out a view definition, MySQL always stores
+        it the same way, in a canonical form. Here is an example that
+        shows how the server changes a double bar concatenation operator
+        to a <a class="link" href="string-functions.html#function_concat"><code class="literal">CONCAT()</code></a> function:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SET sql_mode = 'ANSI';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; CREATE VIEW test.v AS SELECT 'a' || 'b' as col1;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql&gt; SHOW CREATE VIEW test.v\G
+*************************** 1. row ***************************
+                View: v
+         Create View: CREATE VIEW "v" AS select concat('a','b') AS "col1"
+...
+1 row in set (0.00 sec)</code></pre><p>
+        The advantage of storing a view definition in canonical form is
+        that changes made later to the value of
+        <a class="link" href="server-system-variables.html#sysvar_sql_mode"><code class="literal">sql_mode</code></a> does not affect the
+        results from the view. However an additional consequence is that
+        comments prior to <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> are
+        stripped from the definition by the server.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

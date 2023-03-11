@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>SHOW COLUMNS Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="show-columns"></a>13.7.5.5&nbsp;SHOW COLUMNS Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852571453232"></a><a class="indexterm" name="idm45852571450464"></a><a class="indexterm" name="idm45852571449392"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW [FULL] {COLUMNS | FIELDS}
+    {FROM | IN} <em class="replaceable">tbl_name</em>
+    [{FROM | IN} <em class="replaceable">db_name</em>]
+    [LIKE '<em class="replaceable">pattern</em>' | WHERE <em class="replaceable">expr</em>]</code></pre><p>
+        <a class="link" href="show-columns.html" title="13.7.5.5&nbsp;SHOW COLUMNS Statement"><code class="literal">SHOW COLUMNS</code></a> displays information
+        about the columns in a given table. It also works for views.
+        <a class="link" href="show-columns.html" title="13.7.5.5&nbsp;SHOW COLUMNS Statement"><code class="literal">SHOW COLUMNS</code></a> displays information
+        only for those columns for which you have some privilege.
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">mysql&gt; SHOW COLUMNS FROM City;
++-------------+----------+------+-----+---------+----------------+
+| Field       | Type     | Null | Key | Default | Extra          |
++-------------+----------+------+-----+---------+----------------+
+| ID          | int(11)  | NO   | PRI | NULL    | auto_increment |
+| Name        | char(35) | NO   |     |         |                |
+| CountryCode | char(3)  | NO   | MUL |         |                |
+| District    | char(20) | NO   |     |         |                |
+| Population  | int(11)  | NO   |     | 0       |                |
++-------------+----------+------+-----+---------+----------------+</code></pre><p>
+        An alternative to <code class="literal"><em class="replaceable"><code>tbl_name</code></em>
+        FROM <em class="replaceable"><code>db_name</code></em></code> syntax is
+        <em class="replaceable"><code>db_name.tbl_name</code></em>. These two
+        statements are equivalent:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">SHOW COLUMNS FROM mytable FROM mydb;
+SHOW COLUMNS FROM mydb.mytable;</code></pre><p>
+        The optional <code class="literal">FULL</code> keyword causes the output
+        to include the column collation and comments, as well as the
+        privileges you have for each column.
+      </p><p>
+        The <a class="link" href="string-comparison-functions.html#operator_like"><code class="literal">LIKE</code></a> clause, if present,
+        indicates which column names to match. The
+        <code class="literal">WHERE</code> clause can be given to select rows
+        using more general conditions, as discussed in
+        <a class="xref" href="extended-show.html" title="24.8&nbsp;Extensions to SHOW Statements">Section&nbsp;24.8, “Extensions to SHOW Statements”</a>.
+      </p><p>
+        The data types may differ from what you expect them to be based
+        on a <a class="link" href="create-table.html" title="13.1.18&nbsp;CREATE TABLE Statement"><code class="literal">CREATE TABLE</code></a> statement
+        because MySQL sometimes changes data types when you create or
+        alter a table. The conditions under which this occurs are
+        described in <a class="xref" href="silent-column-changes.html" title="13.1.18.6&nbsp;Silent Column Specification Changes">Section&nbsp;13.1.18.6, “Silent Column Specification Changes”</a>.
+      </p><p>
+        <a class="link" href="show-columns.html" title="13.7.5.5&nbsp;SHOW COLUMNS Statement"><code class="literal">SHOW COLUMNS</code></a> displays the
+        following values for each table column:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+            <code class="literal">Field</code>
+          </p><p>
+            The column name.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Type</code>
+          </p><p>
+            The column data type.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Collation</code>
+          </p><p>
+            The collation for nonbinary string columns, or
+            <code class="literal">NULL</code> for other columns. This value is
+            displayed only if you use the <code class="literal">FULL</code>
+            keyword.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Null</code>
+          </p><p>
+            The column nullability. The value is <code class="literal">YES</code>
+            if <code class="literal">NULL</code> values can be stored in the
+            column, <code class="literal">NO</code> if not.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Key</code>
+          </p><p>
+            Whether the column is indexed:
+</p>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                If <code class="literal">Key</code> is empty, the column either is
+                not indexed or is indexed only as a secondary column in
+                a multiple-column, nonunique index.
+              </p></li><li class="listitem"><p>
+                If <code class="literal">Key</code> is <code class="literal">PRI</code>, the
+                column is a <code class="literal">PRIMARY KEY</code> or is one of
+                the columns in a multiple-column <code class="literal">PRIMARY
+                KEY</code>.
+              </p></li><li class="listitem"><p>
+                If <code class="literal">Key</code> is <code class="literal">UNI</code>, the
+                column is the first column of a
+                <code class="literal">UNIQUE</code> index. (A
+                <code class="literal">UNIQUE</code> index permits multiple
+                <code class="literal">NULL</code> values, but you can tell whether
+                the column permits <code class="literal">NULL</code> by checking
+                the <code class="literal">Null</code> field.)
+              </p></li><li class="listitem"><p>
+                If <code class="literal">Key</code> is <code class="literal">MUL</code>, the
+                column is the first column of a nonunique index in which
+                multiple occurrences of a given value are permitted
+                within the column.
+</p></li></ul>
+</div>
+<p>
+            If more than one of the <code class="literal">Key</code> values
+            applies to a given column of a table, <code class="literal">Key</code>
+            displays the one with the highest priority, in the order
+            <code class="literal">PRI</code>, <code class="literal">UNI</code>,
+            <code class="literal">MUL</code>.
+          </p><p>
+            A <code class="literal">UNIQUE</code> index may be displayed as
+            <code class="literal">PRI</code> if it cannot contain
+            <code class="literal">NULL</code> values and there is no
+            <code class="literal">PRIMARY KEY</code> in the table. A
+            <code class="literal">UNIQUE</code> index may display as
+            <code class="literal">MUL</code> if several columns form a composite
+            <code class="literal">UNIQUE</code> index; although the combination of
+            the columns is unique, each column can still hold multiple
+            occurrences of a given value.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Default</code>
+          </p><p>
+            The default value for the column. This is
+            <code class="literal">NULL</code> if the column has an explicit
+            default of <code class="literal">NULL</code>, or if the column
+            definition includes no <code class="literal">DEFAULT</code> clause.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Extra</code>
+          </p><p>
+            Any additional information that is available about a given
+            column. The value is nonempty in these cases:
+</p><a class="indexterm" name="idm45852571381920"></a>
+<div class="itemizedlist">
+<ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>
+                <code class="literal">auto_increment</code> for columns that have
+                the <code class="literal">AUTO_INCREMENT</code> attribute.
+              </p></li><li class="listitem"><p>
+                <code class="literal">on update CURRENT_TIMESTAMP</code> for
+                <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">TIMESTAMP</code></a> or
+                <a class="link" href="datetime.html" title="11.2.2&nbsp;The DATE, DATETIME, and TIMESTAMP Types"><code class="literal">DATETIME</code></a> columns that
+                have the <code class="literal">ON UPDATE CURRENT_TIMESTAMP</code>
+                attribute.
+              </p></li><li class="listitem"><p>
+                <code class="literal">VIRTUAL GENERATED</code> or <code class="literal">STORED
+                GENERATED</code> for generated columns.
+</p></li></ul>
+</div>
+</li><li class="listitem"><p>
+            <code class="literal">Privileges</code>
+          </p><p>
+            The privileges you have for the column. This value is
+            displayed only if you use the <code class="literal">FULL</code>
+            keyword.
+          </p></li><li class="listitem"><p>
+            <code class="literal">Comment</code>
+          </p><p>
+            Any comment included in the column definition. This value is
+            displayed only if you use the <code class="literal">FULL</code>
+            keyword.
+</p></li></ul>
+</div>
+<p>
+        Table column information is also available from the
+        <code class="literal">INFORMATION_SCHEMA</code>
+        <a class="link" href="information-schema-columns-table.html" title="24.3.5&nbsp;The INFORMATION_SCHEMA COLUMNS Table"><code class="literal">COLUMNS</code></a> table. See
+        <a class="xref" href="information-schema-columns-table.html" title="24.3.5&nbsp;The INFORMATION_SCHEMA COLUMNS Table">Section&nbsp;24.3.5, “The INFORMATION_SCHEMA COLUMNS Table”</a>.
+      </p><p>
+        You can list a table's columns with the <a class="link" href="mysqlshow.html" title="4.5.7&nbsp;mysqlshow — Display Database, Table, and Column Information"><span class="command"><strong>mysqlshow
+        <em class="replaceable"><code>db_name</code></em>
+        <em class="replaceable"><code>tbl_name</code></em></strong></span></a> command.
+      </p><p>
+        The <a class="link" href="describe.html" title="13.8.1&nbsp;DESCRIBE Statement"><code class="literal">DESCRIBE</code></a> statement provides
+        information similar to <a class="link" href="show-columns.html" title="13.7.5.5&nbsp;SHOW COLUMNS Statement"><code class="literal">SHOW
+        COLUMNS</code></a>. See <a class="xref" href="describe.html" title="13.8.1&nbsp;DESCRIBE Statement">Section&nbsp;13.8.1, “DESCRIBE Statement”</a>.
+      </p><p>
+        The <a class="link" href="show-create-table.html" title="13.7.5.10&nbsp;SHOW CREATE TABLE Statement"><code class="literal">SHOW CREATE TABLE</code></a>,
+        <a class="link" href="show-table-status.html" title="13.7.5.36&nbsp;SHOW TABLE STATUS Statement"><code class="literal">SHOW TABLE STATUS</code></a>, and
+        <a class="link" href="show-index.html" title="13.7.5.22&nbsp;SHOW INDEX Statement"><code class="literal">SHOW INDEX</code></a> statements also
+        provide information about tables. See <a class="xref" href="show.html" title="13.7.5&nbsp;SHOW Statements">Section&nbsp;13.7.5, “SHOW Statements”</a>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

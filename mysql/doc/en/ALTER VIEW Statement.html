@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>ALTER VIEW Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="alter-view"></a>13.1.10&nbsp;ALTER VIEW Statement</h3>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852584450800"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">ALTER
+    [ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}]
+    [DEFINER = <em class="replaceable">user</em>]
+    [SQL SECURITY { DEFINER | INVOKER }]
+    VIEW <em class="replaceable">view_name</em> [(<em class="replaceable">column_list</em>)]
+    AS <em class="replaceable">select_statement</em>
+    [WITH [CASCADED | LOCAL] CHECK OPTION]</code></pre><p>
+      This statement changes the definition of a view, which must exist.
+      The syntax is similar to that for <a class="link" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement"><code class="literal">CREATE
+      VIEW</code></a> see <a class="xref" href="create-view.html" title="13.1.21&nbsp;CREATE VIEW Statement">Section&nbsp;13.1.21, “CREATE VIEW Statement”</a>). This statement
+      requires the <a class="link" href="privileges-provided.html#priv_create-view"><code class="literal">CREATE VIEW</code></a> and
+      <a class="link" href="privileges-provided.html#priv_drop"><code class="literal">DROP</code></a> privileges for the view, and
+      some privilege for each column referred to in the
+      <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement.
+      <a class="link" href="alter-view.html" title="13.1.10&nbsp;ALTER VIEW Statement"><code class="literal">ALTER VIEW</code></a> is permitted only to the
+      definer or users with the <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a>
+      privilege.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

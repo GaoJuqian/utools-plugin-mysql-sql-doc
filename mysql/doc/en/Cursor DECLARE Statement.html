@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Cursor DECLARE Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="declare-cursor"></a>13.6.6.2&nbsp;Cursor DECLARE Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<pre class="programlisting copytoclipboard language-sql one-line"><code class="language-sql">DECLARE <em class="replaceable">cursor_name</em> CURSOR FOR <em class="replaceable">select_statement</em></code></pre><p>
+        This statement declares a cursor and associates it with a
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement that retrieves
+        the rows to be traversed by the cursor. To fetch the rows later,
+        use a <a class="link" href="fetch.html" title="13.6.6.3&nbsp;Cursor FETCH Statement"><code class="literal">FETCH</code></a> statement. The number
+        of columns retrieved by the
+        <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement must match the
+        number of output variables specified in the
+        <a class="link" href="fetch.html" title="13.6.6.3&nbsp;Cursor FETCH Statement"><code class="literal">FETCH</code></a> statement.
+      </p><p>
+        The <a class="link" href="select.html" title="13.2.9&nbsp;SELECT Statement"><code class="literal">SELECT</code></a> statement cannot have
+        an <code class="literal">INTO</code> clause.
+      </p><p>
+        Cursor declarations must appear before handler declarations and
+        after variable and condition declarations.
+      </p><p>
+        A stored program may contain multiple cursor declarations, but
+        each cursor declared in a given block must have a unique name.
+        For an example, see <a class="xref" href="cursors.html" title="13.6.6&nbsp;Cursors">Section&nbsp;13.6.6, “Cursors”</a>.
+      </p><p>
+        For information available through
+        <a class="link" href="show.html" title="13.7.5&nbsp;SHOW Statements"><code class="literal">SHOW</code></a> statements, it is possible
+        in many cases to obtain equivalent information by using a cursor
+        with an <code class="literal">INFORMATION_SCHEMA</code> table.
+</p>
+</div>
+<br>
+        
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>Account Management Statements</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h3 class="title"><a name="account-management-statements"></a>13.7.1&nbsp;Account Management Statements</h3>
+
+</div>
+
+</div>
+
+</div>
+<div class="toc">
+<dl class="toc"><dt><span class="section"><a href="alter-user.html">13.7.1.1 ALTER USER Statement</a></span></dt><dt><span class="section"><a href="create-user.html">13.7.1.2 CREATE USER Statement</a></span></dt><dt><span class="section"><a href="drop-user.html">13.7.1.3 DROP USER Statement</a></span></dt><dt><span class="section"><a href="grant.html">13.7.1.4 GRANT Statement</a></span></dt><dt><span class="section"><a href="rename-user.html">13.7.1.5 RENAME USER Statement</a></span></dt><dt><span class="section"><a href="revoke.html">13.7.1.6 REVOKE Statement</a></span></dt><dt><span class="section"><a href="set-password.html">13.7.1.7 SET PASSWORD Statement</a></span></dt></dl>
+</div>
+<p>
+      MySQL account information is stored in the tables of the
+      <code class="literal">mysql</code> system database. This database and the
+      access control system are discussed extensively in
+      <a class="xref" href="server-administration.html" title="Chapter&nbsp;5&nbsp;MySQL Server Administration">Chapter&nbsp;5, <i>MySQL Server Administration</i></a>, which you should consult
+      for additional details.
+</p>
+<div class="important" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Important
+</div>
+<p>
+        Some MySQL releases introduce changes to the grant tables to add
+        new privileges or features. To make sure that you can take
+        advantage of any new capabilities, update your grant tables to
+        the current structure whenever you upgrade MySQL. See
+        <a class="xref" href="upgrading.html" title="2.10&nbsp;Upgrading MySQL">Section&nbsp;2.10, “Upgrading MySQL”</a>.
+</p>
+</div>
+<p>
+      When the <a class="link" href="server-system-variables.html#sysvar_read_only"><code class="literal">read_only</code></a> system
+      variable is enabled, account-management statements require the
+      <a class="link" href="privileges-provided.html#priv_super"><code class="literal">SUPER</code></a> privilege, in addition to any
+      other required privileges. This is because they modify tables in
+      the <code class="literal">mysql</code> system database.
+</p>
+</div><br>
+        
+</body>
+</html>

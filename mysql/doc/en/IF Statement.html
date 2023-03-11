@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-CN">
+<head>
+<meta charset="UTF-8">
+<title>IF Statement</title>
+<link href="../docs.css" rel="stylesheet">
+</head>
+<body>
+
+        
+<div class="section">
+<div class="titlepage">
+<div>
+<div>
+<h4 class="title"><a name="if"></a>13.6.5.2&nbsp;IF Statement</h4>
+
+</div>
+
+</div>
+
+</div>
+<a class="indexterm" name="idm45852575188928"></a><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">IF <em class="replaceable">search_condition</em> THEN <em class="replaceable">statement_list</em>
+    [ELSEIF <em class="replaceable">search_condition</em> THEN <em class="replaceable">statement_list</em>] ...
+    [ELSE <em class="replaceable">statement_list</em>]
+END IF</code></pre><p>
+        The <a class="link" href="if.html" title="13.6.5.2&nbsp;IF Statement"><code class="literal">IF</code></a> statement for stored
+        programs implements a basic conditional construct.
+</p>
+<div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+
+<div class="admon-title">
+Note
+</div>
+<p>
+          There is also an <a class="link" href="flow-control-functions.html#function_if"><code class="literal">IF()</code></a>
+          <span class="emphasis"><em>function</em></span>, which differs from the
+          <a class="link" href="if.html" title="13.6.5.2&nbsp;IF Statement"><code class="literal">IF</code></a>
+          <span class="emphasis"><em>statement</em></span> described here. See
+          <a class="xref" href="flow-control-functions.html" title="12.5&nbsp;Flow Control Functions">Section&nbsp;12.5, “Flow Control Functions”</a>. The
+          <a class="link" href="if.html" title="13.6.5.2&nbsp;IF Statement"><code class="literal">IF</code></a> statement can have
+          <code class="literal">THEN</code>, <code class="literal">ELSE</code>, and
+          <code class="literal">ELSEIF</code> clauses, and it is terminated with
+          <code class="literal">END IF</code>.
+</p>
+</div>
+<p>
+        If a given <em class="replaceable"><code>search_condition</code></em> evaluates
+        to true, the corresponding <code class="literal">THEN</code> or
+        <code class="literal">ELSEIF</code> clause
+        <em class="replaceable"><code>statement_list</code></em> executes. If no
+        <em class="replaceable"><code>search_condition</code></em> matches, the
+        <code class="literal">ELSE</code> clause
+        <em class="replaceable"><code>statement_list</code></em> executes.
+      </p><p>
+        Each <em class="replaceable"><code>statement_list</code></em> consists of one
+        or more SQL statements; an empty
+        <em class="replaceable"><code>statement_list</code></em> is not permitted.
+      </p><p>
+        An <code class="literal">IF ... END IF</code> block, like all other
+        flow-control blocks used within stored programs, must be
+        terminated with a semicolon, as shown in this example:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELIMITER //
+
+CREATE FUNCTION SimpleCompare(n INT, m INT)
+  RETURNS VARCHAR(20)
+
+  BEGIN
+    DECLARE s VARCHAR(20);
+
+    IF n &gt; m THEN SET s = '&gt;';
+    ELSEIF n = m THEN SET s = '=';
+    ELSE SET s = '&lt;';
+    END IF;
+
+    SET s = CONCAT(n, ' ', s, ' ', m);
+
+    RETURN s;
+  END //
+
+DELIMITER ;</code></pre><p>
+        As with other flow-control constructs, <code class="literal">IF ... END
+        IF</code> blocks may be nested within other flow-control
+        constructs, including other <a class="link" href="if.html" title="13.6.5.2&nbsp;IF Statement"><code class="literal">IF</code></a>
+        statements. Each <a class="link" href="if.html" title="13.6.5.2&nbsp;IF Statement"><code class="literal">IF</code></a> must be
+        terminated by its own <code class="literal">END IF</code> followed by a
+        semicolon. You can use indentation to make nested flow-control
+        blocks more easily readable by humans (although this is not
+        required by MySQL), as shown here:
+      </p><pre class="programlisting copytoclipboard language-sql"><code class="language-sql">DELIMITER //
+
+CREATE FUNCTION VerboseCompare (n INT, m INT)
+  RETURNS VARCHAR(50)
+
+  BEGIN
+    DECLARE s VARCHAR(50);
+
+    IF n = m THEN SET s = 'equals';
+    ELSE
+      IF n &gt; m THEN SET s = 'greater';
+      ELSE SET s = 'less';
+      END IF;
+
+      SET s = CONCAT('is ', s, ' than');
+    END IF;
+
+    SET s = CONCAT(n, ' ', s, ' ', m, '.');
+
+    RETURN s;
+  END //
+
+DELIMITER ;</code></pre><p>
+        In this example, the inner <a class="link" href="if.html" title="13.6.5.2&nbsp;IF Statement"><code class="literal">IF</code></a> is
+        evaluated only if <code class="literal">n</code> is not equal to
+        <code class="literal">m</code>.
+</p>
+</div>
+<br>
+        
+</body>
+</html>
