@@ -1,7 +1,7 @@
 {
   "name": "utools-plugin-mysql-sql-doc",
   "version": "1.0.0",
-  "description": "MySQL官方文档SQL，API英文版",
+  "description": "MySQL5.7官方文档SQL，API英文版",
   "main": "getMysql.js",
   "scripts": {
     "get": "node getMysql.js"
